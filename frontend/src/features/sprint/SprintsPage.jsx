@@ -27,18 +27,6 @@ const SprintsPage = () => {
   const canAddMember = checkPermission('canManageMembers');
   const canManageProject = checkPermission('canCreateProject') || checkPermission('canCreateSprint');
 
-  const hasMounted = React.useRef(false);
-
-  useEffect(() => {
-    if (!hasMounted.current) {
-      // Auto-open config only if there are exactly 0 sprints on initial page load
-      if (sprints.length === 0 && canManageProject) {
-        setShowConfig(true);
-      }
-      hasMounted.current = true;
-    }
-  }, [sprints.length, canManageProject]);
-
   // Find current project info
   const project = projects.find(p => p.id === projectId) || { name: 'Cargando Proyecto...' };
 

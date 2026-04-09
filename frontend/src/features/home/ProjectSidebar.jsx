@@ -103,17 +103,6 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
 
         <div className="mt-auto pt-6 flex flex-col gap-3">
           <button 
-            onClick={() => {
-              // Simulating Join Team functional via DB inject for the mockup
-              if (displayProject && user) {
-                alert(`¡Te has unido al proyecto ${displayProject.name} exitosamente!`);
-              }
-            }}
-            className="w-full py-3 bg-white text-[#446E51] border border-[#446E51] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
-          >
-             Unirse al Equipo
-          </button>
-          <button 
             onClick={onViewSprints}
             className="w-full py-4 bg-[#446E51] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-green-100"
           >

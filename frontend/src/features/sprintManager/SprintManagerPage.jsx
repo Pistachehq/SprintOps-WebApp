@@ -43,7 +43,7 @@ const SprintManagerPage = () => {
         className="fixed right-0 top-1/2 -translate-y-1/2 h-[300px] w-[60px] bg-gray-400/50 hover:bg-gray-500/50 backdrop-blur-md rounded-l-[30px] flex items-center justify-center transition-all group z-30"
       >
         <span className="rotate-90 whitespace-nowrap text-gray-800 font-bold text-lg tracking-wider group-hover:text-black transition-colors">
-          Daily Standup Meeting
+          Daily Meeting
         </span>
       </button>
 

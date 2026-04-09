@@ -52,7 +52,7 @@ const StandupSidebar = ({ isOpen, onClose }) => {
         }`}
       >
         <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-black text-gray-800 tracking-tight">Daily Standup</h2>
+          <h2 className="text-2xl font-black text-gray-800 tracking-tight">Daily Meeting</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X size={24} className="text-gray-400" />
           </button>
@@ -94,7 +94,7 @@ const StandupSidebar = ({ isOpen, onClose }) => {
             className="w-full py-4 bg-[#446E51] text-white rounded-2xl font-black text-lg hover:opacity-90 transition-opacity shadow-lg shadow-green-100 mt-auto flex items-center justify-center gap-2"
             disabled={showToast}
           >
-            {showToast ? <><Check size={20} /> Guardado</> : "Guardar Standup"}
+            {showToast ? <><Check size={20} /> Guardado</> : "Guardar Daily Meeting"}
           </button>
         </form>
 
@@ -103,7 +103,7 @@ const StandupSidebar = ({ isOpen, onClose }) => {
           <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
             <Check size={14} className="text-white" />
           </div>
-          <span className="font-bold text-sm">Standup guardado correctamente</span>
+          <span className="font-bold text-sm">Daily Meeting guardado correctamente</span>
         </div>
       </div>
     </>
