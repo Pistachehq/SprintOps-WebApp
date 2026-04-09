@@ -1,0 +1,54 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Layout from '../components/Layout';
+import LoginPage from '../features/login/LoginPage';
+import HomePage from '../features/home/HomePage';
+import ProjectPage from '../features/project/ProjectPage';
+import SprintsPage from '../features/sprint/SprintsPage';
+import IssuesBoard from '../features/issues/IssuesBoard';
+import ReflectionPage from '../features/reflection/ReflectionPage';
+import SprintManagerPage from '../features/sprintManager/SprintManagerPage';
+import PlanningPage from '../features/planning/PlanningPage';
+import SprintSubLayout from '../features/sprint/components/SprintSubLayout';
+import TaskDetailPage from '../features/planning/taskDetail/TaskDetailPage';
+import { useAuth } from '../features/auth/hooks/useAuth';
+
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate transition="none" to="/login" />;
+};
+
+const AppRouter = () => {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      
+      <Route path="/" element={
+        <PrivateRoute>
+          <Layout />
+        </PrivateRoute>
+      }>
+        <Route index element={<Navigate to="/home" />} />
+        <Route path="home" element={<HomePage />} />
+        <Route path="projects" element={<HomePage />} />
+        <Route path="project/:projectId" element={<ProjectPage />} />
+        <Route path="project/:projectId/sprints" element={<SprintsPage />} />
+        <Route path="sprint/:id">
+          <Route index element={<SprintManagerPage />} />
+          <Route element={<SprintSubLayout />}>
+            <Route path="planning" element={<PlanningPage />} />
+            <Route path="issues" element={<IssuesBoard />} />
+            <Route path="reflection" element={<ReflectionPage />} />
+          </Route>
+        </Route>
+        <Route path="sprint/:sprintId/planning/task/:taskId" element={<TaskDetailPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/home" />} />
+    </Routes>
+  );
+};
+
+export default AppRouter;

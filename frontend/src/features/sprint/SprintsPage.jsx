@@ -1,0 +1,145 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { UserPlus, Settings } from 'lucide-react';
+import SprintFlow from './SprintFlow';
+import BackButton from '../../components/ui/BackButton';
+import AddUserModal from '../../components/ui/AddUserModal';
+import ProjectConfigView from '../project/ProjectConfigView';
+import { useAuth } from '../auth/hooks/useAuth';
+import { useSprints } from './hooks/useSprints';
+import { useProjects } from '../project/hooks/useProjects';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import EmptyState from '../../components/ui/EmptyState';
+
+const SprintsPage = () => {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const { checkPermission } = useAuth();
+  
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [addedUsers, setAddedUsers] = useState([]);
+
+  const { sprints, isLoading: isLoadingSprints } = useSprints(projectId);
+  const { projects, isLoading: isLoadingProjects } = useProjects();
+  const isLoading = isLoadingSprints || isLoadingProjects;
+
+  const canAddMember = checkPermission('canManageMembers');
+  const canManageProject = checkPermission('canCreateProject') || checkPermission('canCreateSprint');
+
+  const hasMounted = React.useRef(false);
+
+  useEffect(() => {
+    if (!hasMounted.current) {
+      // Auto-open config only if there are exactly 0 sprints on initial page load
+      if (sprints.length === 0 && canManageProject) {
+        setShowConfig(true);
+      }
+      hasMounted.current = true;
+    }
+  }, [sprints.length, canManageProject]);
+
+  // Find current project info
+  const project = projects.find(p => p.id === projectId) || { name: 'Cargando Proyecto...' };
+
+  const handleSprintClick = (sprintId) => {
+    navigate(`/sprint/${sprintId}`);
+  };
+
+  const handleAddUser = (newUser) => {
+    setAddedUsers(prev => [...prev, newUser]);
+  };
+
+  return (
+    <div className="relative min-h-full bg-oracle-bg flex flex-col">
+      
+      {/* Navigation Sub-bar */}
+      <div className="h-[80px] px-10 flex items-center justify-between">
+        <BackButton to="/home" />
+        
+        <div className="flex items-center gap-4">
+          {canManageProject && (
+            <button
+              onClick={() => setShowConfig(true)}
+              className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center gap-2"
+              title="Configurar Proyecto"
+            >
+              <Settings size={18} /> Configurar Proyecto
+            </button>
+          )}
+          {canAddMember && (
+            <button
+              onClick={() => setShowAddUser(true)}
+              className="w-[50px] h-[50px] bg-oracle-main text-white flex items-center justify-center rounded-full shadow-md hover:opacity-90 transition-opacity"
+              title="Agregar usuario al sprint"
+            >
+              <UserPlus size={24} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col justify-center overflow-hidden bg-oracle-bg">
+        {isLoading ? (
+          <LoadingSpinner label="Cargando entorno visual..." fullPage />
+        ) : sprints.length > 0 ? (
+          <SprintFlow
+            sprints={sprints}
+            onSprintClick={handleSprintClick}
+          />
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full -mt-20">
+            <EmptyState 
+              title="No hay Sprints Planificados"
+              description="Inicia la configuración de tu proyecto y agrega tu primer Sprint para comenzar."
+              actionButton={
+                canManageProject && (
+                  <button 
+                    onClick={() => setShowConfig(true)}
+                    className="px-8 py-4 bg-oracle-main text-white rounded-2xl font-bold hover:opacity-90 transition-opacity shadow-lg"
+                  >
+                    Configurar Sprints
+                  </button>
+                )
+              }
+            />
+          </div>
+        )}
+        
+        {/* Project Info Footer */}
+        <div className="py-20 text-center bg-oracle-bg z-10 w-full mt-auto">
+          <p className="text-sm font-medium text-slate-500 mb-1">Nombre del Proyecto:</p>
+          <h2 className="text-4xl font-bold text-slate-900">{project.name}</h2>
+
+          {/* Show added users */}
+          {addedUsers.length > 0 && (
+            <div className="mt-4 flex justify-center gap-2 flex-wrap">
+              {addedUsers.map((u, i) => (
+                <span key={i} className="bg-oracle-main text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {u.name} — {u.role}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <AddUserModal
+        isOpen={showAddUser}
+        onClose={() => setShowAddUser(false)}
+        onAdd={handleAddUser}
+      />
+
+      {showConfig && (
+        <ProjectConfigView 
+          projectId={projectId} 
+          project={project} 
+          onClose={() => setShowConfig(false)} 
+        />
+      )}
+    </div>
+  );
+};
+
+export default SprintsPage;
