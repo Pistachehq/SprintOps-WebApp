@@ -9,6 +9,7 @@ public class CreateIssueRequest {
     private String sprintId;
     private String title;
     private String description;
+    private String purpose;
     private String status;
     private String priority;
     private Integer storyPoints;

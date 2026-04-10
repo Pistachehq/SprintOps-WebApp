@@ -25,6 +25,9 @@ public class Issues {
     @Column(name = "descripcion_issue", length = 500)
     private String descripcionIssue;
 
+    @Column(name = "proposito_issue", length = 500)
+    private String propositoIssue;
+
     @Column(name = "estado_issue", length = 50)
     private String estadoIssue;
 

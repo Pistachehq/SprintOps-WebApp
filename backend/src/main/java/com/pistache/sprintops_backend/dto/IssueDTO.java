@@ -12,6 +12,7 @@ public class IssueDTO {
     private String sprintId;
     private String title;
     private String description;
+    private String purpose;
     private String status;
     private String priority;
     private Integer storyPoints;
@@ -24,6 +25,7 @@ public class IssueDTO {
         dto.setId(i.getIdIssue());
         dto.setTitle(i.getTituloIssue());
         dto.setDescription(i.getDescripcionIssue());
+        dto.setPurpose(i.getPropositoIssue());
         dto.setStatus(i.getEstadoIssue());
         dto.setPriority(i.getPrioridadIssue());
         dto.setStoryPoints(i.getStoryPointsIssue());

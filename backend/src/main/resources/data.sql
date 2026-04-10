@@ -58,12 +58,12 @@ INSERT IGNORE INTO sprint (id_sprint, nombre_sprint, fecha_inicio_sprint, fecha_
 VALUES (2, 'Sprint 2', '2026-04-15', '2026-04-28', 'UI enhancements', 'planned', 1);
 
 -- Issues (belong to project, linked to sprint via desc_issue)
-INSERT IGNORE INTO issues (id_issue, titulo_issue, descripcion_issue, estado_issue, prioridad_issue, story_points_issue, fecha_creacion_issue, Proyecto_id_proyecto)
-VALUES (1, 'Implement login mock', 'Crear login por rol simulado', 'done', 'high', 5, '2026-04-01', 1);
-INSERT IGNORE INTO issues (id_issue, titulo_issue, descripcion_issue, estado_issue, prioridad_issue, story_points_issue, fecha_creacion_issue, Proyecto_id_proyecto)
-VALUES (2, 'Setup JSON DB', 'Configurar localStorage para db', 'in_progress', 'high', 8, '2026-04-01', 1);
-INSERT IGNORE INTO issues (id_issue, titulo_issue, descripcion_issue, estado_issue, prioridad_issue, story_points_issue, fecha_creacion_issue, Proyecto_id_proyecto)
-VALUES (3, 'Fix Layout bug', 'Sidebar colapsa en mobile', 'todo', 'low', 2, '2026-04-01', 1);
+INSERT IGNORE INTO issues (id_issue, titulo_issue, descripcion_issue, proposito_issue, estado_issue, prioridad_issue, story_points_issue, fecha_creacion_issue, Proyecto_id_proyecto)
+VALUES (1, 'Implement login mock', 'Crear login por rol simulado', 'Permitir pruebas de flujo de autenticación sin backend real', 'done', 'high', 5, '2026-04-01', 1);
+INSERT IGNORE INTO issues (id_issue, titulo_issue, descripcion_issue, proposito_issue, estado_issue, prioridad_issue, story_points_issue, fecha_creacion_issue, Proyecto_id_proyecto)
+VALUES (2, 'Setup JSON DB', 'Configurar localStorage para db', 'Tener persistencia local para desarrollo frontend independiente', 'in_progress', 'high', 8, '2026-04-01', 1);
+INSERT IGNORE INTO issues (id_issue, titulo_issue, descripcion_issue, proposito_issue, estado_issue, prioridad_issue, story_points_issue, fecha_creacion_issue, Proyecto_id_proyecto)
+VALUES (3, 'Fix Layout bug', 'Sidebar colapsa en mobile', 'Garantizar experiencia responsive en dispositivos móviles', 'todo', 'low', 2, '2026-04-01', 1);
 
 -- Link issues to sprints (desc_issue)
 INSERT IGNORE INTO desc_issue (Sprint_id_sprint, Issues_id_issue, fecha_entrada)

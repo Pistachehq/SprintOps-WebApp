@@ -73,6 +73,7 @@ public class IssuesController {
         Issues issue = new Issues();
         issue.setTituloIssue(request.getTitle());
         issue.setDescripcionIssue(request.getDescription());
+        issue.setPropositoIssue(request.getPurpose());
         issue.setEstadoIssue(request.getStatus() != null ? request.getStatus() : "todo");
         issue.setPrioridadIssue(request.getPriority() != null ? request.getPriority() : "Medium");
         issue.setStoryPointsIssue(request.getStoryPoints() != null ? request.getStoryPoints() : 0);
@@ -127,6 +128,7 @@ public class IssuesController {
 
         if (updates.containsKey("title")) issue.setTituloIssue((String) updates.get("title"));
         if (updates.containsKey("description")) issue.setDescripcionIssue((String) updates.get("description"));
+        if (updates.containsKey("purpose")) issue.setPropositoIssue((String) updates.get("purpose"));
         if (updates.containsKey("status")) issue.setEstadoIssue((String) updates.get("status"));
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
