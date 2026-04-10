@@ -1,8 +1,42 @@
 import React, { useState } from 'react';
-import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft } from 'lucide-react';
+import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar } from 'lucide-react';
 import { useSprints } from '../sprint/hooks/useSprints';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
+
+// Función para convertir status a display format
+const getStatusDisplay = (status) => {
+  const statusMap = {
+    'planned': 'Planned',
+    'in_progress': 'In Progress',
+    'completed': 'Finished'
+  };
+  return statusMap[status] || status;
+};
+
+// Función para convertir fecha a formato YYYY-MM-DD sin desfase de zona horaria
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  // Si ya está en formato YYYY-MM-DD, devolverlo tal cual
+  if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+  // Si es un objeto Date o string ISO
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Función para formatear fecha en texto legible sin desfase
+const formatDateDisplay = (dateString) => {
+  if (!dateString) return 'No definida';
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+};
 
 const ProjectConfigView = ({ projectId, project, onClose }) => {
   const { sprints, addSprint, updateSprint } = useSprints(projectId);
@@ -26,6 +60,10 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   // Editing member inline
   const [editingMemberIdx, setEditingMemberIdx] = useState(null);
   const [editMemberRole, setEditMemberRole] = useState('');
+
+  // Editing project end date
+  const [isEditingProjectEndDate, setIsEditingProjectEndDate] = useState(false);
+  const [newProjectEndDate, setNewProjectEndDate] = useState(formatDateForInput(project?.end || ''));
   
   const canCreateSprint = checkPermission('canCreateSprint');
 
@@ -86,6 +124,18 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     }
   };
 
+  const handleSaveProjectEndDate = () => {
+    if (newProjectEndDate) {
+      projectsRepository.update(projectId, { end: newProjectEndDate });
+      setIsEditingProjectEndDate(false);
+    }
+  };
+
+  const handleOpenEditProjectEndDate = () => {
+    setNewProjectEndDate(formatDateForInput(project?.end));
+    setIsEditingProjectEndDate(true);
+  };
+
   return (
     <div className="fixed top-[70px] left-0 right-0 bottom-0 bg-[#F0EFED] z-30 flex flex-col overflow-hidden">
       <div className="h-[80px] px-10 flex items-center justify-between shrink-0 bg-[#F0EFED] border-b border-slate-200">
@@ -123,6 +173,76 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
             </div>
           </div>
 
+          {/* Project Info Section */}
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-10">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+              <Calendar className="text-[#446E51]" /> Acerca del Proyecto
+            </h3>
+            
+            {/* Project Name */}
+            <div className="mb-8">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Nombre del Proyecto</p>
+              <p className="text-lg font-black text-slate-800">{project?.name || 'Sin nombre'}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Start Date */}
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Fecha de Inicio</p>
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-[#446E51]" />
+                  <p className="text-lg font-black text-slate-800">
+                    {formatDateDisplay(project?.start)}
+                  </p>
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Fecha de Finalización</p>
+                {isEditingProjectEndDate ? (
+                  <div className="flex gap-2 items-center">
+                    <input 
+                      type="date" 
+                      value={newProjectEndDate}
+                      onChange={e => setNewProjectEndDate(e.target.value)}
+                      className="flex-1 h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
+                    />
+                    <button 
+                      onClick={handleSaveProjectEndDate}
+                      className="px-3 py-2 bg-[#446E51] text-white rounded-lg font-bold flex items-center justify-center hover:opacity-90 transition-opacity"
+                      title="Guardar"
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setIsEditingProjectEndDate(false)}
+                      className="px-3 py-2 bg-gray-200 text-slate-600 rounded-lg font-bold flex items-center justify-center hover:opacity-90 transition-opacity"
+                      title="Cancelar"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={18} className="text-[#446E51]" />
+                      <p className="text-lg font-black text-slate-800">
+                        {formatDateDisplay(project?.end)}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={handleOpenEditProjectEndDate}
+                      className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm flex items-center gap-1.5 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                    >
+                      <Pencil size={14} /> Modificar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Sprints Config */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-h-[600px] overflow-y-auto">
@@ -147,7 +267,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                     >
                       <option value="planned">Planned</option>
                       <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
+                      <option value="completed">Finished</option>
                     </select>
                     <div className="flex gap-2">
                       <button onClick={saveEditSprint} className="flex-1 h-9 bg-[#446E51] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
@@ -166,7 +286,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-1 text-[10px] font-black uppercase text-white bg-[#446E51] rounded">
-                        {s.status}
+                        {getStatusDisplay(s.status)}
                       </span>
                       <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
                         <Pencil size={14} />

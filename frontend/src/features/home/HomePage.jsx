@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import ProjectGrid from './ProjectGrid';
 import ProjectSidebar from './ProjectSidebar';
 import CreateProjectModal from './CreateProjectModal';
@@ -16,8 +16,18 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user, checkPermission } = useAuth();
   const { projects, isLoading, addProject } = useProjects(user?.id);
+  const { searchQuery } = useOutletContext() || {};
 
   const canCreate = checkPermission('canCreateProject');
+
+  // Filter projects based on search query
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery) return projects;
+    return projects.filter(project => 
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [projects, searchQuery]);
 
   const handleSelectProject = (project) => {
     setSelectedProject(project);
@@ -76,12 +86,12 @@ const HomePage = () => {
 
         {isLoading ? (
           <LoadingSpinner label="Cargando proyectos..." />
-        ) : projects.length === 0 ? (
+        ) : filteredProjects.length === 0 ? (
           <EmptyState 
-            title="Aún no tienes proyectos"
-            description="Crea un nuevo proyecto para comenzar a organizar tus Sprints."
+            title={searchQuery ? "No se encontraron proyectos" : "Aún no tienes proyectos"}
+            description={searchQuery ? "Prueba con otro término de búsqueda." : "Crea un nuevo proyecto para comenzar a organizar tus Sprints."}
             actionButton={
-              canCreate && (
+              !searchQuery && canCreate && (
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="px-6 py-3 bg-oracle-main text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
@@ -92,7 +102,7 @@ const HomePage = () => {
             }
           />
         ) : (
-          <ProjectGrid projects={projects} onSelect={handleSelectProject} />
+          <ProjectGrid projects={filteredProjects} onSelect={handleSelectProject} />
         )}
       </div>
 

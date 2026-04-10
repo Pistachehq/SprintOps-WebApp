@@ -21,9 +21,8 @@ const ReflectionPage = () => {
     <div className="h-full font-sans">
       {/* Metrics row - only for users with checkPermission('canViewMetrics') */}
         {checkPermission('canViewMetrics') && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <VelocityChart />
-            <StandupParticipationCard />
             <SprintIndicatorCard />
           </div>
         )}

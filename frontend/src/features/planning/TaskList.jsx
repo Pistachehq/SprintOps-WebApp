@@ -1,21 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import TaskCard from './TaskCard';
+import CreateIssueModal from '../issues/CreateIssueModal';
 import { useIssues } from '../issues/hooks/useIssues';
 
 const TaskList = ({ role, sprintId }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const isOwner = role === 'productOwner';
   const isScrum = role === 'scrumMaster';
   const isDev = role === 'developer';
 
-  const { issues } = useIssues(sprintId);
+  const { issues, addIssue } = useIssues(sprintId);
+
+  const handleCreateIssue = (issueData) => {
+    addIssue({ ...issueData, sprintId });
+  };
 
   return (
     <div className="bg-white rounded-[24px] p-8 shadow-sm border border-gray-100 h-full flex flex-col">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-black text-gray-800">Backlog del Sprint</h2>
         {isOwner && (
-          <button className="w-10 h-10 bg-[#446E51] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg shadow-green-100">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="w-10 h-10 bg-[#446E51] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg shadow-green-100">
             <Plus size={24} />
           </button>
         )}
@@ -26,6 +34,12 @@ const TaskList = ({ role, sprintId }) => {
           <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} />
         ))}
       </div>
+
+      <CreateIssueModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={handleCreateIssue}
+      />
     </div>
   );
 };

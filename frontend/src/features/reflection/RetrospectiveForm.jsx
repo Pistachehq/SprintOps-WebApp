@@ -41,7 +41,7 @@ const RetrospectiveForm = () => {
     <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative">
       <h2 className="text-lg font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-3">
         <Lightbulb size={20} className="text-oracle-red" />
-        Metodología — Scrum
+        Reflexión del Sprint
       </h2>
 
       <div className="space-y-6">

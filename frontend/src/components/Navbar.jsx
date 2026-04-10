@@ -1,11 +1,13 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Avatar from './Avatar';
 import SearchBar from './SearchBar';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
-const Navbar = () => {
+const Navbar = ({ onSearch }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === '/home' || location.pathname === '/projects';
 
   const handleLogout = () => {
     logout();
@@ -22,9 +24,11 @@ const Navbar = () => {
         />
       </Link>
 
-      <div className="hidden md:flex flex-1 justify-center px-4">
-        <SearchBar />
-      </div>
+      {isHome && (
+        <div className="hidden md:flex flex-1 justify-center px-4">
+          <SearchBar onSearch={onSearch} />
+        </div>
+      )}
 
       <div className="flex items-center gap-6 min-w-[200px] justify-end">        
         <div className="relative group">
