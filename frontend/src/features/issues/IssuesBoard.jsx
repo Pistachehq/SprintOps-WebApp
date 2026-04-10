@@ -65,8 +65,8 @@ const IssuesBoard = () => {
     if (newStatus && activeIssue.status !== newStatus) {
       moveIssue(issueId, newStatus);
       const columnLabel = columns.find(c => c.id === newStatus)?.label || newStatus;
-      // Fixed user fallback (no longer uses 'Sistema' hardcoded, enforces user session)
-      issueHistoryRepository.addHistory(issueId, user?.id, 'Cambio de Estado', `Movido a ${columnLabel} por ${user?.username}`);
+      issueHistoryRepository.addHistory(issueId, user?.id, 'Cambio de Estado', `Movido a ${columnLabel} por ${user?.username}`)
+        .catch(() => {});
       toast.success(`Movido exitosamente a ${columnLabel}`);
     }
   };

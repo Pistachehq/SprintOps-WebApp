@@ -42,7 +42,7 @@ const TaskDetailPage = () => {
     );
   }
 
-  const handleEditIssue = (id, updatedData) => {
+  const handleEditIssue = async (id, updatedData) => {
     // Build detailed change description by comparing old vs new
     const fieldLabels = {
       title: 'Título',
@@ -69,7 +69,7 @@ const TaskDetailPage = () => {
       ? `Se modificó: ${changedFields.join(', ')} — por ${user?.username || 'developer'}`
       : `Edición sin cambios detectados — por ${user?.username || 'developer'}`;
 
-    addHistory(user?.id || 'Sistema', 'Editó Tarea', changesText);
+    await addHistory(user?.id || 'Sistema', 'Editó Tarea', changesText);
   };
 
   return (
