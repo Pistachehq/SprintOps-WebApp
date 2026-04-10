@@ -16,6 +16,7 @@ public class IssueDTO {
     private String status;
     private String priority;
     private Integer storyPoints;
+    private Integer parentIssueId;
     private List<Integer> assigneeIds;
     private Integer reporterId;
     private LocalDate createdAt;
@@ -29,6 +30,7 @@ public class IssueDTO {
         dto.setStatus(i.getEstadoIssue());
         dto.setPriority(i.getPrioridadIssue());
         dto.setStoryPoints(i.getStoryPointsIssue());
+        dto.setParentIssueId(i.getParentIssueId());
         dto.setCreatedAt(i.getFechaCreacionIssue());
         dto.setAssigneeIds(assigneeIds);
         dto.setSprintId(sprintId);

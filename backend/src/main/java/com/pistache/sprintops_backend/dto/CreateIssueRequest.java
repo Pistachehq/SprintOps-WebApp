@@ -13,5 +13,6 @@ public class CreateIssueRequest {
     private String status;
     private String priority;
     private Integer storyPoints;
+    private Integer parentIssueId;
     private List<Integer> assigneeIds;
 }

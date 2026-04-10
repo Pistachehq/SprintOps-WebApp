@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 
-const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) => {
+const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [] }) => {
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('Task');
   const [priority, setPriority] = useState('Medium');
   const [points, setPoints] = useState(0);
-  const [assignee, setAssignee] = useState('');
+  const [isSubIssue, setIsSubIssue] = useState(false);
+  const [parentIssueId, setParentIssueId] = useState('');
 
   useEffect(() => {
     if (issue) {
@@ -18,7 +19,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
       setType(issue.type || 'Task');
       setPriority(issue.priority || 'Medium');
       setPoints(issue.storyPoints || 0);
-      setAssignee(issue.assigneeIds && issue.assigneeIds.length > 0 ? issue.assigneeIds[0] : '');
+      setIsSubIssue(!!issue.parentIssueId);
+      setParentIssueId(issue.parentIssueId || '');
     } else {
       setTitle('');
       setPurpose('');
@@ -26,7 +28,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
       setType('Task');
       setPriority('Medium');
       setPoints(0);
-      setAssignee('');
+      setIsSubIssue(false);
+      setParentIssueId('');
     }
   }, [issue, isOpen]);
 
@@ -42,7 +45,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
       priority,
       type,
       storyPoints: Number(points) || 0,
-      assigneeIds: assignee ? [assignee] : []
+      parentIssueId: isSubIssue && parentIssueId ? Number(parentIssueId) : null,
+      assigneeIds: issue ? issue.assigneeIds : []
     };
 
     if (issue && onEdit) {
@@ -125,23 +129,6 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Asignado a (Opcional)</label>
-              <select
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
-                value={assignee}
-                onChange={e => setAssignee(e.target.value)}
-              >
-                <option value="">Sin asignar</option>
-                <option value="developer">Developer</option>
-                <option value="scrumMaster">Scrum Master</option>
-                <option value="productOwner">Product Owner</option>
-                <option value="axel">Axel</option>
-                <option value="sm">SM</option>
-                <option value="po">PO</option>
-                <option value="u1">Axel (Sistema)</option>
-              </select>
-            </div>
-            <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Story Points</label>
               <input 
                 type="number"
@@ -152,7 +139,42 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
                 placeholder="0"
               />
             </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">¿Es Sub Issue?</label>
+              <select
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                value={isSubIssue ? 'yes' : 'no'}
+                onChange={e => {
+                  const val = e.target.value === 'yes';
+                  setIsSubIssue(val);
+                  if (!val) setParentIssueId('');
+                }}
+              >
+                <option value="no">No</option>
+                <option value="yes">Sí</option>
+              </select>
+            </div>
           </div>
+
+          {isSubIssue && (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Issue padre</label>
+              <select
+                required
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                value={parentIssueId}
+                onChange={e => setParentIssueId(e.target.value)}
+              >
+                <option value="">Selecciona un issue...</option>
+                {sprintIssues
+                  .filter(i => String(i.id) !== String(issue?.id))
+                  .map(i => (
+                    <option key={i.id} value={i.id}>#{i.id} — {i.title}</option>
+                  ))
+                }
+              </select>
+            </div>
+          )}
           
           <div className="mt-4 flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">

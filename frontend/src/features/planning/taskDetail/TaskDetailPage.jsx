@@ -134,6 +134,7 @@ const TaskDetailPage = () => {
         onClose={() => setShowEditModal(false)}
         onEdit={handleEditIssue}
         issue={task}
+        sprintIssues={issues}
       />
     </div>
   );

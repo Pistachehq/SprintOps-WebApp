@@ -40,6 +40,9 @@ public class Issues {
     @Column(name = "fecha_creacion_issue")
     private LocalDate fechaCreacionIssue;
 
+    @Column(name = "parent_issue_id")
+    private Integer parentIssueId;
+
     @ManyToOne
     @JoinColumn(name = "Proyecto_id_proyecto")
     private Proyecto proyecto;

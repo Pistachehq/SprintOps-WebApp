@@ -12,7 +12,7 @@ const SprintSubLayout = () => {
   const { id } = useParams();
   const location = useLocation();
   const { checkPermission } = useAuth();
-  const { addIssue } = useIssues(id);
+  const { issues, addIssue } = useIssues(id);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
 
   const canCreateIssue = checkPermission('canCreateIssue');
@@ -102,6 +102,7 @@ const SprintSubLayout = () => {
         isOpen={showCreateIssue}
         onClose={() => setShowCreateIssue(false)}
         onCreate={handleCreateIssue}
+        sprintIssues={issues}
       />
     </div>
   );

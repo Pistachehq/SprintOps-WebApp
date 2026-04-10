@@ -47,6 +47,7 @@ const TaskList = ({ role, sprintId }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateIssue}
+        sprintIssues={issues}
       />
     </div>
   );

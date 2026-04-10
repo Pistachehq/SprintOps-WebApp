@@ -77,6 +77,7 @@ public class IssuesController {
         issue.setEstadoIssue(request.getStatus() != null ? request.getStatus() : "todo");
         issue.setPrioridadIssue(request.getPriority() != null ? request.getPriority() : "Medium");
         issue.setStoryPointsIssue(request.getStoryPoints() != null ? request.getStoryPoints() : 0);
+        issue.setParentIssueId(request.getParentIssueId());
         issue.setFechaCreacionIssue(LocalDate.now());
 
         if (request.getProjectId() != null) {
@@ -132,6 +133,7 @@ public class IssuesController {
         if (updates.containsKey("status")) issue.setEstadoIssue((String) updates.get("status"));
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
+        if (updates.containsKey("parentIssueId")) issue.setParentIssueId((Integer) updates.get("parentIssueId"));
 
         issue = issuesService.save(issue);
 
