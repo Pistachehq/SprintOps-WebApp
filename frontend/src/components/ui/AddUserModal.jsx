@@ -11,7 +11,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setAllUsers(usersRepository.getAll() || []);
+      usersRepository.getAll().then(users => setAllUsers(users || [])).catch(() => setAllUsers([]));
     }
   }, [isOpen]);
 

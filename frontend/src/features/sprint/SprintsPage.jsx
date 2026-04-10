@@ -25,7 +25,7 @@ const SprintsPage = () => {
   const canManageProject = checkPermission('canCreateProject') || checkPermission('canCreateSprint');
 
   // Find current project info
-  const project = projects.find(p => p.id === projectId) || { name: 'Cargando Proyecto...' };
+  const project = projects.find(p => String(p.id) === String(projectId)) || { name: 'Cargando Proyecto...' };
 
   const handleSprintClick = (sprintId) => {
     navigate(`/sprint/${sprintId}`);

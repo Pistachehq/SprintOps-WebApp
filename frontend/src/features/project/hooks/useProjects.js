@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { projectsRepository } from '../../../data/repositories/projectsRepository';
-import { db } from '../../../data/db/dbClient';
 
 const enrichProject = (project) => {
   return {
@@ -21,41 +20,36 @@ export const useProjects = (userId) => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let timeoutId;
-    const fetchData = () => {
-      setIsLoading(true);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
       let data = [];
       if (userId) {
-        data = projectsRepository.getByUserId(userId);
+        data = await projectsRepository.getByUserId(userId);
       } else {
-        data = projectsRepository.getAll();
+        data = await projectsRepository.getAll();
       }
-
-      const enrichedData = data.map(enrichProject);
-
-      timeoutId = setTimeout(() => {
-        setProjects(enrichedData);
-        setIsLoading(false);
-      }, 500);
-    };
-
-    fetchData();
-    const unsubscribe = db.subscribe(fetchData);
-    return () => {
-      unsubscribe();
-      if (timeoutId) clearTimeout(timeoutId);
-    };
+      setProjects((data || []).map(enrichProject));
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+      setProjects([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [userId]);
 
-  const addProject = (projectData) => {
-    projectsRepository.create({ ...projectData, ownerId: userId });
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const addProject = async (projectData) => {
+    const result = await projectsRepository.create({ ...projectData, ownerId: userId });
+    fetchData();
+    return result;
   };
 
-  const getProject = (id) => {
-    const project = projectsRepository.getById(id);
+  const getProject = async (id) => {
+    const project = await projectsRepository.getById(id);
     return project ? enrichProject(project) : null;
   };
 
-  return { projects, isLoading, addProject, getProject };
+  return { projects, isLoading, addProject, getProject, refetch: fetchData };
 };

@@ -1,11 +1,12 @@
-import { db } from '../db/dbClient';
+import apiClient from '../api/apiClient';
 
 export const usersRepository = {
-  getAll: () => db.getCollection('users'),
-  getById: (id) => db.getById('users', id),
-  getByUsername: (username) => {
-    return db.getCollection('users').find(u => u.username === username);
+  getAll: () => apiClient.get('/usuarios'),
+  getById: (id) => apiClient.get(`/usuarios/${id}`),
+  getByUsername: async (username) => {
+    const users = await apiClient.get('/usuarios');
+    return users.find(u => u.username === username);
   },
-  create: (data) => db.insert('users', data),
-  update: (id, data) => db.update('users', id, data),
+  create: (data) => apiClient.post('/usuarios', data),
+  update: (id, data) => apiClient.put(`/usuarios/${id}`, data),
 };

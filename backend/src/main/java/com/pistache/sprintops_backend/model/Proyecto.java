@@ -31,7 +31,10 @@ public class Proyecto {
     @Column(name = "fecha_inicio_proyecto")
     private LocalDate fechaInicioProyecto;
 
-    @Column(name = "estado_del_proyecto", length = 1)
+    @Column(name = "fecha_fin_proyecto")
+    private LocalDate fechaFinProyecto;
+
+    @Column(name = "estado_del_proyecto", length = 50)
     private String estadoDelProyecto;
 
     @ManyToOne

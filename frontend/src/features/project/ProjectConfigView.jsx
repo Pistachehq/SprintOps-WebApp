@@ -83,9 +83,9 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     setEndDate('');
   };
 
-  const handleDeleteSprint = (sprintId) => {
+  const handleDeleteSprint = async (sprintId) => {
     if (confirm('¿Estás seguro de eliminar este sprint?')) {
-      sprintsRepository.delete(sprintId);
+      await sprintsRepository.delete(sprintId);
     }
   };
 
@@ -124,9 +124,9 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     }
   };
 
-  const handleSaveProjectEndDate = () => {
+  const handleSaveProjectEndDate = async () => {
     if (newProjectEndDate) {
-      projectsRepository.update(projectId, { end: newProjectEndDate });
+      await projectsRepository.update(projectId, { end: newProjectEndDate });
       setIsEditingProjectEndDate(false);
     }
   };

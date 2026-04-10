@@ -1,43 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
-import { db } from '../../../data/db/dbClient';
 
 export const useSprints = (projectId) => {
   const [sprints, setSprints] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let timeoutId;
-    const fetchData = () => {
-      setIsLoading(true);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
       let data = [];
       if (projectId) {
-        data = sprintsRepository.getByProjectId(projectId) || [];
+        data = await sprintsRepository.getByProjectId(projectId);
       } else {
-        data = sprintsRepository.getAll() || [];
+        data = await sprintsRepository.getAll();
       }
-
-      timeoutId = setTimeout(() => {
-        setSprints(data);
-        setIsLoading(false);
-      }, 500);
-    };
-
-    fetchData();
-    const unsubscribe = db.subscribe(fetchData);
-    return () => {
-      unsubscribe();
-      if (timeoutId) clearTimeout(timeoutId);
-    };
+      setSprints(data || []);
+    } catch (err) {
+      console.error('Error fetching sprints:', err);
+      setSprints([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [projectId]);
 
-  const addSprint = (sprintData) => {
-    sprintsRepository.create({ ...sprintData, projectId });
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const addSprint = async (sprintData) => {
+    await sprintsRepository.create({ ...sprintData, projectId });
+    fetchData();
   };
 
   const getSprint = (id) => sprintsRepository.getById(id);
 
-  const updateSprint = (id, data) => sprintsRepository.update(id, data);
+  const updateSprint = async (id, data) => {
+    await sprintsRepository.update(id, data);
+    fetchData();
+  };
 
-  return { sprints, isLoading, addSprint, getSprint, updateSprint };
+  return { sprints, isLoading, addSprint, getSprint, updateSprint, refetch: fetchData };
 };

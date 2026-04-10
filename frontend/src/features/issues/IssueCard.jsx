@@ -56,7 +56,7 @@ const IssueCard = ({ issue }) => {
       
       <div className="flex justify-end items-center">
         <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg">
-          <span className="text-[10px] font-black text-[#446E51]">{issue.points} pts</span>
+          <span className="text-[10px] font-black text-[#446E51]">{issue.storyPoints || issue.points} pts</span>
         </div>
       </div>
     </div>

@@ -1,39 +1,36 @@
 import { useState, useEffect } from 'react';
-import { usersRepository } from '../../../data/repositories/usersRepository';
 import { hasPermission } from '../../../domain/permissions/rolePermissions';
+import apiClient from '../../../data/api/apiClient';
+
+const normalizeRole = (backendRole) => {
+  const map = {
+    'Developer': 'developer',
+    'Scrum Master': 'scrumMaster',
+    'Product Owner': 'productOwner',
+  };
+  return map[backendRole] || backendRole;
+};
 
 export const useAuth = () => {
   const [user, setUser] = useState(() => {
-    // Attempt to hydrate from localStorage ID
-    const userId = localStorage.getItem("auth_user_id");
-    if (userId) {
-      const dbUser = usersRepository.getById(userId);
-      return dbUser || null;
+    // Hydrate from localStorage
+    const stored = localStorage.getItem("auth_user");
+    if (stored) {
+      try { return JSON.parse(stored); } catch { return null; }
     }
     return null;
   });
 
-  const login = (role, username) => {
-    // Find the user simulating a login (mock)
-    let dbUser = usersRepository.getByUsername(username);
-
-    // If user doesn't exist, we'll create a temp mock user
-    if (!dbUser) {
-        dbUser = usersRepository.create({
-            name: username,
-            username: username,
-            email: `${username}@mock.com`,
-            role: role,
-            active: true
-        });
-    }
-
-    localStorage.setItem("auth_user_id", dbUser.id);
-    setUser(dbUser);
+  const login = async (username, password) => {
+    const userData = await apiClient.post('/auth/login', { username, password });
+    userData.role = normalizeRole(userData.role);
+    localStorage.setItem("auth_user", JSON.stringify(userData));
+    setUser(userData);
+    return userData;
   };
 
   const logout = () => {
-    localStorage.removeItem("auth_user_id");
+    localStorage.removeItem("auth_user");
     setUser(null);
   };
 

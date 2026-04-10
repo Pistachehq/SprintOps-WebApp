@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 const TaskCard = ({ task, role, sprintId }) => {
   const navigate = useNavigate();
   const { id, title, priority, storyPoints, description, assigneeIds } = task; // Updated field names for consistency
-  const canAssign = role === 'Scrum Master' || role === 'Product Owner' || role === 'developer'; // Adjusted to match permissions
+  const canAssign = role === 'scrumMaster' || role === 'productOwner' || role === 'developer';
   
   // Format id
   const formattedId = String(id).replace('i', '');
@@ -40,13 +40,13 @@ const TaskCard = ({ task, role, sprintId }) => {
       <div className="flex justify-between items-center mt-auto">
         <div className="flex items-center gap-4">
           <div className="flex -space-x-2">
-            {(Array.isArray(assignee) ? assignee : [assignee || '']).map((user, i) => user && (
+            {(Array.isArray(assignee) ? assignee : [assignee || '']).filter(Boolean).map((user, i) => (
               <div 
                 key={i} 
                 className="w-10 h-10 rounded-full bg-[#446E51] border-2 border-white flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm"
-                title={user}
+                title={String(user)}
               >
-                {user.charAt(0)}
+                {String(user).charAt(0)}
               </div>
             ))}
           </div>

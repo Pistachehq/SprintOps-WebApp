@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import BackButton from '../../components/ui/BackButton';
 import SprintFlow from './SprintFlow';
@@ -10,10 +10,13 @@ const SprintManagerPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isStandupOpen, setIsStandupOpen] = useState(false);
+  const [sprint, setSprint] = useState(null);
   
-  // Get sprint details to find the projectId
-  const sprint = sprintsRepository.getById(id);
-  const projectId = sprint?.projectId || 'p1'; // Fallback to p1 if not found
+  useEffect(() => {
+    sprintsRepository.getById(id).then(s => setSprint(s)).catch(() => {});
+  }, [id]);
+
+  const projectId = sprint?.projectId || location.state?.project?.id || 'p1';
   
   // Use project name from state or fallback
   const projectName = location.state?.project?.name || "Gestor de Proyectos";

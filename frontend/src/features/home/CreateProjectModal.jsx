@@ -16,29 +16,17 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
     return String(Math.floor(Math.random() * 90000) + 10000).slice(0, 5);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const code = generateProjectCode();
     
-    onCreate({
-      id: Date.now(),
+    const result = await onCreate({
       name,
       description,
       start,
       end,
-      codigo: code,
-      progress: 0,
-      status: "Active",
-      owner: "Scrum Master",
-      members: [],
-      tasksTotal: 0,
-      tasksCompleted: 0,
-      tasksLate: 0,
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800",
-      colorOverlay: "rgba(68, 110, 81, 0.7)"
     });
     
-    setGeneratedCode(code);
+    setGeneratedCode(result?.codigo || '');
     setShowCodeModal(true);
     setName('');
     setDescription('');

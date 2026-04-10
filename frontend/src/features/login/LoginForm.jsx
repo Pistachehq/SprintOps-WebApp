@@ -7,31 +7,21 @@ const LoginForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Usuarios simulados (Usernames)
-  const users = [
-    { username: "developer", password: "123", role: "developer" },
-    { username: "scrum", password: "123", role: "scrumMaster" },
-    { username: "owner", password: "123", role: "productOwner" },
-    { username: "axel", password: "123", role: "developer" },
-    { username: "sm", password: "123", role: "scrumMaster" },
-    { username: "po", password: "123", role: "productOwner" }
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const userMatched = users.find(
-      (u) => (u.username === username || u.username === username.toLowerCase()) && u.password === password
-    );
-
-    if (userMatched) {
-      // Inicia sesion dentro del manejador central global (db)
-      login(userMatched.role, userMatched.username);
+    setError('');
+    setLoading(true);
+    try {
+      await login(username, password);
       navigate('/home');
-    } else {
-      setError('Usuario o contraseña incorrectos');
+    } catch (err) {
+      setError(err.message || 'Usuario o contraseña incorrectos');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,9 +60,10 @@ const LoginForm = () => {
         <div className="pt-[10px]">
           <button
             type="submit"
-            className="w-full h-[48px] bg-[#446E51] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4"
+            disabled={loading}
+            className="w-full h-[48px] bg-[#446E51] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4 disabled:opacity-60"
           >
-            Iniciar Sesion
+            {loading ? 'Iniciando...' : 'Iniciar Sesion'}
           </button>
         </div>
 

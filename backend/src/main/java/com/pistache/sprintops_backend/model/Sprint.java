@@ -31,7 +31,7 @@ public class Sprint {
     @Column(name = "objetivo_sprint", length = 250)
     private String objetivoSprint;
 
-    @Column(name = "estado_del_sprint", length = 1)
+    @Column(name = "estado_del_sprint", length = 50)
     private String estadoDelSprint;
 
     @ManyToOne

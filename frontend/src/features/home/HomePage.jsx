@@ -6,6 +6,7 @@ import CreateProjectModal from './CreateProjectModal';
 import JoinProjectModal from '../../components/ui/JoinProjectModal';
 import { useAuth } from '../auth/hooks/useAuth';
 import { useProjects } from '../project/hooks/useProjects';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
 
@@ -15,7 +16,7 @@ const HomePage = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const navigate = useNavigate();
   const { user, checkPermission } = useAuth();
-  const { projects, isLoading, addProject } = useProjects(user?.id);
+  const { projects, isLoading, addProject, refetch } = useProjects(user?.id);
   const { searchQuery } = useOutletContext() || {};
 
   const canCreate = checkPermission('canCreateProject');
@@ -39,25 +40,22 @@ const HomePage = () => {
     }
   };
 
-  const handleCreateProject = (newProject) => {
-    const projectToCreate = {
-      ...newProject,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: "active"
-    };
-    addProject(projectToCreate);
+  const handleCreateProject = async (newProject) => {
+    return await addProject(newProject);
   };
 
-  const handleJoinProject = (code) => {
-    // Find project by code and join
-    const project = projects.find(p => p.codigo === code);
-    if (project) {
-      // Simulate joining - in real app this would update backend
-      alert(`¡Te has unido al proyecto ${project.name} exitosamente!`);
-      // Could also navigate to project or refresh projects list
-    } else {
-      alert('No se encontró proyecto con ese código');
+  const handleJoinProject = async (code) => {
+    try {
+      const project = await projectsRepository.getByCodigo(code);
+      if (project) {
+        await projectsRepository.joinProject(project.id, user.id);
+        alert(`¡Te has unido al proyecto ${project.name} exitosamente!`);
+        refetch();
+      } else {
+        alert('No se encontró proyecto con ese código');
+      }
+    } catch (err) {
+      alert(err.message || 'No se encontró proyecto con ese código');
     }
   };
 
