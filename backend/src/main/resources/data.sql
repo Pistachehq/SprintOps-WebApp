@@ -36,6 +36,8 @@ INSERT IGNORE INTO info_usuario_equipo (Equipo_id_equipo, Usuario_id_usuario, fe
 VALUES (1, 3, '2026-04-01');
 INSERT IGNORE INTO info_usuario_equipo (Equipo_id_equipo, Usuario_id_usuario, fecha_union_equipo)
 VALUES (2, 1, '2026-03-01');
+INSERT IGNORE INTO info_usuario_equipo (Equipo_id_equipo, Usuario_id_usuario, fecha_union_equipo)
+VALUES (2, 3, '2026-03-01');
 
 -- User roles in teams (roles_de_usuarios)
 INSERT IGNORE INTO roles_de_usuarios (Rol_id_rol, Equipo_id_equipo, Usuario_id_usuario)
@@ -46,6 +48,8 @@ INSERT IGNORE INTO roles_de_usuarios (Rol_id_rol, Equipo_id_equipo, Usuario_id_u
 VALUES (3, 1, 3);
 INSERT IGNORE INTO roles_de_usuarios (Rol_id_rol, Equipo_id_equipo, Usuario_id_usuario)
 VALUES (1, 2, 1);
+INSERT IGNORE INTO roles_de_usuarios (Rol_id_rol, Equipo_id_equipo, Usuario_id_usuario)
+VALUES (3, 2, 3);
 
 -- Sprints
 INSERT IGNORE INTO sprint (id_sprint, nombre_sprint, fecha_inicio_sprint, fecha_fin_sprint, objetivo_sprint, estado_del_sprint, Proyecto_id_proyecto)

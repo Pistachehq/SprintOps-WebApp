@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar } from 'lucide-react';
 import { useSprints } from '../sprint/hooks/useSprints';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -47,10 +47,14 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
-  const [localMembers, setLocalMembers] = useState([
-    { name: 'Axel De Gyves', email: 'axel@mock.com', role: 'Developer' }
-  ]);
+  const [localMembers, setLocalMembers] = useState([]);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    projectsRepository.getMembers(projectId).then(members => {
+      setLocalMembers(members);
+    }).catch(() => {});
+  }, [projectId]);
 
   // Editing sprint inline
   const [editingSprintId, setEditingSprintId] = useState(null);
