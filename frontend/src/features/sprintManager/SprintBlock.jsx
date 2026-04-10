@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SprintBlock = ({ label, vertical, isMain, onClick, icon: Icon, stats }) => {
+const SprintBlock = ({ label, vertical, isMain, onClick, icon: Icon, stats, progress }) => {
   const baseClasses = "relative bg-[#446E51] rounded-[32px] shadow-[0_20px_50px_rgba(68,110,81,0.2)] hover:shadow-[0_25px_60px_rgba(68,110,81,0.3)] hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center overflow-hidden group border border-white/10";
   
   const width = isMain ? "w-[600px]" : "w-[180px]";
@@ -40,7 +40,7 @@ const SprintBlock = ({ label, vertical, isMain, onClick, icon: Icon, stats }) =>
       {/* Decorative Line (Only for main) */}
       {isMain && (
         <div className="absolute bottom-10 left-10 right-10 h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-white/40 w-2/3 rounded-full" />
+          <div className="h-full bg-white/40 rounded-full transition-all duration-500" style={{ width: `${progress ?? 66}%` }} />
         </div>
       )}
     </div>

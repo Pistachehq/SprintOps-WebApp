@@ -4,22 +4,40 @@ import BackButton from '../../components/ui/BackButton';
 import SprintFlow from './SprintFlow';
 import StandupSidebar from './StandupSidebar';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
+import { useIssues } from '../issues/hooks/useIssues';
+import { useAuth } from '../auth/hooks/useAuth';
 
 const SprintManagerPage = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isStandupOpen, setIsStandupOpen] = useState(false);
   const [sprint, setSprint] = useState(null);
+  const [projectName, setProjectName] = useState('Cargando...');
+  const { issues } = useIssues(id);
   
   useEffect(() => {
-    sprintsRepository.getById(id).then(s => setSprint(s)).catch(() => {});
+    sprintsRepository.getById(id).then(s => {
+      setSprint(s);
+      if (s?.projectId) {
+        projectsRepository.getById(s.projectId).then(p => setProjectName(p.name)).catch(() => {});
+      }
+    }).catch(() => {});
   }, [id]);
 
   const projectId = sprint?.projectId || location.state?.project?.id || 'p1';
-  
-  // Use project name from state or fallback
-  const projectName = location.state?.project?.name || "Gestor de Proyectos";
+
+  // Calculate progress based on role
+  const role = user?.role || 'developer';
+  const isDev = role === 'developer';
+  const relevantIssues = isDev
+    ? issues.filter(i => i.assigneeIds?.includes(user?.id))
+    : issues;
+  const totalIssues = relevantIssues.length;
+  const doneIssues = relevantIssues.filter(i => i.status === 'done').length;
+  const progress = totalIssues > 0 ? Math.round((doneIssues / totalIssues) * 100) : 0;
 
   return (
     <div className="h-full bg-[#F0EFED] flex flex-col items-center py-12 px-10 relative overflow-hidden">
@@ -32,7 +50,7 @@ const SprintManagerPage = () => {
       </h1>
 
       <div className="w-full max-w-6xl flex-1 flex justify-center items-center">
-        <SprintFlow sprintId={id} />
+        <SprintFlow sprintId={id} progress={progress} />
       </div>
 
       <div className="mt-8 mb-4 text-center">

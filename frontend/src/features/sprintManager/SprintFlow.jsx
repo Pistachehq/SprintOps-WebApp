@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ListTodo, LayoutDashboard, RotateCcw, ChevronRight } from 'lucide-react';
 import SprintBlock from './SprintBlock';
 
-const SprintFlow = ({ sprintId }) => {
+const SprintFlow = ({ sprintId, progress = 0 }) => {
   const navigate = useNavigate();
+
+  const statusLabel = progress === 100 ? 'Completado' : 'En Progreso';
 
   return (
     <div className="flex items-center gap-10">
@@ -24,7 +26,8 @@ const SprintFlow = ({ sprintId }) => {
         label="Product Backlog" 
         isMain
         icon={LayoutDashboard}
-        stats="En Progreso — 65% completado"
+        stats={`${statusLabel} — ${progress}% completado`}
+        progress={progress}
         onClick={() => navigate(`/sprint/${sprintId}/issues`)}
       />
 
