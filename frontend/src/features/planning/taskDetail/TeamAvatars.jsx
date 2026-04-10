@@ -1,44 +1,48 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import AddUserModal from '../../../components/ui/AddUserModal';
+import AssignUserModal from '../AssignUserModal';
 
-const TeamAvatars = ({ members: initialMembers = [], canAdd = false }) => {
-  const [members, setMembers] = useState(initialMembers);
+const TeamAvatars = ({ assignedMembers = [], allMembers = [], assigneeIds = [], taskId, canAdd = false, onAssign }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const handleAdd = (newUser) => {
-    setMembers(prev => [...prev, newUser.name]);
+  const handleToggle = (userId) => {
+    if (!onAssign) return;
+    const newIds = assigneeIds.includes(userId)
+      ? assigneeIds.filter(id => id !== userId)
+      : [...assigneeIds, userId];
+    onAssign(taskId, newIds);
   };
 
   return (
     <>
       <div className="flex items-center gap-3 flex-wrap">
-        {members.map((member, index) => (
+        {assignedMembers.map((member) => (
           <div
-            key={index}
+            key={member.userId}
             className="w-12 h-12 rounded-full bg-[#446E51] ring-2 ring-white shadow-sm flex items-center justify-center text-white font-bold text-lg uppercase"
-            title={typeof member === 'string' ? member : member.name}
+            title={member.name}
           >
-            {typeof member === 'string' ? member.charAt(0) : member.name?.charAt(0)}
+            {member.name.charAt(0)}
           </div>
         ))}
 
-        {/* Add Member Button — only visible for scrumMaster */}
         {canAdd && (
           <button
             onClick={() => setShowModal(true)}
             className="w-12 h-12 rounded-full bg-[#446E51] ring-2 ring-white shadow-sm flex items-center justify-center text-white hover:bg-[#355640] transition-colors"
-            title="Agregar miembro"
+            title="Asignar miembro"
           >
             <Plus size={22} />
           </button>
         )}
       </div>
 
-      <AddUserModal
+      <AssignUserModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onAdd={handleAdd}
+        members={allMembers}
+        assigneeIds={assigneeIds}
+        onToggle={handleToggle}
       />
     </>
   );

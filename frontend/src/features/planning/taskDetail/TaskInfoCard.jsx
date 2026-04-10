@@ -1,8 +1,8 @@
 import React from 'react';
 import TeamAvatars from './TeamAvatars';
 
-const TaskInfoCard = ({ task, role }) => {
-  const isDev = role === 'developer';
+const TaskInfoCard = ({ task, role, members = [], onAssign }) => {
+  const assignedMembers = members.filter(m => task.assigneeIds?.includes(m.userId));
 
   return (
     <div className="bg-white rounded-[24px] p-10 shadow-sm border border-gray-100 w-full space-y-8">
@@ -25,7 +25,14 @@ const TaskInfoCard = ({ task, role }) => {
       {/* Equipo */}
       <section>
         <h3 className="text-lg font-bold text-[#446E51] mb-3">Equipo Asignado</h3>
-        <TeamAvatars members={Array.isArray(task.assignee) ? task.assignee : [task.assignee || '']} canAdd={role === 'scrumMaster'} />
+        <TeamAvatars
+          assignedMembers={assignedMembers}
+          allMembers={members}
+          assigneeIds={task.assigneeIds || []}
+          taskId={task.id}
+          canAdd={role === 'scrumMaster' || role === 'productOwner'}
+          onAssign={onAssign}
+        />
       </section>
     </div>
   );

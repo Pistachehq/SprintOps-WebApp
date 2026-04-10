@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Pencil, RotateCcw } from 'lucide-react';
 import BackButton from '../../../components/ui/BackButton';
@@ -7,18 +7,26 @@ import { useIssues } from '../../issues/hooks/useIssues';
 import { useIssueHistory } from '../../issues/hooks/useIssueHistory';
 import { useAuth } from '../../auth/hooks/useAuth';
 import CreateIssueModal from '../../issues/CreateIssueModal';
+import { projectsRepository } from '../../../data/repositories/projectsRepository';
 
 const TaskDetailPage = () => {
   const { sprintId, taskId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const role = user?.role || 'developer';
-  const { issues, updateIssue } = useIssues(sprintId);
+  const { issues, updateIssue, assignIssue } = useIssues(sprintId);
   const { history, addHistory } = useIssueHistory(taskId);
   
   const [showEditModal, setShowEditModal] = useState(false);
+  const [members, setMembers] = useState([]);
 
   const task = issues.find(t => String(t.id) === String(taskId));
+
+  useEffect(() => {
+    if (task?.projectId) {
+      projectsRepository.getMembers(task.projectId).then(m => setMembers(m || [])).catch(() => {});
+    }
+  }, [task?.projectId]);
 
   if (!task) {
     return (
@@ -91,7 +99,7 @@ const TaskDetailPage = () => {
         </p>
 
         {/* Info Card */}
-        <TaskInfoCard task={task} role={role} />
+        <TaskInfoCard task={task} role={role} members={members} onAssign={assignIssue} />
 
         {/* History Section - Always visible below */}
         <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8">
