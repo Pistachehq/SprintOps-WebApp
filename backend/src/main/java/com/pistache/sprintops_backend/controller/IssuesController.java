@@ -131,7 +131,32 @@ public class IssuesController {
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
 
-        return ResponseEntity.ok(toDTO(issuesService.save(issue)));
+        issue = issuesService.save(issue);
+
+        // Update assignees if provided
+        if (updates.containsKey("assigneeIds")) {
+            // Remove existing assignments
+            List<AsignacionIssues> existing = asignacionIssuesRepository.findByIssueIdIssue(id);
+            asignacionIssuesRepository.deleteAll(existing);
+
+            // Add new assignments
+            @SuppressWarnings("unchecked")
+            List<Integer> newAssigneeIds = (List<Integer>) updates.get("assigneeIds");
+            if (newAssigneeIds != null) {
+                for (Integer assigneeId : newAssigneeIds) {
+                    var optUser = usuarioService.findById(assigneeId);
+                    if (optUser.isPresent()) {
+                        AsignacionIssues asig = new AsignacionIssues();
+                        asig.setId(new AsignacionIssues.AsignacionIssuesId(assigneeId, issue.getIdIssue()));
+                        asig.setUsuario(optUser.get());
+                        asig.setIssue(issue);
+                        asignacionIssuesRepository.save(asig);
+                    }
+                }
+            }
+        }
+
+        return ResponseEntity.ok(toDTO(issue));
     }
 
     @DeleteMapping("/{id}")

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import TaskCard from './TaskCard';
 import CreateIssueModal from '../issues/CreateIssueModal';
 import { useIssues } from '../issues/hooks/useIssues';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
 
 const TaskList = ({ role, sprintId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,7 +11,14 @@ const TaskList = ({ role, sprintId }) => {
   const isScrum = role === 'scrumMaster';
   const isDev = role === 'developer';
 
-  const { issues, addIssue } = useIssues(sprintId);
+  const { issues, addIssue, assignIssue } = useIssues(sprintId);
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    if (issues.length > 0 && issues[0].projectId) {
+      projectsRepository.getMembers(issues[0].projectId).then(m => setMembers(m || [])).catch(() => {});
+    }
+  }, [issues]);
 
   const handleCreateIssue = (issueData) => {
     addIssue({ ...issueData, sprintId });
@@ -31,7 +39,7 @@ const TaskList = ({ role, sprintId }) => {
 
       <div className="space-y-4">
         {issues.map((task) => (
-          <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} />
+          <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} members={members} onAssign={assignIssue} />
         ))}
       </div>
 
