@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { X, ExternalLink } from 'lucide-react';
 import { useAuth } from '../auth/hooks/useAuth';
+import { sprintsRepository } from '../../data/repositories/sprintsRepository';
+import { issuesRepository } from '../../data/repositories/issuesRepository';
 
 const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [displayProject, setDisplayProject] = useState(null);
   const { user } = useAuth();
+  const [stats, setStats] = useState({ total: 0, completed: 0, blocked: 0, progress: 0 });
 
   useEffect(() => {
     if (project) {
       setDisplayProject(project);
-      // Small delay to ensure the component is in the DOM before animating
       const timer = setTimeout(() => setIsOpen(true), 10);
       return () => clearTimeout(timer);
     } else {
@@ -19,6 +21,33 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
       return () => clearTimeout(timer);
     }
   }, [project]);
+
+  useEffect(() => {
+    if (!project?.id) return;
+    const loadStats = async () => {
+      try {
+        const sprints = await sprintsRepository.getByProjectId(project.id);
+        const allIssues = (await Promise.all(
+          sprints.map(s => issuesRepository.getBySprintId(s.id))
+        )).flat();
+
+        const role = user?.role || 'developer';
+        const relevant = role === 'developer'
+          ? allIssues.filter(i => i.assigneeIds?.includes(user?.id))
+          : allIssues;
+
+        const total = relevant.length;
+        const completed = relevant.filter(i => i.status === 'done').length;
+        const blocked = relevant.filter(i => i.status === 'blocked').length;
+        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        setStats({ total, completed, blocked, progress });
+      } catch {
+        setStats({ total: 0, completed: 0, blocked: 0, progress: 0 });
+      }
+    };
+    loadStats();
+  }, [project?.id, user?.id, user?.role]);
 
   if (!displayProject && !isOpen) return null;
 
@@ -49,12 +78,12 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
           <div>
             <div className="flex justify-between items-end mb-2">
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Progreso</h3>
-              <span className="text-2xl font-black text-[#446E51]">{displayProject?.progress}%</span>
+              <span className="text-2xl font-black text-[#446E51]">{stats.progress}%</span>
             </div>
             <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-[#446E51] rounded-full transition-all duration-1000"
-                style={{ width: `${isOpen ? displayProject?.progress : 0}%` }}
+                style={{ width: `${isOpen ? stats.progress : 0}%` }}
               />
             </div>
           </div>
@@ -80,7 +109,7 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                 <span className="text-sm font-medium text-gray-600">Totales</span>
               </div>
-              <span className="font-bold text-gray-800">{displayProject?.tasksTotal}</span>
+              <span className="font-bold text-gray-800">{stats.total}</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
@@ -88,15 +117,15 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
                 <div className="w-2 h-2 rounded-full bg-green-500" />
                 <span className="text-sm font-medium text-gray-600">Completados</span>
               </div>
-              <span className="font-bold text-gray-800">{displayProject?.tasksCompleted}</span>
+              <span className="font-bold text-gray-800">{stats.completed}</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-sm font-medium text-gray-600">Retrasadas</span>
+                <span className="text-sm font-medium text-gray-600">Bloqueados</span>
               </div>
-              <span className="font-bold text-gray-800">{displayProject?.tasksLate}</span>
+              <span className="font-bold text-gray-800">{stats.blocked}</span>
             </div>
           </div>
         </div>
