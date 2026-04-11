@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/hooks/useAuth';
 import { usersRepository } from '../../data/repositories/usersRepository';
-import { Camera, Save, FolderKanban, Pencil, CalendarDays, Shield, Hash } from 'lucide-react';
+import { Camera, Save, FolderKanban, Pencil, CalendarDays, Shield, Hash, Check, X } from 'lucide-react';
 import BackButton from '../../components/ui/BackButton';
 
 const AVATAR_OPTIONS = [
@@ -67,11 +67,10 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-[#F0EFED] p-8 lg:p-16">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
+        <div className="flex items-center gap-4 mb-10">
           <BackButton />
+          <h1 className="text-4xl font-black text-gray-800">Mi Perfil</h1>
         </div>
-
-        <h1 className="text-4xl font-black text-gray-800 mb-10">Mi Perfil</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Left Column — Profile Card */}
@@ -97,23 +96,39 @@ const ProfilePage = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     {editing ? (
-                      <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => e.key === 'Enter' && setEditing(false)}
-                        className="text-2xl font-black text-gray-800 bg-transparent border-b-2 border-[#446E51] outline-none w-full"
-                      />
+                      <>
+                        <input
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          autoFocus
+                          onKeyDown={(e) => e.key === 'Enter' && setEditing(false)}
+                          className="text-2xl font-black text-gray-800 bg-transparent border-b-2 border-[#446E51] outline-none flex-1"
+                        />
+                        <button
+                          onClick={() => setEditing(false)}
+                          className="w-8 h-8 rounded-full bg-[#446E51]/10 text-[#446E51] flex items-center justify-center hover:bg-[#446E51]/20 transition-colors"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={() => { setUsername(user?.name || ''); setEditing(false); }}
+                          className="w-8 h-8 rounded-full bg-red-50 text-oracle-red flex items-center justify-center hover:bg-red-100 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </>
                     ) : (
-                      <h2 className="text-2xl font-black text-gray-800">{username}</h2>
+                      <>
+                        <h2 className="text-2xl font-black text-gray-800">{username}</h2>
+                        <button
+                          onClick={() => setEditing(true)}
+                          className="text-gray-400 hover:text-[#446E51] transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      </>
                     )}
-                    <button
-                      onClick={() => setEditing(!editing)}
-                      className="text-gray-400 hover:text-[#446E51] transition-colors"
-                    >
-                      <Pencil size={16} />
-                    </button>
                   </div>
                   <p className="text-sm text-gray-400 font-medium">{user?.email}</p>
                 </div>

@@ -91,6 +91,7 @@ public class ProyectoController {
             dto.setName(m.getUsuario().getNombreUsuario());
             dto.setEmail(m.getUsuario().getEmailUsuario());
             dto.setRole(mapRoleName(roleMap.getOrDefault(m.getUsuario().getIdUsuario(), "Developer")));
+            dto.setAvatarUrl(m.getUsuario().getAvatarUrl());
             return dto;
         }).collect(Collectors.toList());
     }

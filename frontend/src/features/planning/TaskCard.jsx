@@ -49,16 +49,31 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign }) => {
         
         <div className="flex justify-between items-center mt-auto">
           <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {assignedMembers.map((member) => (
-                <div 
-                  key={member.userId} 
-                  className="w-10 h-10 rounded-full bg-[#446E51] border-2 border-white flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm"
-                  title={member.name}
-                >
-                  {member.name.charAt(0)}
-                </div>
+            <div className="flex -space-x-3">
+              {assignedMembers.slice(0, 2).map((member) => (
+                member.avatarUrl ? (
+                  <img
+                    key={member.userId}
+                    src={member.avatarUrl}
+                    alt={member.name}
+                    title={member.name}
+                    className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm"
+                  />
+                ) : (
+                  <div 
+                    key={member.userId} 
+                    className="w-10 h-10 rounded-full bg-[#446E51] border-2 border-white flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm"
+                    title={member.name}
+                  >
+                    {member.name.charAt(0)}
+                  </div>
+                )
               ))}
+              {assignedMembers.length > 2 && (
+                <div className="w-10 h-10 rounded-full bg-[#446E51] border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                  +{assignedMembers.length - 2}
+                </div>
+              )}
             </div>
 
             {canAssign && (
