@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, Pencil, RotateCcw } from 'lucide-react';
+import { Pencil, RotateCcw, ArrowRightLeft, Trash2, ArchiveRestore, Clock } from 'lucide-react';
 import BackButton from '../../../components/ui/BackButton';
 import TaskInfoCard from './TaskInfoCard';
 import { useIssues } from '../../issues/hooks/useIssues';
@@ -38,6 +38,19 @@ const TaskDetailPage = () => {
       projectsRepository.getMembers(task.projectId).then(m => setMembers(m || [])).catch(() => {});
     }
   }, [task?.projectId]);
+
+  const getHistoryIcon = (action) => {
+    const lower = (action || '').toLowerCase();
+    if (lower.includes('editó') || lower.includes('edito'))
+      return { icon: Pencil, bg: 'bg-blue-500' };
+    if (lower.includes('estado') || lower.includes('movido'))
+      return { icon: ArrowRightLeft, bg: 'bg-amber-500' };
+    if (lower.includes('papelera') && lower.includes('restaurado'))
+      return { icon: ArchiveRestore, bg: 'bg-[#446E51]' };
+    if (lower.includes('papelera') || lower.includes('eliminado'))
+      return { icon: Trash2, bg: 'bg-red-500' };
+    return { icon: Clock, bg: 'bg-gray-500' };
+  };
 
   if (!task) {
     return (
@@ -121,10 +134,12 @@ const TaskDetailPage = () => {
           </h3>
           {history.length > 0 ? (
             <div className="space-y-4">
-              {history.map((record, i) => (
+              {history.map((record, i) => {
+                const { icon: Icon, bg } = getHistoryIcon(record.action);
+                return (
                 <div key={i} className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#446E51] text-white shrink-0 shadow">
-                    <Clock size={16} />
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white shrink-0 shadow ${bg}`}>
+                    <Icon size={16} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
@@ -134,7 +149,8 @@ const TaskDetailPage = () => {
                     <p className="text-sm text-slate-500">{record.changes}</p>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-slate-400 italic text-center py-6 font-medium">No hay modificaciones recientes en esta tarea.</p>
