@@ -117,6 +117,11 @@ public class ProyectoController {
         proyecto.setEstadoDelProyecto("A");
         proyecto.setEquipo(savedEquipo);
 
+        // Set creator
+        if (request.getOwnerId() != null) {
+            usuarioService.findById(request.getOwnerId()).ifPresent(proyecto::setCreador);
+        }
+
         proyecto = proyectoService.save(proyecto);
 
         // Add owner to equipo

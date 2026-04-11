@@ -69,8 +69,8 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
 
   const loadRoles = async () => {
     try {
-      const allRoles = await rolesRepository.getAll();
-      setRoles(allRoles);
+      const projectRoles = await rolesRepository.getByProject(projectId);
+      setRoles(projectRoles);
     } catch (err) {
       console.error('Error loading roles:', err);
     }
@@ -566,6 +566,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
           refreshPermissions();
         }}
         editRole={editingRole}
+        projectId={projectId}
       />
     </div>
   );

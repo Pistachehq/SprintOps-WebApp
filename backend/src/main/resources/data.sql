@@ -22,10 +22,10 @@ INSERT IGNORE INTO equipo (id_equipo, nombre_equipo, descripcion, fecha_creacion
 VALUES (2, 'Equipo Legacy Migration', 'Equipo del proyecto Legacy System Migration', '2026-03-01');
 
 -- Projects
-INSERT IGNORE INTO proyecto (id_proyecto, nombre_proyecto, codigo_proyecto, descripcion_proyecto, fecha_inicio_proyecto, fecha_fin_proyecto, estado_del_proyecto, Equipo_id_equipo)
-VALUES (1, 'Oracle ChatBot', '12345', 'ChatBot y web app SprintOps', '2026-04-01', '2026-04-30', 'active', 1);
-INSERT IGNORE INTO proyecto (id_proyecto, nombre_proyecto, codigo_proyecto, descripcion_proyecto, fecha_inicio_proyecto, fecha_fin_proyecto, estado_del_proyecto, Equipo_id_equipo)
-VALUES (2, 'Legacy System Migration', '54321', 'Migración de sistemas legados a la nube', '2026-03-01', '2026-05-30', 'active', 2);
+INSERT IGNORE INTO proyecto (id_proyecto, nombre_proyecto, codigo_proyecto, descripcion_proyecto, fecha_inicio_proyecto, fecha_fin_proyecto, estado_del_proyecto, Equipo_id_equipo, creador_id_usuario)
+VALUES (1, 'Oracle ChatBot', '12345', 'ChatBot y web app SprintOps', '2026-04-01', '2026-04-30', 'active', 1, 3);
+INSERT IGNORE INTO proyecto (id_proyecto, nombre_proyecto, codigo_proyecto, descripcion_proyecto, fecha_inicio_proyecto, fecha_fin_proyecto, estado_del_proyecto, Equipo_id_equipo, creador_id_usuario)
+VALUES (2, 'Legacy System Migration', '54321', 'Migración de sistemas legados a la nube', '2026-03-01', '2026-05-30', 'active', 2, 3);
 
 -- User-Team memberships (info_usuario_equipo)
 INSERT IGNORE INTO info_usuario_equipo (Equipo_id_equipo, Usuario_id_usuario, fecha_union_equipo)

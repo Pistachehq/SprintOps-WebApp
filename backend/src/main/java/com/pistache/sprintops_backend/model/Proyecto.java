@@ -41,6 +41,10 @@ public class Proyecto {
     @JoinColumn(name = "Equipo_id_equipo")
     private Equipo equipo;
 
+    @ManyToOne
+    @JoinColumn(name = "creador_id_usuario")
+    private Usuario creador;
+
     @OneToOne(mappedBy = "proyecto")
     private Metodologia metodologia;
 

@@ -24,7 +24,7 @@ const PERMISSION_LABELS = {
   canEditProjectDates: { label: 'Modificar fechas del proyecto' },
 };
 
-const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null }) => {
+const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, projectId = null }) => {
   const [roleName, setRoleName] = useState('');
   const [availablePermisos, setAvailablePermisos] = useState([]);
   const [selectedPermisoIds, setSelectedPermisoIds] = useState(new Set());
@@ -94,7 +94,7 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null }) =>
         await rolesRepository.update(editRole.idRol, { nombreRol: roleName.trim() });
         await rolesRepository.setPermisos(editRole.idRol, permisoIds);
       } else {
-        await rolesRepository.createWithPermisos(roleName.trim(), permisoIds);
+        await rolesRepository.createWithPermisos(roleName.trim(), permisoIds, projectId);
       }
       onRoleCreated?.();
       onClose();

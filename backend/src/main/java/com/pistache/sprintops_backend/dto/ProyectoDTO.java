@@ -14,6 +14,8 @@ public class ProyectoDTO {
     private LocalDate start;
     private LocalDate end;
     private Integer equipoId;
+    private Integer creadorId;
+    private String creadorName;
 
     public static ProyectoDTO fromEntity(Proyecto p) {
         ProyectoDTO dto = new ProyectoDTO();
@@ -26,6 +28,10 @@ public class ProyectoDTO {
         dto.setEnd(p.getFechaFinProyecto());
         if (p.getEquipo() != null) {
             dto.setEquipoId(p.getEquipo().getIdEquipo());
+        }
+        if (p.getCreador() != null) {
+            dto.setCreadorId(p.getCreador().getIdUsuario());
+            dto.setCreadorName(p.getCreador().getNombreUsuario());
         }
         return dto;
     }

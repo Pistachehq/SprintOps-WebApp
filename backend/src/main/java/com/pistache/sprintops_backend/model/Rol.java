@@ -23,6 +23,15 @@ public class Rol {
     private String nombreRol;
 
     @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "proyecto_id_proyecto")
+    private Proyecto proyecto;
+
+    public Integer getProyectoId() {
+        return proyecto != null ? proyecto.getIdProyecto() : null;
+    }
+
+    @JsonIgnore
     @OneToMany(mappedBy = "rol")
     private Set<TablaPermisos> tablaPermisos;
 

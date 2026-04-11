@@ -17,9 +17,11 @@ const SprintsPage = () => {
   const [showConfig, setShowConfig] = useState(false);
   const [addedUsers, setAddedUsers] = useState([]);
 
+  const { checkPermission } = useAuth();
   const { sprints, isLoading: isLoadingSprints } = useSprints(projectId);
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
+  const canManageProject = checkPermission('canManageSprints');
 
   // Find current project info
   const project = projects.find(p => String(p.id) === String(projectId)) || { name: 'Cargando Proyecto...' };

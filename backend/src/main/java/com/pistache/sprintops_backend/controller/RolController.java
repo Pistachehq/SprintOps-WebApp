@@ -6,6 +6,8 @@ import com.pistache.sprintops_backend.model.TablaPermisos;
 import com.pistache.sprintops_backend.model.TablaPermisos.TablaPermisosId;
 import com.pistache.sprintops_backend.service.PermisoService;
 import com.pistache.sprintops_backend.service.RolService;
+import com.pistache.sprintops_backend.service.ProyectoService;
+import com.pistache.sprintops_backend.repository.RolRepository;
 import com.pistache.sprintops_backend.repository.TablaPermisosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +30,24 @@ public class RolController {
     @Autowired
     private TablaPermisosRepository tablaPermisosRepository;
 
+    @Autowired
+    private ProyectoService proyectoService;
+
+    @Autowired
+    private RolRepository rolRepository;
+
     @GetMapping
     public List<Rol> getAll() {
         return rolService.findAll();
+    }
+
+    @GetMapping("/proyecto/{proyectoId}")
+    public List<Rol> getByProject(@PathVariable Integer proyectoId) {
+        // Return global roles (proyecto=null) + roles scoped to this project
+        List<Rol> globalRoles = rolRepository.findByProyectoIsNull();
+        List<Rol> projectRoles = rolRepository.findByProyecto_IdProyecto(proyectoId);
+        globalRoles.addAll(projectRoles);
+        return globalRoles;
     }
 
     @GetMapping("/{id}")
@@ -108,9 +125,13 @@ public class RolController {
         String nombreRol = (String) body.get("nombreRol");
         @SuppressWarnings("unchecked")
         List<Integer> permisoIds = (List<Integer>) body.get("permisoIds");
+        Integer proyectoId = body.get("proyectoId") != null ? ((Number) body.get("proyectoId")).intValue() : null;
 
         Rol rol = new Rol();
         rol.setNombreRol(nombreRol);
+        if (proyectoId != null) {
+            proyectoService.findById(proyectoId).ifPresent(rol::setProyecto);
+        }
         Rol savedRol = rolService.save(rol);
 
         if (permisoIds != null) {
