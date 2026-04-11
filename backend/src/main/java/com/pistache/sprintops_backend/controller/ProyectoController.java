@@ -31,6 +31,8 @@ public class ProyectoController {
     private InfoUsuarioEquipoRepository infoUsuarioEquipoRepository;
     @Autowired
     private RolesDeUsuariosRepository rolesDeUsuariosRepository;
+    @Autowired
+    private RolRepository rolRepository;
 
     @GetMapping
     public List<ProyectoDTO> getAll() {
@@ -100,7 +102,7 @@ public class ProyectoController {
         equipo.setNombreEquipo("Equipo " + request.getName());
         equipo.setDescripcion("Equipo del proyecto " + request.getName());
         equipo.setFechaCreacionEquipo(LocalDate.now());
-        equipo = equipoService.save(equipo);
+        final Equipo savedEquipo = equipoService.save(equipo);
 
         // Generate 5-digit code
         String codigo = String.valueOf(new Random().nextInt(90000) + 10000);
@@ -112,7 +114,7 @@ public class ProyectoController {
         proyecto.setFechaInicioProyecto(request.getStart());
         proyecto.setFechaFinProyecto(request.getEnd());
         proyecto.setEstadoDelProyecto("A");
-        proyecto.setEquipo(equipo);
+        proyecto.setEquipo(savedEquipo);
 
         proyecto = proyectoService.save(proyecto);
 
@@ -121,11 +123,22 @@ public class ProyectoController {
             var owner = usuarioService.findById(request.getOwnerId());
             if (owner.isPresent()) {
                 InfoUsuarioEquipo info = new InfoUsuarioEquipo();
-                info.setId(new InfoUsuarioEquipo.InfoUsuarioEquipoId(equipo.getIdEquipo(), owner.get().getIdUsuario()));
-                info.setEquipo(equipo);
+                info.setId(new InfoUsuarioEquipo.InfoUsuarioEquipoId(savedEquipo.getIdEquipo(), owner.get().getIdUsuario()));
+                info.setEquipo(savedEquipo);
                 info.setUsuario(owner.get());
                 info.setFechaUnionEquipo(LocalDate.now());
                 infoUsuarioEquipoRepository.save(info);
+
+                // Assign Product Owner role to the creator
+                rolRepository.findByNombreRol("Product Owner").ifPresent(poRol -> {
+                    RolesDeUsuarios roleEntry = new RolesDeUsuarios();
+                    roleEntry.setId(new RolesDeUsuarios.RolesDeUsuariosId(
+                        poRol.getIdRol(), savedEquipo.getIdEquipo(), owner.get().getIdUsuario()));
+                    roleEntry.setRol(poRol);
+                    roleEntry.setEquipo(savedEquipo);
+                    roleEntry.setUsuario(owner.get());
+                    rolesDeUsuariosRepository.save(roleEntry);
+                });
             }
         }
 

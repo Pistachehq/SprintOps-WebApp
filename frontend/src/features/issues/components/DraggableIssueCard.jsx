@@ -21,7 +21,7 @@ export const IssueCardContent = ({ issue }) => {
         <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${getPriorityColor(issue.priority)}`}>
           {issue.priority || 'Normal'}
         </span>
-        <span className="text-[10px] font-bold text-gray-400">#{String(issue.id).replace('i', '')}</span>
+        <span className="text-[10px] font-bold text-gray-400">#{issue.displayIndex || issue.id}</span>
       </div>
       <h4 className="text-sm font-bold text-gray-800 mb-4 line-clamp-2">{issue.title}</h4>
       <div className="flex justify-end items-center">

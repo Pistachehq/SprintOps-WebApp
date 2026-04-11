@@ -8,7 +8,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign }) => {
   const { id, title, priority, storyPoints, description, assigneeIds = [] } = task;
   const canAssign = role === 'scrumMaster' || role === 'productOwner' || role === 'developer';
   
-  const formattedId = String(id).replace('i', '');
+  const formattedId = task.displayIndex || id;
   const points = storyPoints || task.points || 0;
 
   const assignedMembers = members.filter(m => assigneeIds.includes(m.userId));

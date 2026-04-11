@@ -80,7 +80,7 @@ const TaskDetailPage = () => {
           <div className="flex items-center gap-6">
             <BackButton />
             <div>
-              <p className="text-xs font-bold text-[#446E51] uppercase tracking-widest mb-1">Sprint {sprintId} · Tarea #{task.id}</p>
+              <p className="text-xs font-bold text-[#446E51] uppercase tracking-widest mb-1">Sprint {sprintId} · Tarea #{task.displayIndex || task.id}</p>
               <h1 className="text-4xl lg:text-5xl font-black text-slate-900">
                 {task.title}
               </h1>

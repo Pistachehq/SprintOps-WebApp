@@ -46,7 +46,7 @@ const SprintManagerPage = () => {
       </div>
 
       <h1 className="text-[52px] font-black text-gray-800 mb-20 tracking-tight">
-        Product BackLog (Issues)
+        {sprint?.name || 'Cargando...'}
       </h1>
 
       <div className="w-full max-w-6xl flex-1 flex justify-center items-center">

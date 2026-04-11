@@ -16,7 +16,7 @@ export const useIssues = (sprintId, projectId) => {
       } else {
         data = await issuesRepository.getAll();
       }
-      setIssues(data || []);
+      setIssues((data || []).map((issue, idx) => ({ ...issue, displayIndex: idx + 1 })));
     } catch (err) {
       console.error('Error fetching issues:', err);
       setIssues([]);
