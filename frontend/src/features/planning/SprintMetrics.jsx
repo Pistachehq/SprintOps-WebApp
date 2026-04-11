@@ -12,7 +12,7 @@ const SprintMetrics = ({ role, sprintId }) => {
     <div className="space-y-6">
       {canViewMetrics && (
         <>
-          <CapacityCard />
+          <CapacityCard sprintId={sprintId} />
           <PredictionCard />
         </>
       )}
