@@ -10,6 +10,7 @@ import com.pistache.sprintops_backend.service.UsuarioService;
 import com.pistache.sprintops_backend.repository.AsignacionIssuesRepository;
 import com.pistache.sprintops_backend.repository.DescIssueRepository;
 import com.pistache.sprintops_backend.repository.IssuesRepository;
+import com.pistache.sprintops_backend.repository.LogsIssuesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,8 @@ public class IssuesController {
     private DescIssueRepository descIssueRepository;
     @Autowired
     private IssuesRepository issuesRepository;
+    @Autowired
+    private LogsIssuesRepository logsIssuesRepository;
 
     @GetMapping
     public List<IssueDTO> getAll() {
@@ -168,6 +171,9 @@ public class IssuesController {
         if (!issuesService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        asignacionIssuesRepository.deleteAll(asignacionIssuesRepository.findByIssueIdIssue(id));
+        descIssueRepository.deleteAll(descIssueRepository.findByIssueIdIssue(id));
+        logsIssuesRepository.deleteAll(logsIssuesRepository.findByIssueIdIssue(id));
         issuesService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
