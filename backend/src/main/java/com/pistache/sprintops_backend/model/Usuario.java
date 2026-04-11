@@ -34,6 +34,9 @@ public class Usuario {
     @Column(name = "activo_usuario", length = 1)
     private String activoUsuario;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @OneToMany(mappedBy = "usuario")
     private Set<RolesDeUsuarios> rolesDeUsuarios;
 

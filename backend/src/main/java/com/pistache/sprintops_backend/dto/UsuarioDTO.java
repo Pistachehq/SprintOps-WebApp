@@ -13,6 +13,7 @@ public class UsuarioDTO {
     private String role;
     private boolean active;
     private LocalDate fechaRegistro;
+    private String avatarUrl;
 
     public static UsuarioDTO fromEntity(Usuario u, String role) {
         UsuarioDTO dto = new UsuarioDTO();
@@ -23,6 +24,7 @@ public class UsuarioDTO {
         dto.setRole(role != null ? role : "developer");
         dto.setActive("1".equals(u.getActivoUsuario()));
         dto.setFechaRegistro(u.getFechaRegistroUsuario());
+        dto.setAvatarUrl(u.getAvatarUrl());
         return dto;
     }
 }

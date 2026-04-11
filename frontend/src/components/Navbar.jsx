@@ -37,7 +37,7 @@ const Navbar = ({ onSearch }) => {
               <p className="text-sm font-bold text-white">{user?.name || 'Usuario'}</p>
               <p className="text-[10px] text-gray-400 uppercase tracking-widest">{user?.role || 'Guest'}</p>
             </div>
-            <Avatar name={user?.name} className="border-2 border-white/20" />
+            <Avatar name={user?.name} avatarUrl={user?.avatarUrl} className="border-2 border-white/20" />
           </button>
 
           {/* User Menu Dropdown */}
@@ -45,8 +45,10 @@ const Navbar = ({ onSearch }) => {
             <div className="p-4 border-b border-gray-50 bg-gray-50/50">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Ajustes</p>
             </div>
-            <button className="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
-              Mi Cuenta
+            <button 
+              onClick={() => navigate('/profile')}
+              className="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
+              Perfil
             </button>
             <button 
               onClick={handleLogout}

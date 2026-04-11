@@ -1,10 +1,14 @@
 package com.pistache.sprintops_backend.controller;
 
 import com.pistache.sprintops_backend.dto.UsuarioDTO;
+import com.pistache.sprintops_backend.dto.ProyectoDTO;
 import com.pistache.sprintops_backend.model.Usuario;
 import com.pistache.sprintops_backend.model.RolesDeUsuarios;
+import com.pistache.sprintops_backend.model.Proyecto;
 import com.pistache.sprintops_backend.service.UsuarioService;
+import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.repository.RolesDeUsuariosRepository;
+import com.pistache.sprintops_backend.repository.InfoUsuarioEquipoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +25,10 @@ public class UsuarioController {
     private UsuarioService usuarioService;
     @Autowired
     private RolesDeUsuariosRepository rolesDeUsuariosRepository;
+    @Autowired
+    private InfoUsuarioEquipoRepository infoUsuarioEquipoRepository;
+    @Autowired
+    private ProyectoService proyectoService;
 
     @GetMapping
     public List<UsuarioDTO> getAll() {
@@ -42,12 +50,16 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(@PathVariable Integer id, @RequestBody Usuario usuario) {
-        if (!usuarioService.existsById(id)) {
+    public ResponseEntity<UsuarioDTO> update(@PathVariable Integer id, @RequestBody java.util.Map<String, Object> body) {
+        var existing = usuarioService.findById(id);
+        if (existing.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        usuario.setIdUsuario(id);
-        return ResponseEntity.ok(usuarioService.save(usuario));
+        Usuario usuario = existing.get();
+        if (body.containsKey("name")) usuario.setNombreUsuario((String) body.get("name"));
+        if (body.containsKey("avatarUrl")) usuario.setAvatarUrl((String) body.get("avatarUrl"));
+        UsuarioDTO dto = UsuarioDTO.fromEntity(usuarioService.save(usuario), getRoleForUser(id));
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
@@ -57,6 +69,33 @@ public class UsuarioController {
         }
         usuarioService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/proyectos")
+    public ResponseEntity<List<java.util.Map<String, Object>>> getUserProjects(@PathVariable Integer id) {
+        var memberships = infoUsuarioEquipoRepository.findByUsuarioIdUsuario(id);
+        List<java.util.Map<String, Object>> result = memberships.stream()
+            .flatMap(m -> {
+                Integer equipoId = m.getEquipo().getIdEquipo();
+                // Get user's role in this team
+                List<RolesDeUsuarios> teamRoles = rolesDeUsuariosRepository.findByEquipoIdEquipo(equipoId);
+                String userRole = teamRoles.stream()
+                    .filter(r -> r.getUsuario().getIdUsuario().equals(id))
+                    .map(r -> r.getRol().getNombreRol())
+                    .findFirst().orElse("Developer");
+
+                return proyectoService.findByEquipo(m.getEquipo()).stream()
+                    .map(p -> {
+                        java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+                        map.put("id", p.getIdProyecto());
+                        map.put("name", p.getNombreProyecto());
+                        map.put("description", p.getDescripcionProyecto());
+                        map.put("role", userRole);
+                        return map;
+                    });
+            })
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 
     private String getRoleForUser(Integer userId) {

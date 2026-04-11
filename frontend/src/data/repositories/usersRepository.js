@@ -9,4 +9,5 @@ export const usersRepository = {
   },
   create: (data) => apiClient.post('/usuarios', data),
   update: (id, data) => apiClient.put(`/usuarios/${id}`, data),
+  getUserProjects: (id) => apiClient.get(`/usuarios/${id}/proyectos`),
 };
