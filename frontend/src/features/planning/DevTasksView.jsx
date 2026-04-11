@@ -38,7 +38,7 @@ const DevTasksView = ({ sprintId, issuesData }) => {
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(4 * 7rem)' }}>
           {myTasks.map(task => (
             <div
               key={task.id}
