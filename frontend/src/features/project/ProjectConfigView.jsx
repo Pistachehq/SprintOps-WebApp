@@ -42,7 +42,7 @@ const formatDateDisplay = (dateString) => {
 
 const ProjectConfigView = ({ projectId, project, onClose }) => {
   const { sprints, addSprint, updateSprint } = useSprints(projectId);
-  const { checkPermission } = useAuth();
+  const { user, checkPermission, refreshPermissions } = useAuth();
   
   const [sprintName, setSprintName] = useState('');
   const [sprintGoal, setSprintGoal] = useState('');
@@ -116,6 +116,8 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const [newProjectEndDate, setNewProjectEndDate] = useState(formatDateForInput(project?.end || ''));
   
   const canCreateSprint = checkPermission('canCreateSprint');
+  const canManageMembers = checkPermission('canManageMembers');
+  const canEditProjectDates = checkPermission('canEditProjectDates');
 
   const handleAddSprint = (e) => {
     e.preventDefault();
@@ -159,10 +161,20 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     setEditMemberRole(localMembers[idx].role);
   };
 
-  const saveEditMember = () => {
-    const updated = [...localMembers];
-    updated[editingMemberIdx] = { ...updated[editingMemberIdx], role: editMemberRole };
-    setLocalMembers(updated);
+  const saveEditMember = async () => {
+    const member = localMembers[editingMemberIdx];
+    try {
+      await projectsRepository.updateMemberRole(projectId, member.userId, editMemberRole);
+      const updated = [...localMembers];
+      updated[editingMemberIdx] = { ...updated[editingMemberIdx], role: editMemberRole };
+      setLocalMembers(updated);
+      // If editing the current user's role, update auth with the new role
+      if (member.userId === user?.id) {
+        refreshPermissions(editMemberRole);
+      }
+    } catch (err) {
+      console.error('Error updating member role:', err);
+    }
     setEditingMemberIdx(null);
   };
 
@@ -281,12 +293,14 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                         {formatDateDisplay(project?.end)}
                       </p>
                     </div>
-                    <button 
-                      onClick={handleOpenEditProjectEndDate}
-                      className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm flex items-center gap-1.5 hover:bg-blue-100 transition-colors whitespace-nowrap"
-                    >
-                      <Pencil size={14} /> Modificar
-                    </button>
+                    {canEditProjectDates && (
+                      <button 
+                        onClick={handleOpenEditProjectEndDate}
+                        className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm flex items-center gap-1.5 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                      >
+                        <Pencil size={14} /> Modificar
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -294,7 +308,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Sprints Config */}
+            {/* Sprints Section - always visible, actions gated */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-h-[600px] overflow-y-auto">
               <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
                 <LayoutList className="text-[#446E51]" /> Gestionar Sprints
@@ -338,12 +352,16 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                       <span className="px-2 py-1 text-[10px] font-black uppercase text-white bg-[#446E51] rounded">
                         {getStatusDisplay(s.status)}
                       </span>
-                      <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={() => handleDeleteSprint(s.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={14} />
-                      </button>
+                      {canCreateSprint && (
+                        <>
+                          <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
+                            <Pencil size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteSprint(s.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -382,7 +400,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
               )}
             </div>
 
-            {/* Members Config */}
+            {/* Members Section - always visible, actions gated */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-h-[600px] overflow-y-auto">
           <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
             <Users className="text-[#446E51]" /> Roles de Equipo
@@ -423,12 +441,16 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                       <span className="px-2 py-1 text-[10px] font-black uppercase text-[#446E51] bg-[#446E51]/10 rounded">
                         {m.role}
                       </span>
-                      <button onClick={() => startEditMember(idx)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={() => handleDeleteMember(idx)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={14} />
-                      </button>
+                      {canManageMembers && (
+                        <>
+                          <button onClick={() => startEditMember(idx)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
+                            <Pencil size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteMember(idx)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -438,7 +460,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
             </div>
           </div>
 
-          {/* Roles Management Section */}
+          {/* Roles Management Section - always visible, actions gated */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mt-10">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -447,12 +469,14 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                 </h3>
                 <p className="text-sm text-slate-500 mt-1">Crea roles personalizados con permisos específicos para tu equipo.</p>
               </div>
-              <button
-                onClick={() => { setEditingRole(null); setShowCreateRoleModal(true); }}
-                className="px-4 py-2.5 bg-[#446E51] text-white font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity text-sm"
-              >
-                <Plus size={16} /> Nuevo Rol
-              </button>
+              {canManageMembers && (
+                <button
+                  onClick={() => { setEditingRole(null); setShowCreateRoleModal(true); }}
+                  className="px-4 py-2.5 bg-[#446E51] text-white font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity text-sm"
+                >
+                  <Plus size={16} /> Nuevo Rol
+                </button>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -476,21 +500,25 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                       >
                         <Eye size={14} />
                       </button>
-                      <button
-                        onClick={() => { setEditingRole(role); setShowCreateRoleModal(true); }}
-                        className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors"
-                        title="Editar rol"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      {role.idRol > 3 && (
-                        <button
-                          onClick={() => handleDeleteRole(role.idRol)}
-                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar rol"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      {canManageMembers && (
+                        <>
+                          <button
+                            onClick={() => { setEditingRole(role); setShowCreateRoleModal(true); }}
+                            className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors"
+                            title="Editar rol"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          {role.idRol > 3 && (
+                            <button
+                              onClick={() => handleDeleteRole(role.idRol)}
+                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Eliminar rol"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -534,6 +562,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
           loadRoles();
           setRolePermisos({});
           setExpandedRoleId(null);
+          refreshPermissions();
         }}
         editRole={editingRole}
       />

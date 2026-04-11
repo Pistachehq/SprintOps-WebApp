@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AssignUserModal from './AssignUserModal';
+import { useAuth } from '../auth/hooks/useAuth';
 
 const TaskCard = ({ task, role, sprintId, members = [], onAssign }) => {
   const navigate = useNavigate();
+  const { checkPermission } = useAuth();
   const [showAssignModal, setShowAssignModal] = useState(false);
   const { id, title, priority, storyPoints, description, assigneeIds = [] } = task;
-  const canAssign = role === 'scrumMaster' || role === 'productOwner' || role === 'developer';
+  const canAssign = checkPermission('canManageMembers');
   
   const formattedId = task.displayIndex || id;
   const points = storyPoints || task.points || 0;

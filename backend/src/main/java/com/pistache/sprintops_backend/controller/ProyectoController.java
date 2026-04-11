@@ -90,7 +90,7 @@ public class ProyectoController {
             dto.setUserId(m.getUsuario().getIdUsuario());
             dto.setName(m.getUsuario().getNombreUsuario());
             dto.setEmail(m.getUsuario().getEmailUsuario());
-            dto.setRole(mapRoleName(roleMap.getOrDefault(m.getUsuario().getIdUsuario(), "Developer")));
+            dto.setRole(roleMap.getOrDefault(m.getUsuario().getIdUsuario(), "Developer"));
             dto.setAvatarUrl(m.getUsuario().getAvatarUrl());
             return dto;
         }).collect(Collectors.toList());
@@ -173,6 +173,50 @@ public class ProyectoController {
         infoUsuarioEquipoRepository.save(info);
 
         return ResponseEntity.ok(Map.of("message", "Te has unido al proyecto exitosamente"));
+    }
+
+    @PutMapping("/{id}/miembros/{userId}/rol")
+    public ResponseEntity<?> updateMemberRole(
+            @PathVariable Integer id,
+            @PathVariable Integer userId,
+            @RequestBody Map<String, String> body) {
+        String roleName = body.get("role");
+        if (roleName == null || roleName.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Role name is required"));
+        }
+
+        var proyecto = proyectoService.findById(id);
+        if (proyecto.isEmpty() || proyecto.get().getEquipo() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Integer equipoId = proyecto.get().getEquipo().getIdEquipo();
+
+        var usuario = usuarioService.findById(userId);
+        if (usuario.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var newRol = rolRepository.findByNombreRol(roleName);
+        if (newRol.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Rol no encontrado: " + roleName));
+        }
+
+        // Delete old role entry for this user in this team
+        List<RolesDeUsuarios> existing = rolesDeUsuariosRepository.findByEquipoIdEquipo(equipoId);
+        existing.stream()
+                .filter(r -> r.getUsuario().getIdUsuario().equals(userId))
+                .forEach(rolesDeUsuariosRepository::delete);
+
+        // Insert new role entry
+        RolesDeUsuarios entry = new RolesDeUsuarios();
+        entry.setId(new RolesDeUsuarios.RolesDeUsuariosId(
+                newRol.get().getIdRol(), equipoId, userId));
+        entry.setRol(newRol.get());
+        entry.setEquipo(proyecto.get().getEquipo());
+        entry.setUsuario(usuario.get());
+        rolesDeUsuariosRepository.save(entry);
+
+        return ResponseEntity.ok(Map.of("message", "Rol actualizado exitosamente"));
     }
 
     @PutMapping("/{id}")

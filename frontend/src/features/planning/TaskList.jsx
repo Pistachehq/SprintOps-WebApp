@@ -4,12 +4,12 @@ import TaskCard from './TaskCard';
 import CreateIssueModal from '../issues/CreateIssueModal';
 import { useIssues } from '../issues/hooks/useIssues';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
+import { useAuth } from '../auth/hooks/useAuth';
 
 const TaskList = ({ role, sprintId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const isOwner = role === 'productOwner';
-  const isScrum = role === 'scrumMaster';
-  const isDev = role === 'developer';
+  const { checkPermission } = useAuth();
+  const canCreateIssue = checkPermission('canCreateIssue');
 
   const { issues, addIssue, assignIssue } = useIssues(sprintId);
   const [members, setMembers] = useState([]);
@@ -28,7 +28,7 @@ const TaskList = ({ role, sprintId }) => {
     <div className="bg-white rounded-[24px] p-8 shadow-sm border border-gray-100 h-full flex flex-col">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-black text-gray-800">Backlog del Sprint</h2>
-        {isOwner && (
+        {canCreateIssue && (
           <button 
             onClick={() => setIsModalOpen(true)}
             className="w-10 h-10 bg-[#446E51] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg shadow-green-100">

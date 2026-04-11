@@ -8,5 +8,6 @@ export const projectsRepository = {
   create: (data) => apiClient.post('/proyectos', data),
   update: (id, data) => apiClient.put(`/proyectos/${id}`, data),
   getMembers: (projectId) => apiClient.get(`/proyectos/${projectId}/miembros`),
+  updateMemberRole: (projectId, userId, role) => apiClient.put(`/proyectos/${projectId}/miembros/${userId}/rol`, { role }),
   joinProject: (projectId, userId) => apiClient.post(`/proyectos/${projectId}/unirse`, { userId }),
 };

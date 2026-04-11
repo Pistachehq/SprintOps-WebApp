@@ -13,7 +13,6 @@ import EmptyState from '../../components/ui/EmptyState';
 const SprintsPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { checkPermission } = useAuth();
   
   const [showConfig, setShowConfig] = useState(false);
   const [addedUsers, setAddedUsers] = useState([]);
@@ -21,8 +20,6 @@ const SprintsPage = () => {
   const { sprints, isLoading: isLoadingSprints } = useSprints(projectId);
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
-
-  const canManageProject = checkPermission('canCreateSprint');
 
   // Find current project info
   const project = projects.find(p => String(p.id) === String(projectId)) || { name: 'Cargando Proyecto...' };
@@ -39,7 +36,6 @@ const SprintsPage = () => {
         <BackButton to="/home" />
         
         <div className="flex items-center gap-4">
-          {canManageProject && (
             <button
               onClick={() => setShowConfig(true)}
               className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center gap-2"
@@ -47,7 +43,6 @@ const SprintsPage = () => {
             >
               <Settings size={18} /> Configurar Proyecto
             </button>
-          )}
         </div>
       </div>
 

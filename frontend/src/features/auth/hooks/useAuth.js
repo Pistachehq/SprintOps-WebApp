@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { hasPermission } from '../../../domain/permissions/rolePermissions';
+import { useState, useEffect, useContext, createContext, useCallback, createElement } from 'react';
 import apiClient from '../../../data/api/apiClient';
 
 const normalizeRole = (backendRole) => {
@@ -11,9 +10,17 @@ const normalizeRole = (backendRole) => {
   return map[backendRole] || backendRole;
 };
 
-export const useAuth = () => {
+// Map from frontend normalized role name to backend role name
+const roleNameMap = {
+  'developer': 'Developer',
+  'scrumMaster': 'Scrum Master',
+  'productOwner': 'Product Owner',
+};
+
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    // Hydrate from localStorage
     const stored = localStorage.getItem("auth_user");
     if (stored) {
       try { return JSON.parse(stored); } catch { return null; }
@@ -21,25 +28,88 @@ export const useAuth = () => {
     return null;
   });
 
+  const [permissions, setPermissions] = useState(() => {
+    const stored = localStorage.getItem("auth_permissions");
+    if (stored) {
+      try { return JSON.parse(stored); } catch { return {}; }
+    }
+    return {};
+  });
+
+  // Fetch permissions from backend for the user's role
+  const loadPermissions = useCallback(async (role) => {
+    try {
+      const allRoles = await apiClient.get('/roles');
+      const backendName = roleNameMap[role] || role;
+      const matched = allRoles.find(r =>
+        r.nombreRol === backendName ||
+        r.nombreRol.toLowerCase().replace(/\s+/g, '') === role.toLowerCase().replace(/\s+/g, '')
+      );
+      if (matched) {
+        const permisos = await apiClient.get(`/roles/${matched.idRol}/permisos`);
+        const permMap = {};
+        permisos.forEach(p => { permMap[p.nombrePermiso] = true; });
+        setPermissions(permMap);
+        localStorage.setItem("auth_permissions", JSON.stringify(permMap));
+      } else {
+        setPermissions({});
+        localStorage.setItem("auth_permissions", JSON.stringify({}));
+      }
+    } catch (err) {
+      console.error('Error loading permissions:', err);
+    }
+  }, []);
+
+  // Always re-fetch permissions on mount to stay in sync with backend
+  useEffect(() => {
+    if (user?.role) {
+      loadPermissions(user.role);
+    }
+  }, [user?.role, loadPermissions]);
+
   const login = async (username, password) => {
     const userData = await apiClient.post('/auth/login', { username, password });
     userData.role = normalizeRole(userData.role);
     localStorage.setItem("auth_user", JSON.stringify(userData));
     setUser(userData);
+    await loadPermissions(userData.role);
     return userData;
   };
 
   const logout = () => {
     localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_permissions");
     setUser(null);
+    setPermissions({});
   };
 
-  const checkPermission = (action) => {
+  const checkPermission = useCallback((action) => {
     if (!user) return false;
-    return hasPermission(user.role, action);
-  };
+    return !!permissions[action];
+  }, [user, permissions]);
+
+  const refreshPermissions = useCallback((newRole) => {
+    if (newRole && user) {
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      loadPermissions(newRole);
+    } else if (user?.role) {
+      loadPermissions(user.role);
+    }
+  }, [user, loadPermissions]);
 
   const isAuthenticated = !!user;
 
-  return { user, login, logout, isAuthenticated, checkPermission };
+  const value = { user, login, logout, isAuthenticated, checkPermission, refreshPermissions };
+
+  return createElement(AuthContext.Provider, { value }, children);
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

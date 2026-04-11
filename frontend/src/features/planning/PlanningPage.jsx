@@ -16,14 +16,14 @@ const PlanningPage = () => {
   const { addIssue } = useIssues(id);
   const role = user?.role || 'developer';
 
-  const isDev = role === 'developer';
+  const canViewAllIssues = checkPermission('canViewAllIssues');
   const canCreateIssue = checkPermission('canCreateIssue');
   const { setShowCreateIssue } = useOutletContext();
 
   return (
     <div className="h-full font-sans">
 
-        {isDev ? (
+        {!canViewAllIssues ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             <div className="lg:col-span-2">
               <DevTasksView sprintId={id} />

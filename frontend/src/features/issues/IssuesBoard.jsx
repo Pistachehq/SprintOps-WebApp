@@ -24,13 +24,13 @@ const IssuesBoard = () => {
   const [activeDragIssue, setActiveDragIssue] = useState(null);
 
   const canCreateIssue = checkPermission('canCreateIssue');
-  const canMoveAnyIssue = checkPermission('canMoveAnyIssue');
+  const canViewAllIssues = checkPermission('canViewAllIssues');
 
-  // Developers only see their assigned issues; PO/SM see all
+  // Users with canViewAllIssues see all; otherwise only their assigned issues
   const role = user?.role || 'developer';
-  const visibleIssues = role === 'developer'
-    ? issues.filter(i => i.assigneeIds?.includes(user?.id))
-    : issues;
+  const visibleIssues = canViewAllIssues
+    ? issues
+    : issues.filter(i => i.assigneeIds?.includes(user?.id));
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -61,8 +61,8 @@ const IssuesBoard = () => {
     const activeIssue = visibleIssues.find(i => i.id === issueId);
     if (!activeIssue) return;
 
-    if (!canMoveAnyIssue && !activeIssue.assigneeIds?.includes(user?.id)) {
-      toast.error("No tienes permisos para mover este issue");
+    if (!activeIssue.assigneeIds?.includes(user?.id)) {
+      toast.error("Solo puedes mover tus propios issues");
       return; 
     }
 

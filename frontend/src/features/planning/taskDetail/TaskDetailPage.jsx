@@ -12,8 +12,9 @@ import { projectsRepository } from '../../../data/repositories/projectsRepositor
 const TaskDetailPage = () => {
   const { sprintId, taskId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, checkPermission } = useAuth();
   const role = user?.role || 'developer';
+  const canEditIssue = checkPermission('canEditIssue');
   const { issues, updateIssue, assignIssue } = useIssues(sprintId);
   const { history, addHistory } = useIssueHistory(taskId);
   
@@ -86,12 +87,14 @@ const TaskDetailPage = () => {
               </h1>
             </div>
           </div>
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="flex items-center gap-2 bg-white border border-gray-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-          >
-            <Pencil size={18} /> Editar Tarea
-          </button>
+          {canEditIssue && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="flex items-center gap-2 bg-white border border-gray-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+            >
+              <Pencil size={18} /> Editar Tarea
+            </button>
+          )}
         </div>
 
         <p className="text-sm text-gray-400 font-medium ml-14 mb-10">
