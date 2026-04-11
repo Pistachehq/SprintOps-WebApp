@@ -9,11 +9,11 @@ INSERT IGNORE INTO rol (id_rol, nombre_rol, sistema) VALUES (3, 'Product Owner',
 
 -- Users (password: 123)
 INSERT IGNORE INTO usuario (id_usuario, nombre_usuario, email_usuario, password_hash, fecha_registro_usuario, activo_usuario)
-VALUES (1, 'axel', 'axel@example.com', '123', '2026-04-01', '1');
+VALUES (1, 'axel', 'axel@example.com', '$2a$10$mUInZ98LeUdptvXuuAmiXupViLI2MZH7ttcbNluDsP9xcz/TwmlM.', '2026-04-01', '1');
 INSERT IGNORE INTO usuario (id_usuario, nombre_usuario, email_usuario, password_hash, fecha_registro_usuario, activo_usuario)
-VALUES (2, 'sm', 'sm@example.com', '123', '2026-04-01', '1');
+VALUES (2, 'sm', 'sm@example.com', '$2a$10$mUInZ98LeUdptvXuuAmiXupViLI2MZH7ttcbNluDsP9xcz/TwmlM.', '2026-04-01', '1');
 INSERT IGNORE INTO usuario (id_usuario, nombre_usuario, email_usuario, password_hash, fecha_registro_usuario, activo_usuario)
-VALUES (3, 'po', 'po@example.com', '123', '2026-04-01', '1');
+VALUES (3, 'po', 'po@example.com', '$2a$10$mUInZ98LeUdptvXuuAmiXupViLI2MZH7ttcbNluDsP9xcz/TwmlM.', '2026-04-01', '1');
 
 -- Equipos
 INSERT IGNORE INTO equipo (id_equipo, nombre_equipo, descripcion, fecha_creacion_equipo)

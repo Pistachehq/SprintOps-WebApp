@@ -8,6 +8,7 @@ import com.pistache.sprintops_backend.service.UsuarioService;
 import com.pistache.sprintops_backend.repository.RolesDeUsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,9 @@ public class AuthController {
     @Autowired
     private RolesDeUsuariosRepository rolesDeUsuariosRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         // Find user by username (nombre_usuario) or email
@@ -39,8 +43,7 @@ public class AuthController {
 
         Usuario user = optUser.get();
 
-        // Check password
-        if (!user.getPasswordHash().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             return ResponseEntity.status(401).body(Map.of("error", "Contraseña incorrecta"));
         }
 
