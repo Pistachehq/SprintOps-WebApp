@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
-import { useIssues } from '../issues/hooks/useIssues';
 
-const CapacityCard = ({ sprintId }) => {
+const CapacityCard = ({ sprintId, issues = [] }) => {
   const [capacity, setCapacity] = useState(null);
-  const { issues } = useIssues(sprintId);
 
   useEffect(() => {
     if (!sprintId) return;

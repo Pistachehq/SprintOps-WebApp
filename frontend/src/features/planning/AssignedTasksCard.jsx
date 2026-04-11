@@ -1,12 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
-import { useIssues } from '../issues/hooks/useIssues';
 
-const AssignedTasksCard = ({ sprintId }) => {
+const AssignedTasksCard = ({ sprintId, issues = [] }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { issues } = useIssues(sprintId);
   const roleLower = user?.role?.toLowerCase() || '';
 
   const myTasks = issues.filter(t => t.assigneeIds?.includes(user?.id));

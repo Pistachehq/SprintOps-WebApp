@@ -1,13 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
-import { useIssues } from '../issues/hooks/useIssues';
 import { ChevronRight, ClipboardList } from 'lucide-react';
 
-const DevTasksView = ({ sprintId }) => {
+const DevTasksView = ({ sprintId, issuesData }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { issues } = useIssues(sprintId);
+  const { issues } = issuesData;
 
   // Filter tasks assigned to the current dev user
   const myTasks = issues.filter(t => t.assigneeIds?.includes(user?.id));

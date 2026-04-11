@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Pencil } from 'lucide-react';
 import TaskCard from './TaskCard';
 import CreateIssueModal from '../issues/CreateIssueModal';
-import { useIssues } from '../issues/hooks/useIssues';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { useAuth } from '../auth/hooks/useAuth';
 
-const TaskList = ({ role, sprintId }) => {
+const TaskList = ({ role, sprintId, issuesData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const { checkPermission } = useAuth();
   const canCreateIssue = checkPermission('canCreateIssue');
   const canEditIssue = checkPermission('canEditIssue');
 
-  const { issues, addIssue, deleteIssue, assignIssue } = useIssues(sprintId);
+  const { issues, addIssue, deleteIssue, assignIssue } = issuesData;
   const [members, setMembers] = useState([]);
 
   useEffect(() => {

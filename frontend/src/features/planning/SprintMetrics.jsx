@@ -4,7 +4,7 @@ import PredictionCard from './PredictionCard';
 import AssignedTasksCard from './AssignedTasksCard';
 import { useAuth } from '../auth/hooks/useAuth';
 
-const SprintMetrics = ({ role, sprintId }) => {
+const SprintMetrics = ({ role, sprintId, issues }) => {
   const { checkPermission } = useAuth();
   const canViewMetrics = checkPermission('canViewMetrics');
 
@@ -12,11 +12,11 @@ const SprintMetrics = ({ role, sprintId }) => {
     <div className="space-y-6">
       {canViewMetrics && (
         <>
-          <CapacityCard sprintId={sprintId} />
+          <CapacityCard sprintId={sprintId} issues={issues} />
           <PredictionCard />
         </>
       )}
-      <AssignedTasksCard role={role} sprintId={sprintId} />
+      <AssignedTasksCard role={role} sprintId={sprintId} issues={issues} />
     </div>
   );
 };
