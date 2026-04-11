@@ -62,6 +62,7 @@ public class SprintController {
         sprint.setEstadoDelSprint(request.getStatus() != null ? request.getStatus() : "P");
         sprint.setFechaInicioSprint(request.getStartDate());
         sprint.setFechaFinSprint(request.getEndDate());
+        sprint.setCapacidadStoryPoints(request.getCapacity());
         sprint.setProyecto(optProyecto.get());
 
         return ResponseEntity.ok(SprintDTO.fromEntity(sprintService.save(sprint)));
@@ -80,6 +81,7 @@ public class SprintController {
         if (updates.containsKey("status")) sprint.setEstadoDelSprint((String) updates.get("status"));
         if (updates.containsKey("startDate")) sprint.setFechaInicioSprint(LocalDate.parse((String) updates.get("startDate")));
         if (updates.containsKey("endDate")) sprint.setFechaFinSprint(LocalDate.parse((String) updates.get("endDate")));
+        if (updates.containsKey("capacity")) sprint.setCapacidadStoryPoints(updates.get("capacity") != null ? ((Number) updates.get("capacity")).intValue() : null);
 
         return ResponseEntity.ok(SprintDTO.fromEntity(sprintService.save(sprint)));
     }

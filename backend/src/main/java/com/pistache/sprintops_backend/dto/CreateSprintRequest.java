@@ -11,4 +11,5 @@ public class CreateSprintRequest {
     private String status;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer capacity;
 }

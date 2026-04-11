@@ -13,6 +13,7 @@ public class SprintDTO {
     private String status;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer capacity;
 
     public static SprintDTO fromEntity(Sprint s) {
         SprintDTO dto = new SprintDTO();
@@ -22,6 +23,7 @@ public class SprintDTO {
         dto.setStatus(s.getEstadoDelSprint());
         dto.setStartDate(s.getFechaInicioSprint());
         dto.setEndDate(s.getFechaFinSprint());
+        dto.setCapacity(s.getCapacidadStoryPoints());
         if (s.getProyecto() != null) {
             dto.setProjectId(s.getProyecto().getIdProyecto());
         }

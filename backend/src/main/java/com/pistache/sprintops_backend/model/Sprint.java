@@ -34,6 +34,9 @@ public class Sprint {
     @Column(name = "estado_del_sprint", length = 50)
     private String estadoDelSprint;
 
+    @Column(name = "capacidad_story_points")
+    private Integer capacidadStoryPoints;
+
     @ManyToOne
     @JoinColumn(name = "Proyecto_id_proyecto")
     private Proyecto proyecto;

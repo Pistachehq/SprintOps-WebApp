@@ -48,6 +48,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const [sprintGoal, setSprintGoal] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [sprintCapacity, setSprintCapacity] = useState('');
   
   const [localMembers, setLocalMembers] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -128,12 +129,14 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
       goal: sprintGoal,
       status: 'planned',
       startDate,
-      endDate
+      endDate,
+      capacity: sprintCapacity ? parseInt(sprintCapacity) : null
     });
     setSprintName('');
     setSprintGoal('');
     setStartDate('');
     setEndDate('');
+    setSprintCapacity('');
   };
 
   const handleDeleteSprint = async (sprintId) => {
@@ -383,6 +386,10 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">Meta del Sprint</label>
                     <input value={sprintGoal} onChange={e=>setSprintGoal(e.target.value)} placeholder="ej. Completar módulo de autenticación" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Capacidad de Story Points</label>
+                    <input type="number" min="0" value={sprintCapacity} onChange={e=>setSprintCapacity(e.target.value)} placeholder="ej. 40" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
