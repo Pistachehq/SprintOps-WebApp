@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar } from 'lucide-react';
+import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye } from 'lucide-react';
 import { useSprints } from '../sprint/hooks/useSprints';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
+import { rolesRepository } from '../../data/repositories/rolesRepository';
+import CreateRoleModal from './CreateRoleModal';
 
 // Función para convertir status a display format
 const getStatusDisplay = (status) => {
@@ -50,11 +52,55 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const [localMembers, setLocalMembers] = useState([]);
   const [copied, setCopied] = useState(false);
 
+  // Roles management state
+  const [roles, setRoles] = useState([]);
+  const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
+  const [editingRole, setEditingRole] = useState(null);
+  const [expandedRoleId, setExpandedRoleId] = useState(null);
+  const [rolePermisos, setRolePermisos] = useState({});
+
   useEffect(() => {
     projectsRepository.getMembers(projectId).then(members => {
       setLocalMembers(members);
     }).catch(() => {});
+    loadRoles();
   }, [projectId]);
+
+  const loadRoles = async () => {
+    try {
+      const allRoles = await rolesRepository.getAll();
+      setRoles(allRoles);
+    } catch (err) {
+      console.error('Error loading roles:', err);
+    }
+  };
+
+  const handleDeleteRole = async (roleId) => {
+    if (confirm('¿Estás seguro de eliminar este rol?')) {
+      try {
+        await rolesRepository.delete(roleId);
+        loadRoles();
+      } catch (err) {
+        console.error('Error deleting role:', err);
+      }
+    }
+  };
+
+  const toggleRoleExpand = async (roleId) => {
+    if (expandedRoleId === roleId) {
+      setExpandedRoleId(null);
+      return;
+    }
+    setExpandedRoleId(roleId);
+    if (!rolePermisos[roleId]) {
+      try {
+        const permisos = await rolesRepository.getPermisos(roleId);
+        setRolePermisos(prev => ({ ...prev, [roleId]: permisos }));
+      } catch (err) {
+        console.error('Error loading role permisos:', err);
+      }
+    }
+  };
 
   // Editing sprint inline
   const [editingSprintId, setEditingSprintId] = useState(null);
@@ -354,10 +400,9 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                       onChange={e => setEditMemberRole(e.target.value)}
                       className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
                     >
-                      <option value="Developer">Desarrollador</option>
-                      <option value="Scrum Master">Scrum Master</option>
-                      <option value="Product Owner">Product Owner</option>
-                      <option value="Desarrollador">Desarrollador</option>
+                      {roles.map(r => (
+                        <option key={r.idRol} value={r.nombreRol}>{r.nombreRol}</option>
+                      ))}
                     </select>
                     <div className="flex gap-2">
                       <button onClick={saveEditMember} className="flex-1 h-9 bg-[#446E51] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
@@ -392,8 +437,106 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
           </div>
             </div>
           </div>
+
+          {/* Roles Management Section */}
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mt-10">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Shield className="text-[#446E51]" /> Gestionar Roles
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">Crea roles personalizados con permisos específicos para tu equipo.</p>
+              </div>
+              <button
+                onClick={() => { setEditingRole(null); setShowCreateRoleModal(true); }}
+                className="px-4 py-2.5 bg-[#446E51] text-white font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity text-sm"
+              >
+                <Plus size={16} /> Nuevo Rol
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {roles.map(role => (
+                <div key={role.idRol} className="border border-slate-100 rounded-xl overflow-hidden">
+                  <div className="p-4 bg-slate-50 flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#446E51]/10 flex items-center justify-center">
+                        <Shield size={16} className="text-[#446E51]" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-800">{role.nombreRol}</h4>
+                        <p className="text-xs text-slate-400">ID: {role.idRol}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleRoleExpand(role.idRol)}
+                        className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors"
+                        title="Ver permisos"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        onClick={() => { setEditingRole(role); setShowCreateRoleModal(true); }}
+                        className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors"
+                        title="Editar rol"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      {role.idRol > 3 && (
+                        <button
+                          onClick={() => handleDeleteRole(role.idRol)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar rol"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expanded permissions */}
+                  {expandedRoleId === role.idRol && (
+                    <div className="px-4 pb-4 pt-2 bg-white border-t border-slate-100">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Permisos asignados</p>
+                      {rolePermisos[role.idRol] && rolePermisos[role.idRol].length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {rolePermisos[role.idRol].map(p => (
+                            <span
+                              key={p.idPermiso}
+                              className="px-3 py-1.5 text-xs font-semibold bg-[#446E51]/10 text-[#446E51] rounded-lg"
+                            >
+                              {p.descripcion || p.nombrePermiso}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-400 italic">Sin permisos asignados</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {roles.length === 0 && (
+                <p className="text-sm text-slate-400 italic text-center py-4">No hay roles definidos.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Create/Edit Role Modal */}
+      <CreateRoleModal
+        isOpen={showCreateRoleModal}
+        onClose={() => { setShowCreateRoleModal(false); setEditingRole(null); }}
+        onRoleCreated={() => {
+          loadRoles();
+          setRolePermisos({});
+          setExpandedRoleId(null);
+        }}
+        editRole={editingRole}
+      />
     </div>
   );
 };

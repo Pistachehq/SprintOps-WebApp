@@ -35,7 +35,7 @@ const Navbar = ({ onSearch }) => {
           <button className="flex items-center gap-3 transition-all hover:opacity-80">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-white">{user?.name || 'Usuario'}</p>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">{user?.role || 'Guest'}</p>
+              <p className="text-[10px] text-gray-400 tracking-widest">{user?.email || ''}</p>
             </div>
             <Avatar name={user?.name} avatarUrl={user?.avatarUrl} className="border-2 border-white/20" />
           </button>

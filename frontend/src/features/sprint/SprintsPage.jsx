@@ -22,7 +22,7 @@ const SprintsPage = () => {
   const { projects, isLoading: isLoadingProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
 
-  const canManageProject = checkPermission('canCreateProject') || checkPermission('canCreateSprint');
+  const canManageProject = checkPermission('canCreateSprint');
 
   // Find current project info
   const project = projects.find(p => String(p.id) === String(projectId)) || { name: 'Cargando Proyecto...' };

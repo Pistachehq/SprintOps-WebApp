@@ -78,3 +78,34 @@ INSERT IGNORE INTO asignacion_issues (Usuario_id_usuario, Issues_id_issue)
 VALUES (1, 1);
 INSERT IGNORE INTO asignacion_issues (Usuario_id_usuario, Issues_id_issue)
 VALUES (1, 2);
+
+-- Permisos (Permissions) — project-scoped, applied per role within a project
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (1, 'canCreateSprint', 'Crear sprints');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (2, 'canCreateIssue', 'Crear issues');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (3, 'canEditIssue', 'Editar issues');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (4, 'canManageMembers', 'Gestionar miembros del equipo');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (5, 'canViewMetrics', 'Ver métricas del proyecto');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (6, 'canViewOnlyOwnIssues', 'Ver solo tus propios issues');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (7, 'canViewAllIssues', 'Ver issues de todo el equipo');
+
+-- Role-Permission assignments (tabla_permisos)
+-- Developer: canCreateIssue, canEditIssue, canViewOnlyOwnIssues
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 2);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 3);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 6);
+
+-- Scrum Master: canCreateSprint, canCreateIssue, canEditIssue, canManageMembers, canViewMetrics, canViewAllIssues
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 1);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 2);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 3);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 4);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 5);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 7);
+
+-- Product Owner: all permissions except canViewOnlyOwnIssues
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 1);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 2);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 3);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 4);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 5);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 7);

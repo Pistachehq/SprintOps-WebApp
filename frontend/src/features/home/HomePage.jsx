@@ -19,7 +19,7 @@ const HomePage = () => {
   const { projects, isLoading, addProject, refetch } = useProjects(user?.id);
   const { searchQuery } = useOutletContext() || {};
 
-  const canCreate = checkPermission('canCreateProject');
+  const canCreate = true; // All users can create projects
 
   // Filter projects based on search query
   const filteredProjects = useMemo(() => {

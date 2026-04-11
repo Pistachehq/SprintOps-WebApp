@@ -1,5 +1,6 @@
 package com.pistache.sprintops_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,9 +22,11 @@ public class Rol {
     @Column(name = "nombre_rol", length = 100)
     private String nombreRol;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "rol")
     private Set<TablaPermisos> tablaPermisos;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "rol")
     private Set<RolesDeUsuarios> rolesDeUsuarios;
 }
