@@ -31,11 +31,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        // Find user by username (nombre_usuario) or email
-        var optUser = usuarioService.findByNombreUsuario(request.getUsername());
-        if (optUser.isEmpty()) {
-            optUser = usuarioService.findByEmailUsuario(request.getUsername());
-        }
+        var optUser = usuarioService.findByEmailUsuario(request.getEmail());
 
         if (optUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("error", "Usuario no encontrado"));

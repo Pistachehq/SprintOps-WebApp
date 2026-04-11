@@ -67,8 +67,8 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user?.role, loadPermissions]);
 
-  const login = async (username, password) => {
-    const userData = await apiClient.post('/auth/login', { username, password });
+  const login = async (email, password) => {
+    const userData = await apiClient.post('/auth/login', { email, password });
     userData.role = normalizeRole(userData.role);
     localStorage.setItem("auth_user", JSON.stringify(userData));
     setUser(userData);
