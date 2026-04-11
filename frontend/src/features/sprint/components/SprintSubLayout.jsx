@@ -15,10 +15,11 @@ const SprintSubLayout = () => {
   const { checkPermission, refreshPermissionsForProject } = useAuth();
   const { issues, addIssue } = useIssues(id);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
+  const [sprintName, setSprintName] = useState('');
 
-  // Load permissions based on the user's role in this sprint's project
   useEffect(() => {
     sprintsRepository.getById(id).then(sprint => {
+      if (sprint?.name) setSprintName(sprint.name);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
       }
@@ -62,7 +63,7 @@ const SprintSubLayout = () => {
           <div className="flex items-center gap-4">
             <BackButton to={`/sprint/${id}`} />
             <h1 className="text-4xl font-black text-slate-800 tracking-tight transition-all duration-300">
-              {title === 'Kanban' ? `Sprint ${id}: ${title}` : title}
+              {title === 'Kanban' ? `${sprintName || `Sprint ${id}`}: ${title}` : title}
             </h1>
           </div>
 
