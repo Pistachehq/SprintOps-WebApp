@@ -43,11 +43,11 @@ public class RolController {
 
     @GetMapping("/proyecto/{proyectoId}")
     public List<Rol> getByProject(@PathVariable Integer proyectoId) {
-        // Return global roles (proyecto=null) + roles scoped to this project
-        List<Rol> globalRoles = rolRepository.findByProyectoIsNull();
+        // Return system/base roles + roles scoped to this project only
+        List<Rol> baseRoles = rolRepository.findBySistemaTrue();
         List<Rol> projectRoles = rolRepository.findByProyecto_IdProyecto(proyectoId);
-        globalRoles.addAll(projectRoles);
-        return globalRoles;
+        baseRoles.addAll(projectRoles);
+        return baseRoles;
     }
 
     @GetMapping("/{id}")

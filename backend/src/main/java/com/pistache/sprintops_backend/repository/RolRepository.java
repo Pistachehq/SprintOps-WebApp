@@ -11,4 +11,5 @@ public interface RolRepository extends JpaRepository<Rol, Integer> {
     Optional<Rol> findByNombreRol(String nombreRol);
     List<Rol> findByProyecto_IdProyecto(Integer proyectoId);
     List<Rol> findByProyectoIsNull();
+    List<Rol> findBySistemaTrue();
 }

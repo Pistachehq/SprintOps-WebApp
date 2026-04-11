@@ -22,6 +22,9 @@ public class Rol {
     @Column(name = "nombre_rol", length = 100)
     private String nombreRol;
 
+    @Column(name = "sistema", nullable = false)
+    private Boolean sistema = false;
+
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "proyecto_id_proyecto")

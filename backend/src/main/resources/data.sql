@@ -2,10 +2,10 @@
 -- SprintOps Seed Data
 -- ============================================
 
--- Roles
-INSERT IGNORE INTO rol (id_rol, nombre_rol) VALUES (1, 'Developer');
-INSERT IGNORE INTO rol (id_rol, nombre_rol) VALUES (2, 'Scrum Master');
-INSERT IGNORE INTO rol (id_rol, nombre_rol) VALUES (3, 'Product Owner');
+-- Roles (system = base roles available in all projects)
+INSERT IGNORE INTO rol (id_rol, nombre_rol, sistema) VALUES (1, 'Developer', true);
+INSERT IGNORE INTO rol (id_rol, nombre_rol, sistema) VALUES (2, 'Scrum Master', true);
+INSERT IGNORE INTO rol (id_rol, nombre_rol, sistema) VALUES (3, 'Product Owner', true);
 
 -- Users (password: 123)
 INSERT IGNORE INTO usuario (id_usuario, nombre_usuario, email_usuario, password_hash, fecha_registro_usuario, activo_usuario)
