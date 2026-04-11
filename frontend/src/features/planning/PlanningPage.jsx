@@ -19,7 +19,7 @@ const PlanningPage = () => {
     <div className="h-full font-sans">
 
         {!canViewAllIssues ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
             <div className="lg:col-span-2">
               <DevTasksView sprintId={id} issuesData={issuesData} />
             </div>
@@ -28,7 +28,7 @@ const PlanningPage = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
             <div className="lg:col-span-2">
               <TaskList role={role} sprintId={id} issuesData={issuesData} />
             </div>
