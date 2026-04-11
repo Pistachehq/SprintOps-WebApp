@@ -65,7 +65,8 @@ public class AuthController {
         return switch (dbRole.toLowerCase()) {
             case "product owner", "productowner" -> "productOwner";
             case "scrum master", "scrummaster" -> "scrumMaster";
-            default -> "developer";
+            case "developer" -> "developer";
+            default -> dbRole;
         };
     }
 }

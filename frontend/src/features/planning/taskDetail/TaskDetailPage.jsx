@@ -8,11 +8,12 @@ import { useIssueHistory } from '../../issues/hooks/useIssueHistory';
 import { useAuth } from '../../auth/hooks/useAuth';
 import CreateIssueModal from '../../issues/CreateIssueModal';
 import { projectsRepository } from '../../../data/repositories/projectsRepository';
+import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
 
 const TaskDetailPage = () => {
   const { sprintId, taskId } = useParams();
   const navigate = useNavigate();
-  const { user, checkPermission } = useAuth();
+  const { user, checkPermission, refreshPermissionsForProject } = useAuth();
   const role = user?.role || 'developer';
   const canEditIssue = checkPermission('canEditIssue');
   const { issues, updateIssue, assignIssue } = useIssues(sprintId);
@@ -22,6 +23,15 @@ const TaskDetailPage = () => {
   const [members, setMembers] = useState([]);
 
   const task = issues.find(t => String(t.id) === String(taskId));
+
+  // Load permissions based on the user's role in this sprint's project
+  useEffect(() => {
+    sprintsRepository.getById(sprintId).then(sprint => {
+      if (sprint?.projectId) {
+        refreshPermissionsForProject(sprint.projectId);
+      }
+    }).catch(() => {});
+  }, [sprintId]);
 
   useEffect(() => {
     if (task?.projectId) {

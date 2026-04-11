@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useParams, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
@@ -7,13 +7,23 @@ import SprintTabs from '../../../components/ui/SprintTabs';
 import CreateIssueModal from '../../issues/CreateIssueModal';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useIssues } from '../../issues/hooks/useIssues';
+import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
 
 const SprintSubLayout = () => {
   const { id } = useParams();
   const location = useLocation();
-  const { checkPermission } = useAuth();
+  const { checkPermission, refreshPermissionsForProject } = useAuth();
   const { issues, addIssue } = useIssues(id);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
+
+  // Load permissions based on the user's role in this sprint's project
+  useEffect(() => {
+    sprintsRepository.getById(id).then(sprint => {
+      if (sprint?.projectId) {
+        refreshPermissionsForProject(sprint.projectId);
+      }
+    }).catch(() => {});
+  }, [id]);
 
   const canCreateIssue = checkPermission('canCreateIssue');
 

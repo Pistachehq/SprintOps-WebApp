@@ -99,9 +99,26 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user, loadPermissions]);
 
+  // Load permissions based on the user's role in a specific project
+  const refreshPermissionsForProject = useCallback(async (projectId) => {
+    if (!user) return;
+    try {
+      const members = await apiClient.get(`/proyectos/${projectId}/miembros`);
+      const me = members.find(m => m.userId === user.id);
+      if (me && me.role) {
+        const updatedUser = { ...user, role: me.role };
+        setUser(updatedUser);
+        localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+        await loadPermissions(me.role);
+      }
+    } catch (err) {
+      console.error('Error loading project permissions:', err);
+    }
+  }, [user, loadPermissions]);
+
   const isAuthenticated = !!user;
 
-  const value = { user, login, logout, isAuthenticated, checkPermission, refreshPermissions };
+  const value = { user, login, logout, isAuthenticated, checkPermission, refreshPermissions, refreshPermissionsForProject };
 
   return createElement(AuthContext.Provider, { value }, children);
 };

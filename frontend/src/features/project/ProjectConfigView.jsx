@@ -42,7 +42,7 @@ const formatDateDisplay = (dateString) => {
 
 const ProjectConfigView = ({ projectId, project, onClose }) => {
   const { sprints, addSprint, updateSprint } = useSprints(projectId);
-  const { user, checkPermission, refreshPermissions } = useAuth();
+  const { user, checkPermission, refreshPermissions, refreshPermissionsForProject } = useAuth();
   
   const [sprintName, setSprintName] = useState('');
   const [sprintGoal, setSprintGoal] = useState('');
@@ -64,6 +64,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
       setLocalMembers(members);
     }).catch(() => {});
     loadRoles();
+    refreshPermissionsForProject(projectId);
   }, [projectId]);
 
   const loadRoles = async () => {
