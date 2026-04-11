@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import BackButton from '../../components/ui/BackButton';
 import SprintFlow from './SprintFlow';
 import StandupSidebar from './StandupSidebar';
+import TrashModal from '../planning/TrashModal';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { useIssues } from '../issues/hooks/useIssues';
@@ -14,9 +16,10 @@ const SprintManagerPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isStandupOpen, setIsStandupOpen] = useState(false);
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [sprint, setSprint] = useState(null);
   const [projectName, setProjectName] = useState('Cargando...');
-  const { issues } = useIssues(id);
+  const { issues, refetch } = useIssues(id);
   
   useEffect(() => {
     sprintsRepository.getById(id).then(s => {
@@ -45,6 +48,14 @@ const SprintManagerPage = () => {
         <BackButton to={`/project/${projectId}/sprints`} />
       </div>
 
+      <button
+        onClick={() => setIsTrashOpen(true)}
+        className="absolute top-10 right-24 flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-slate-600 font-bold text-sm hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm"
+        title="Papelera del Sprint"
+      >
+        <Trash2 size={18} /> Papelera
+      </button>
+
       <h1 className="text-[52px] font-black text-gray-800 mb-20 tracking-tight">
         {sprint?.name || 'Cargando...'}
       </h1>
@@ -71,6 +82,13 @@ const SprintManagerPage = () => {
       <StandupSidebar 
         isOpen={isStandupOpen} 
         onClose={() => setIsStandupOpen(false)} 
+      />
+
+      <TrashModal
+        isOpen={isTrashOpen}
+        onClose={() => setIsTrashOpen(false)}
+        sprintId={id}
+        onRestored={refetch}
       />
     </div>
   );

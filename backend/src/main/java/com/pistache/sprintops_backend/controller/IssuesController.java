@@ -11,11 +11,14 @@ import com.pistache.sprintops_backend.repository.AsignacionIssuesRepository;
 import com.pistache.sprintops_backend.repository.DescIssueRepository;
 import com.pistache.sprintops_backend.repository.IssuesRepository;
 import com.pistache.sprintops_backend.repository.LogsIssuesRepository;
+import com.pistache.sprintops_backend.repository.PapeleraIssueRepository;
+import com.pistache.sprintops_backend.service.LogsIssuesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,6 +43,10 @@ public class IssuesController {
     private IssuesRepository issuesRepository;
     @Autowired
     private LogsIssuesRepository logsIssuesRepository;
+    @Autowired
+    private PapeleraIssueRepository papeleraIssueRepository;
+    @Autowired
+    private LogsIssuesService logsIssuesService;
 
     @GetMapping
     public List<IssueDTO> getAll() {
@@ -168,11 +175,33 @@ public class IssuesController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!issuesService.existsById(id)) {
+        var optIssue = issuesService.findById(id);
+        if (optIssue.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        Issues issue = optIssue.get();
+
+        List<DescIssue> descs = descIssueRepository.findByIssueIdIssue(id);
+        Integer sprintId = descs.isEmpty() ? null : descs.get(0).getSprint().getIdSprint();
+
+        PapeleraIssue trashed = new PapeleraIssue();
+        trashed.setOriginalIssueId(issue.getIdIssue());
+        trashed.setSprintId(sprintId);
+        trashed.setProyectoId(issue.getProyecto() != null ? issue.getProyecto().getIdProyecto() : null);
+        trashed.setTitulo(issue.getTituloIssue());
+        trashed.setDescripcion(issue.getDescripcionIssue());
+        trashed.setProposito(issue.getPropositoIssue());
+        trashed.setEstado(issue.getEstadoIssue());
+        trashed.setPrioridad(issue.getPrioridadIssue());
+        trashed.setStoryPoints(issue.getStoryPointsIssue());
+        trashed.setParentIssueId(issue.getParentIssueId());
+        trashed.setFechaCreacionIssue(issue.getFechaCreacionIssue());
+        trashed.setFechaBorrado(LocalDateTime.now());
+        papeleraIssueRepository.save(trashed);
+
         asignacionIssuesRepository.deleteAll(asignacionIssuesRepository.findByIssueIdIssue(id));
-        descIssueRepository.deleteAll(descIssueRepository.findByIssueIdIssue(id));
+        descIssueRepository.deleteAll(descs);
         logsIssuesRepository.deleteAll(logsIssuesRepository.findByIssueIdIssue(id));
         issuesService.deleteById(id);
         return ResponseEntity.noContent().build();
