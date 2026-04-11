@@ -26,6 +26,12 @@ const IssuesBoard = () => {
   const canCreateIssue = checkPermission('canCreateIssue');
   const canMoveAnyIssue = checkPermission('canMoveAnyIssue');
 
+  // Developers only see their assigned issues; PO/SM see all
+  const role = user?.role || 'developer';
+  const visibleIssues = role === 'developer'
+    ? issues.filter(i => i.assigneeIds?.includes(user?.id))
+    : issues;
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 }
@@ -40,7 +46,7 @@ const IssuesBoard = () => {
   ];
 
   const handleDragStart = (event) => {
-    const draggedIssue = issues.find(i => i.id === event.active.id);
+    const draggedIssue = visibleIssues.find(i => i.id === event.active.id);
     setActiveDragIssue(draggedIssue || null);
   };
 
@@ -52,7 +58,7 @@ const IssuesBoard = () => {
     const issueId = active.id;
     const targetColumnId = over.id;
 
-    const activeIssue = issues.find(i => i.id === issueId);
+    const activeIssue = visibleIssues.find(i => i.id === issueId);
     if (!activeIssue) return;
 
     if (!canMoveAnyIssue && !activeIssue.assigneeIds?.includes(user?.id)) {
@@ -83,7 +89,7 @@ const IssuesBoard = () => {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Sprint Metrics Strip */}
         {checkPermission('canViewMetrics') && (
-          <SprintMetrics issues={issues} />
+          <SprintMetrics issues={visibleIssues} />
         )}
 
         {/* Kanban Board */}
@@ -96,7 +102,7 @@ const IssuesBoard = () => {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full overflow-hidden">
               {columns.map(column => {
-                const columnIssues = issues.filter(i => i.status === column.id);
+                const columnIssues = visibleIssues.filter(i => i.status === column.id);
                 return (
                   <div key={column.id} className="flex flex-col h-full bg-slate-50 rounded-2xl p-4 border border-slate-100">
                     <div className="flex items-center justify-between mb-4 px-2">
