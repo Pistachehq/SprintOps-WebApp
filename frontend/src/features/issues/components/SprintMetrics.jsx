@@ -21,7 +21,7 @@ const SprintMetrics = ({ issues }) => {
           <div className="space-y-2">
             {blockedIssues.map(bi => (
               <div key={bi.id} className="bg-red-50 text-red-700 text-xs font-bold px-3 py-2 rounded-lg border border-red-100">
-                #{String(bi.id).replace('i','')} {bi.title}
+                #{bi.displayIndex || bi.id} {bi.title}
               </div>
             ))}
           </div>

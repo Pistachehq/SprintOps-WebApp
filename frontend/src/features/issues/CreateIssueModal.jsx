@@ -169,7 +169,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
                 {sprintIssues
                   .filter(i => String(i.id) !== String(issue?.id))
                   .map(i => (
-                    <option key={i.id} value={i.id}>#{i.id} — {i.title}</option>
+                    <option key={i.id} value={i.id}>#{i.displayIndex || i.id} — {i.title}</option>
                   ))
                 }
               </select>

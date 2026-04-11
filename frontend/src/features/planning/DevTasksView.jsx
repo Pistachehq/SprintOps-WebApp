@@ -47,7 +47,7 @@ const DevTasksView = ({ sprintId, issuesData }) => {
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="font-black text-[#446E51] text-sm bg-[#446E51]/10 px-2 py-0.5 rounded">#{task.id}</span>
+                  <span className="font-black text-[#446E51] text-sm bg-[#446E51]/10 px-2 py-0.5 rounded">#{task.displayIndex || task.id}</span>
                   <h3 className="text-lg font-bold text-gray-800 group-hover:text-[#446E51] transition-colors">{task.title}</h3>
                 </div>
                 {task.description && (

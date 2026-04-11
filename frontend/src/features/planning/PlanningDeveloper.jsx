@@ -38,7 +38,7 @@ const PlanningDeveloper = () => {
           <tbody className="divide-y divide-gray-50">
             {myTasks.map(task => (
               <tr key={task.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-xs font-bold text-slate-400">{task.id}</td>
+                <td className="px-6 py-4 text-xs font-bold text-slate-400">#{task.displayIndex || task.id}</td>
                 <td className="px-6 py-4">
                   <p className="font-bold text-slate-900">{task.title}</p>
                   <p className="text-xs text-slate-500 mt-1">{task.description}</p>
