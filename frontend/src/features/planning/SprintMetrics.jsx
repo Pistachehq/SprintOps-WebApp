@@ -1,6 +1,6 @@
 import React from 'react';
 import CapacityCard from './CapacityCard';
-import PredictionCard from './PredictionCard';
+import WorkloadCard from './WorkloadCard';
 import AssignedTasksCard from './AssignedTasksCard';
 import { useAuth } from '../auth/hooks/useAuth';
 
@@ -9,11 +9,11 @@ const SprintMetrics = ({ role, sprintId, issues }) => {
   const canViewMetrics = checkPermission('canViewMetrics');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex-1">
       {canViewMetrics && (
         <>
           <CapacityCard sprintId={sprintId} issues={issues} />
-          <PredictionCard />
+          <WorkloadCard issues={issues} />
         </>
       )}
       <AssignedTasksCard role={role} sprintId={sprintId} issues={issues} />

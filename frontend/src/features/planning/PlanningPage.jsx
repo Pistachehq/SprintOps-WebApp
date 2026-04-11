@@ -19,20 +19,20 @@ const PlanningPage = () => {
     <div className="h-full font-sans">
 
         {!canViewAllIssues ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
+            <div className="lg:col-span-2 flex flex-col">
               <DevTasksView sprintId={id} issuesData={issuesData} />
             </div>
-            <div>
+            <div className="flex flex-col">
               <SprintMetrics role={role} sprintId={id} issues={issuesData.issues} />
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
+            <div className="lg:col-span-2 flex flex-col">
               <TaskList role={role} sprintId={id} issuesData={issuesData} />
             </div>
-            <div>
+            <div className="flex flex-col">
               <SprintMetrics role={role} sprintId={id} issues={issuesData.issues} />
             </div>
           </div>

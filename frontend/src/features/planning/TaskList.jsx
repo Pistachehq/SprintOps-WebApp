@@ -53,7 +53,7 @@ const TaskList = ({ role, sprintId, issuesData }) => {
         </div>
       </div>
 
-      <div className="overflow-y-auto space-y-4" style={{ maxHeight: 'calc(4 * 10rem)' }}>
+      <div className="overflow-y-auto space-y-4 flex-1">
         {issues.map((task) => (
           <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} members={members} onAssign={assignIssue} editMode={editMode} onDelete={deleteIssue} />
         ))}
