@@ -47,7 +47,7 @@ public class ProyectoIssuesDocxExportService {
     private AsignacionIssuesRepository asignacionIssuesRepository;
 
     public byte[] export(Proyecto proyecto) throws IOException {
-        List<Issues> issues = issuesRepository.findByProyectoIdProyecto(proyecto.getIdProyecto());
+        List<Issues> issues = issuesRepository.findAllBelongingToProject(proyecto.getIdProyecto());
         issues.sort(Comparator.comparing(Issues::getIdIssue, Comparator.nullsLast(Integer::compareTo)));
 
         try (XWPFDocument doc = new XWPFDocument()) {

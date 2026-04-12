@@ -72,7 +72,7 @@ public class IssuesController {
 
     @GetMapping("/proyecto/{projectId}")
     public List<IssueDTO> getByProjectId(@PathVariable Integer projectId) {
-        return issuesRepository.findByProyectoIdProyecto(projectId).stream()
+        return issuesRepository.findAllBelongingToProject(projectId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
