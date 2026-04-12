@@ -117,11 +117,10 @@ const TimelinePage = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [photoDates, setPhotoDates] = useState(new Set());
   const [hoveredRow, setHoveredRow] = useState(null);
-  const [containerH, setContainerH] = useState(800);
+  const [viewH, setViewH] = useState(2000);
   const gridRef = useRef(null);
   const sidebarRef = useRef(null);
   const headerRef = useRef(null);
-  const containerRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -146,9 +145,22 @@ const TimelinePage = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const days = useMemo(() => {
-    if (!project?.start || !project?.end) return [];
-    return getDaysBetween(project.start, project.end);
-  }, [project]);
+    const candidates = [];
+    if (project?.start) candidates.push(new Date(project.start + 'T00:00:00'));
+    if (project?.end) candidates.push(new Date(project.end + 'T00:00:00'));
+    issues.forEach(i => {
+      if (i.createdAt) candidates.push(new Date(i.createdAt + 'T00:00:00'));
+      if (i.completedAt) candidates.push(new Date(i.completedAt + 'T00:00:00'));
+    });
+    const now = new Date(); now.setHours(0,0,0,0);
+    candidates.push(now);
+    if (candidates.length === 0) return [];
+    const earliest = new Date(Math.min(...candidates.map(d => d.getTime())));
+    const latest = new Date(Math.max(...candidates.map(d => d.getTime())));
+    earliest.setDate(earliest.getDate() - 14);
+    latest.setMonth(latest.getMonth() + 3);
+    return getDaysBetween(earliest.toISOString().split('T')[0], latest.toISOString().split('T')[0]);
+  }, [project, issues]);
 
   const today = useMemo(() => { const t = new Date(); t.setHours(0,0,0,0); return t; }, []);
   const todayIdx = useMemo(() => days.findIndex(d => d.getTime() === today.getTime()), [days, today]);
@@ -191,12 +203,14 @@ const TimelinePage = () => {
   useEffect(() => { if (!isLoading && days.length > 0) setTimeout(scrollToToday, 300); }, [isLoading, days, scrollToToday]);
 
   useEffect(() => {
-    const el = containerRef.current;
+    const el = gridRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => setContainerH(entry.contentRect.height));
+    const measure = () => setViewH(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  });
 
   const refreshPhotoDates = async () => {
     const dt = await timelineRepository.getPhotoDates(projectId).catch(() => []);
@@ -208,12 +222,12 @@ const TimelinePage = () => {
   if (!project || days.length === 0) return (
     <div className="h-full bg-oracle-bg flex flex-col">
       <div className="h-[72px] px-10 flex items-center"><BackButton to={`/project/${projectId}/sprints`} /></div>
-      <div className="flex-1 flex items-center justify-center"><p className="text-gray-500">El proyecto no tiene fechas de inicio y fin configuradas.</p></div>
+      <div className="flex-1 flex items-center justify-center"><p className="text-gray-500">No se pudo cargar el cronograma del proyecto.</p></div>
     </div>
   );
 
   const gridW = days.length * COL_W;
-  const gridH = Math.max(issues.length * ROW_H, containerH);
+  const gridH = Math.max(issues.length * ROW_H, viewH);
   const sidebarW = 300;
 
   return (
@@ -243,7 +257,7 @@ const TimelinePage = () => {
           </div>
           {/* Issue rows */}
           <div ref={sidebarRef} className="flex-1 overflow-y-auto overflow-x-hidden" onScroll={() => syncScroll('sidebar')} style={{ scrollbarWidth: 'thin' }}>
-            <div style={{ minHeight: gridH }}>
+            <div style={{ height: gridH }}>
               {positions.map((p, idx) => {
                 const color = BAR_COLORS[p.ci % BAR_COLORS.length];
                 const dur = p.issue.createdAt ? diffDays(p.issue.createdAt, p.issue.completedAt || today.toISOString().split('T')[0]) : 0;
@@ -305,7 +319,7 @@ const TimelinePage = () => {
           </div>
 
           {/* Grid body */}
-          <div ref={el => { gridRef.current = el; containerRef.current = el; }} className="flex-1 overflow-auto" onScroll={() => syncScroll('grid')} style={{ scrollbarWidth: 'thin' }}>
+          <div ref={gridRef} className="flex-1 overflow-auto" onScroll={() => syncScroll('grid')} style={{ scrollbarWidth: 'thin' }}>
             <div className="relative" style={{ width: gridW, height: gridH }}>
 
               {/* Row stripes */}
