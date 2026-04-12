@@ -14,6 +14,16 @@ import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 
 const nodeTypes = { issueNode: IssueNode };
 
+function getSubtreeWidth(id, childMap, depthSizes) {
+  const children = childMap[id] || [];
+  if (children.length === 0) return depthSizes(0);
+  let total = 0;
+  children.forEach(c => {
+    total += getSubtreeWidth(c.id, childMap, depthSizes);
+  });
+  return Math.max(total, depthSizes(0));
+}
+
 function buildGraph(issues, selectedId) {
   const childMap = {};
   issues.forEach(issue => {
@@ -26,76 +36,81 @@ function buildGraph(issues, selectedId) {
   const rootIssues = issues.filter(i => !i.parentIssueId);
   const hasChildren = (id) => (childMap[id]?.length || 0) > 0;
 
-  const getSize = (sp, isRoot) => {
-    const points = sp || 1;
-    const base = isRoot ? 55 : 40;
-    return Math.min(150, Math.max(60, base + points * 9));
+  const getSize = (depth) => {
+    const sizes = [120, 85, 65, 50, 40];
+    return sizes[Math.min(depth, sizes.length - 1)];
   };
 
   const nodes = [];
   const edges = [];
 
-  const GRID_GAP_X = 400;
-  const GRID_GAP_Y = 350;
-  const COLS = Math.max(2, Math.ceil(Math.sqrt(rootIssues.length)));
-
-  rootIssues.forEach((issue, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
-    const jitterX = (Math.sin(idx * 2.7) * 60);
-    const jitterY = (Math.cos(idx * 1.9) * 40);
-    const x = col * GRID_GAP_X + jitterX;
-    const y = row * GRID_GAP_Y + jitterY;
-    const size = getSize(issue.storyPoints, true);
+  function layoutNode(issue, x, y, depth, availableWidth) {
+    const size = getSize(depth);
 
     nodes.push({
       id: String(issue.id),
       type: 'issueNode',
-      position: { x, y },
+      position: { x: x - size / 2, y },
       data: {
         label: `#${issue.displayIndex || issue.id}`,
         size,
-        isRoot: true,
+        depth,
         isSelected: issue.id === selectedId,
         hasChildren: hasChildren(issue.id),
       },
     });
 
     const children = childMap[issue.id] || [];
-    const angleStep = children.length > 1 ? Math.PI / Math.max(children.length - 1, 1) : 0;
-    const startAngle = -Math.PI / 3;
+    if (children.length === 0) return;
+
+    const VERTICAL_GAP = 120 + size * 0.5;
+    const childY = y + VERTICAL_GAP;
+
+    const subtreeWidths = children.map(c => {
+      const cSize = getSize(depth + 1);
+      const stw = getSubtreeWidth(c.id, childMap, () => cSize * 2.2);
+      return Math.max(stw, cSize * 2.2);
+    });
+    const totalWidth = subtreeWidths.reduce((a, b) => a + b, 0);
+
+    let startX = x - totalWidth / 2;
 
     children.forEach((child, ci) => {
-      const angle = children.length === 1
-        ? Math.PI / 4
-        : startAngle + ci * angleStep;
-      const dist = 160 + size * 0.6;
-      const childSize = getSize(child.storyPoints, false);
-      const cx = x + size / 2 + Math.cos(angle) * dist - childSize / 2;
-      const cy = y + size / 2 + Math.sin(angle) * dist - childSize / 2;
+      const childX = startX + subtreeWidths[ci] / 2;
+      startX += subtreeWidths[ci];
 
-      nodes.push({
-        id: String(child.id),
-        type: 'issueNode',
-        position: { x: cx, y: cy },
-        data: {
-          label: `#${child.displayIndex || child.id}`,
-          size: childSize,
-          isRoot: false,
-          isSelected: child.id === selectedId,
-          hasChildren: false,
-        },
-      });
+      layoutNode(child, childX, childY, depth + 1, subtreeWidths[ci]);
 
       edges.push({
         id: `e-${issue.id}-${child.id}`,
         source: String(issue.id),
         target: String(child.id),
         type: 'default',
-        style: { stroke: 'rgba(107,159,123,0.5)', strokeWidth: 2 },
-        animated: true,
+        style: {
+          stroke: `rgba(140,200,160,${Math.max(0.2, 0.6 - depth * 0.1)})`,
+          strokeWidth: Math.max(1, 3 - depth * 0.5),
+        },
+        animated: depth < 2,
       });
     });
+  }
+
+  const ROOT_GAP = 500;
+  const rootSubtreeWidths = rootIssues.map(r => {
+    const stw = getSubtreeWidth(r.id, childMap, () => getSize(1) * 2.2);
+    return Math.max(stw, getSize(0) * 3);
+  });
+  const totalRootWidth = rootSubtreeWidths.reduce((a, b) => a + b, 0)
+    + (rootIssues.length - 1) * ROOT_GAP;
+
+  let rootStartX = -totalRootWidth / 2;
+
+  rootIssues.forEach((issue, idx) => {
+    const w = rootSubtreeWidths[idx];
+    const cx = rootStartX + w / 2;
+    rootStartX += w + ROOT_GAP;
+
+    layoutNode(issue, cx, 0, 0, w);
   });
 
   return { nodes, edges };
@@ -119,7 +134,7 @@ const UniverseFlow = ({ issues, sprintNames }) => {
     setCenter(
       node.position.x + size / 2,
       node.position.y + size / 2,
-      { zoom: 1.4, duration: 800 }
+      { zoom: 1.5, duration: 800 }
     );
   }, [issues, setCenter]);
 
@@ -137,8 +152,8 @@ const UniverseFlow = ({ issues, sprintNames }) => {
         onNodeClick={onNodeClick}
         onPaneClick={() => setSelectedIssue(null)}
         fitView
-        fitViewOptions={{ padding: 0.5 }}
-        minZoom={0.1}
+        fitViewOptions={{ padding: 0.3 }}
+        minZoom={0.05}
         maxZoom={4}
         proOptions={{ hideAttribution: true }}
         style={{ background: 'transparent' }}
@@ -217,14 +232,6 @@ const IssueUniversePage = () => {
         const allIssues = [];
         const seenIds = new Set();
 
-        const projectIssues = await issuesRepository.getByProjectId(projectId).catch(() => []);
-        (projectIssues || []).forEach(issue => {
-          if (!seenIds.has(issue.id)) {
-            seenIds.add(issue.id);
-            allIssues.push(issue);
-          }
-        });
-
         for (const sprint of (sprintsData || [])) {
           const sprintIssues = await issuesRepository.getBySprintId(sprint.id).catch(() => []);
           (sprintIssues || []).forEach(issue => {
@@ -261,11 +268,11 @@ const IssueUniversePage = () => {
           to { opacity: 1; transform: translateX(0) scale(1); }
         }
         @keyframes twinkle {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
+          0%, 100% { opacity: 0.15; }
+          50% { opacity: 0.8; }
         }
         .react-flow__edge path {
-          filter: drop-shadow(0 0 4px rgba(107,159,123,0.4));
+          filter: drop-shadow(0 0 6px rgba(140,200,160,0.4));
         }
       `}</style>
 
@@ -288,20 +295,19 @@ const IssueUniversePage = () => {
       </div>
 
       <div className="flex-1 relative">
-        {/* Star particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {Array.from({ length: 60 }).map((_, i) => (
+          {Array.from({ length: 80 }).map((_, i) => (
             <div
               key={i}
               className="absolute rounded-full bg-white"
               style={{
-                width: Math.random() * 2 + 1,
-                height: Math.random() * 2 + 1,
+                width: Math.random() * 2.5 + 0.5,
+                height: Math.random() * 2.5 + 0.5,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                opacity: Math.random() * 0.4 + 0.1,
-                animation: `twinkle ${2 + Math.random() * 4}s ease-in-out infinite`,
-                animationDelay: `${Math.random() * 3}s`,
+                opacity: Math.random() * 0.3 + 0.05,
+                animation: `twinkle ${2 + Math.random() * 5}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 4}s`,
               }}
             />
           ))}

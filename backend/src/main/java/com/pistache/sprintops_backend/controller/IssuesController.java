@@ -94,22 +94,30 @@ public class IssuesController {
             proyectoService.findById(request.getProjectId()).ifPresent(issue::setProyecto);
         }
 
-        issue = issuesService.save(issue);
-
-        // Link to sprint via desc_issue
+        // Link to sprint via desc_issue, and derive project from sprint if not set
+        Sprint linkedSprint = null;
         if (request.getSprintId() != null) {
             try {
                 Integer sprintId = Integer.parseInt(request.getSprintId());
                 var optSprint = sprintService.findById(sprintId);
                 if (optSprint.isPresent()) {
-                    DescIssue desc = new DescIssue();
-                    desc.setId(new DescIssue.DescIssueId(sprintId, issue.getIdIssue()));
-                    desc.setSprint(optSprint.get());
-                    desc.setIssue(issue);
-                    desc.setFechaEntrada(LocalDate.now());
-                    descIssueRepository.save(desc);
+                    linkedSprint = optSprint.get();
+                    if (issue.getProyecto() == null && linkedSprint.getProyecto() != null) {
+                        issue.setProyecto(linkedSprint.getProyecto());
+                    }
                 }
             } catch (NumberFormatException ignored) {}
+        }
+
+        issue = issuesService.save(issue);
+
+        if (linkedSprint != null) {
+            DescIssue desc = new DescIssue();
+            desc.setId(new DescIssue.DescIssueId(linkedSprint.getIdSprint(), issue.getIdIssue()));
+            desc.setSprint(linkedSprint);
+            desc.setIssue(issue);
+            desc.setFechaEntrada(LocalDate.now());
+            descIssueRepository.save(desc);
         }
 
         // Assign to users

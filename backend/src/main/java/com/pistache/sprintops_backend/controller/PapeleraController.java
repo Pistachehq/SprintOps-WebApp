@@ -66,18 +66,26 @@ public class PapeleraController {
             proyectoService.findById(trashed.getProyectoId()).ifPresent(issue::setProyecto);
         }
 
-        issue = issuesService.save(issue);
-
+        Sprint linkedSprint = null;
         if (trashed.getSprintId() != null) {
             var optSprint = sprintService.findById(trashed.getSprintId());
             if (optSprint.isPresent()) {
-                DescIssue desc = new DescIssue();
-                desc.setId(new DescIssue.DescIssueId(trashed.getSprintId(), issue.getIdIssue()));
-                desc.setSprint(optSprint.get());
-                desc.setIssue(issue);
-                desc.setFechaEntrada(LocalDate.now());
-                descIssueRepository.save(desc);
+                linkedSprint = optSprint.get();
+                if (issue.getProyecto() == null && linkedSprint.getProyecto() != null) {
+                    issue.setProyecto(linkedSprint.getProyecto());
+                }
             }
+        }
+
+        issue = issuesService.save(issue);
+
+        if (linkedSprint != null) {
+            DescIssue desc = new DescIssue();
+            desc.setId(new DescIssue.DescIssueId(linkedSprint.getIdSprint(), issue.getIdIssue()));
+            desc.setSprint(linkedSprint);
+            desc.setIssue(issue);
+            desc.setFechaEntrada(LocalDate.now());
+            descIssueRepository.save(desc);
         }
 
         LogsIssues logDelete = new LogsIssues();
