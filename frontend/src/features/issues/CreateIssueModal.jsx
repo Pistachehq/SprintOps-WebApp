@@ -8,6 +8,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   const [type, setType] = useState('Task');
   const [priority, setPriority] = useState('Medium');
   const [points, setPoints] = useState(0);
+  const [endDate, setEndDate] = useState('');
   const [isSubIssue, setIsSubIssue] = useState(false);
   const [parentIssueId, setParentIssueId] = useState('');
 
@@ -19,6 +20,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setType(issue.type || 'Task');
       setPriority(issue.priority || 'Medium');
       setPoints(issue.storyPoints || 0);
+      setEndDate(issue.completedAt || '');
       setIsSubIssue(!!issue.parentIssueId);
       setParentIssueId(issue.parentIssueId || '');
     } else {
@@ -28,6 +30,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setType('Task');
       setPriority('Medium');
       setPoints(0);
+      setEndDate('');
       setIsSubIssue(false);
       setParentIssueId('');
     }
@@ -45,6 +48,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       priority,
       type,
       storyPoints: Number(points) || 0,
+      endDate: endDate || null,
       parentIssueId: isSubIssue && parentIssueId ? Number(parentIssueId) : null,
       assigneeIds: issue ? issue.assigneeIds : []
     };
@@ -139,6 +143,18 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
                 placeholder="0"
               />
             </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha fin tentativa</label>
+              <input 
+                type="date"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">¿Es Sub Issue?</label>
               <select

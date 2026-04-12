@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Settings, GitFork } from 'lucide-react';
+import { Settings, GitFork, CalendarDays } from 'lucide-react';
 import SprintFlow from './SprintFlow';
 import BackButton from '../../components/ui/BackButton';
 import ProjectConfigView from '../project/ProjectConfigView';
@@ -38,6 +38,13 @@ const SprintsPage = () => {
         <BackButton to="/home" />
         
         <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(`/project/${projectId}/timeline`)}
+              className="px-6 py-3 bg-[#446E51] text-white rounded-xl font-bold text-sm hover:bg-[#3a5f45] transition-colors flex items-center gap-2 shadow-sm"
+              title="Calendario"
+            >
+              <CalendarDays size={18} /> Calendario
+            </button>
             <button
               onClick={() => navigate(`/project/${projectId}/universe`)}
               className="px-6 py-3 bg-[#446E51] text-white rounded-xl font-bold text-sm hover:bg-[#3a5f45] transition-colors flex items-center gap-2 shadow-sm"

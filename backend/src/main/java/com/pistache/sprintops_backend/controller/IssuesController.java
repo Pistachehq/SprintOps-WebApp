@@ -89,6 +89,7 @@ public class IssuesController {
         issue.setStoryPointsIssue(request.getStoryPoints() != null ? request.getStoryPoints() : 0);
         issue.setParentIssueId(request.getParentIssueId());
         issue.setFechaCreacionIssue(LocalDate.now());
+        issue.setFechaFinIssue(request.getEndDate());
 
         if (request.getProjectId() != null) {
             proyectoService.findById(request.getProjectId()).ifPresent(issue::setProyecto);
@@ -148,7 +149,17 @@ public class IssuesController {
         if (updates.containsKey("title")) issue.setTituloIssue((String) updates.get("title"));
         if (updates.containsKey("description")) issue.setDescripcionIssue((String) updates.get("description"));
         if (updates.containsKey("purpose")) issue.setPropositoIssue((String) updates.get("purpose"));
-        if (updates.containsKey("status")) issue.setEstadoIssue((String) updates.get("status"));
+        if (updates.containsKey("status")) {
+            String newStatus = (String) updates.get("status");
+            issue.setEstadoIssue(newStatus);
+            if ("done".equalsIgnoreCase(newStatus)) {
+                issue.setFechaFinIssue(LocalDate.now());
+            }
+        }
+        if (updates.containsKey("endDate")) {
+            String endDateStr = (String) updates.get("endDate");
+            issue.setFechaFinIssue(endDateStr != null ? LocalDate.parse(endDateStr) : null);
+        }
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
         if (updates.containsKey("parentIssueId")) issue.setParentIssueId((Integer) updates.get("parentIssueId"));

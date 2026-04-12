@@ -40,6 +40,9 @@ public class Issues {
     @Column(name = "fecha_creacion_issue")
     private LocalDate fechaCreacionIssue;
 
+    @Column(name = "fecha_fin_issue")
+    private LocalDate fechaFinIssue;
+
     @Column(name = "parent_issue_id")
     private Integer parentIssueId;
 

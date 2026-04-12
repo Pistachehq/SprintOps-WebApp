@@ -1,6 +1,7 @@
 package com.pistache.sprintops_backend.dto;
 
 import lombok.Data;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -15,4 +16,5 @@ public class CreateIssueRequest {
     private Integer storyPoints;
     private Integer parentIssueId;
     private List<Integer> assigneeIds;
+    private LocalDate endDate;
 }
