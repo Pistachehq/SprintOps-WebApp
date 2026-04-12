@@ -29,6 +29,11 @@ public class Reunion {
     @JoinColumn(name = "Sprint_id_sprint")
     private Sprint sprint;
 
+    /** Denormalizado desde el sprint para consultas/reportes sin join extra. */
+    @ManyToOne
+    @JoinColumn(name = "Proyecto_id_proyecto")
+    private Proyecto proyecto;
+
     @OneToMany(mappedBy = "reunion")
     private Set<RegistroReunion> registrosReunion;
 }

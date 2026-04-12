@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,16 @@ public class ReunionController {
     private SprintService sprintService;
     @Autowired
     private UsuarioService usuarioService;
+
+    private static Integer projectIdFromReunion(Reunion r) {
+        if (r.getProyecto() != null) {
+            return r.getProyecto().getIdProyecto();
+        }
+        if (r.getSprint() != null && r.getSprint().getProyecto() != null) {
+            return r.getSprint().getProyecto().getIdProyecto();
+        }
+        return null;
+    }
 
     @GetMapping
     public List<Reunion> getAll() {
@@ -52,6 +63,7 @@ public class ReunionController {
                     map.put("type", r.getTipoReunion());
                     map.put("date", r.getFechaDeReunion().toString());
                     map.put("sprintId", sprintId);
+                    map.put("projectId", projectIdFromReunion(r));
                     return map;
                 })
                 .collect(Collectors.toList());
@@ -75,7 +87,11 @@ public class ReunionController {
                     Reunion r = new Reunion();
                     r.setTipoReunion("Daily");
                     r.setFechaDeReunion(today);
-                    r.setSprint(optSprint.get());
+                    var sp = optSprint.get();
+                    r.setSprint(sp);
+                    if (sp.getProyecto() != null) {
+                        r.setProyecto(sp.getProyecto());
+                    }
                     return reunionService.save(r);
                 });
 
@@ -89,6 +105,8 @@ public class ReunionController {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("reunionId", reunion.getIdReunion());
         result.put("date", reunion.getFechaDeReunion().toString());
+        result.put("sprintId", sprintId);
+        result.put("projectId", projectIdFromReunion(reunion));
 
         if (existingRegistro.isPresent()) {
             RegistroReunion reg = existingRegistro.get();
@@ -96,6 +114,9 @@ public class ReunionController {
             result.put("done", reg.getQueHice());
             result.put("doing", reg.getQueHare());
             result.put("blockers", reg.getImpedimentos());
+            if (reg.getFechaHoraRegistro() != null) {
+                result.put("savedAt", reg.getFechaHoraRegistro().toString());
+            }
         } else {
             result.put("registroId", null);
             result.put("done", "");
@@ -133,13 +154,19 @@ public class ReunionController {
         registro.setImpedimentos(blockers != null ? blockers : "");
         registro.setReunion(optReunion.get());
         registro.setUsuario(optUser.get());
+        registro.setFechaHoraRegistro(LocalDateTime.now());
 
         registro = registroReunionRepository.save(registro);
 
+        Reunion reunion = optReunion.get();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("registroId", registro.getIdRegistro());
         result.put("reunionId", reunionId);
-        result.put("date", optReunion.get().getFechaDeReunion().toString());
+        result.put("date", reunion.getFechaDeReunion().toString());
+        result.put("sprintId", reunion.getSprint() != null ? reunion.getSprint().getIdSprint() : null);
+        result.put("projectId", projectIdFromReunion(reunion));
+        result.put("userId", userId);
+        result.put("savedAt", registro.getFechaHoraRegistro().toString());
         result.put("done", registro.getQueHice());
         result.put("doing", registro.getQueHare());
         result.put("blockers", registro.getImpedimentos());
