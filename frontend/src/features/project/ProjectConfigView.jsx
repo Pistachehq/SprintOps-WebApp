@@ -487,7 +487,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
               {roles.map(role => (
                 <div key={role.idRol} className="border border-slate-100 rounded-xl overflow-hidden">
                   <div className="p-4 bg-slate-50 flex justify-between items-center">
