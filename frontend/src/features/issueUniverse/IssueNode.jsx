@@ -19,11 +19,11 @@ const IssueNode = ({ data }) => {
       style={{
         width: size,
         height: size,
-        fontSize: Math.max(10, size * 0.28),
+        fontSize: Math.max(9, size * 0.28),
         background: colorSet.bg,
         boxShadow: isSelected
           ? `0 0 50px ${colorSet.glow}, 0 0 100px ${colorSet.glow}, inset 0 0 20px rgba(255,255,255,0.15)`
-          : `0 0 ${hasChildren ? '25px' : '15px'} ${colorSet.glow}, inset 0 0 10px rgba(255,255,255,0.08)`,
+          : `0 0 ${hasChildren ? '25px' : '12px'} ${colorSet.glow}, inset 0 0 8px rgba(255,255,255,0.08)`,
         transform: isSelected ? 'scale(1.2)' : 'scale(1)',
         animation: isSelected ? 'none' : `float ${3 + depth * 0.5}s ease-in-out infinite`,
         animationDelay: `${(parseInt(label.replace('#', '')) || 0) * 0.6}s`,
@@ -32,8 +32,18 @@ const IssueNode = ({ data }) => {
       <span style={{ textShadow: '0 2px 10px rgba(0,0,0,0.4)', letterSpacing: '-0.02em' }}>
         {label}
       </span>
-      <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-0 !h-0" />
-      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-0 !h-0" />
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!bg-transparent !border-0 !w-0 !h-0"
+        style={{ top: '50%', left: '50%' }}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!bg-transparent !border-0 !w-0 !h-0"
+        style={{ top: '50%', left: '50%' }}
+      />
     </div>
   );
 };

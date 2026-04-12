@@ -9,22 +9,20 @@ import {
 import '@xyflow/react/dist/style.css';
 import { ArrowLeft, X, Orbit } from 'lucide-react';
 import IssueNode from './IssueNode';
+import SunNode from './SunNode';
 import { issuesRepository } from '../../data/repositories/issuesRepository';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
 
-const nodeTypes = { issueNode: IssueNode };
+const nodeTypes = { issueNode: IssueNode, sunNode: SunNode };
 
-function getSubtreeWidth(id, childMap, depthSizes) {
+function getSubtreeLeafCount(id, childMap) {
   const children = childMap[id] || [];
-  if (children.length === 0) return depthSizes(0);
-  let total = 0;
-  children.forEach(c => {
-    total += getSubtreeWidth(c.id, childMap, depthSizes);
-  });
-  return Math.max(total, depthSizes(0));
+  if (children.length === 0) return 1;
+  return children.reduce((sum, c) => sum + getSubtreeLeafCount(c.id, childMap), 0);
 }
 
-function buildGraph(issues, selectedId) {
+function buildGraph(issues, selectedId, projectName) {
   const childMap = {};
   issues.forEach(issue => {
     if (issue.parentIssueId) {
@@ -37,20 +35,32 @@ function buildGraph(issues, selectedId) {
   const hasChildren = (id) => (childMap[id]?.length || 0) > 0;
 
   const getSize = (depth) => {
-    const sizes = [120, 85, 65, 50, 40];
+    const sizes = [110, 80, 60, 46, 36];
     return sizes[Math.min(depth, sizes.length - 1)];
   };
 
+  const SUN_SIZE = 180;
   const nodes = [];
   const edges = [];
 
-  function layoutNode(issue, x, y, depth, availableWidth) {
+  nodes.push({
+    id: 'sun',
+    type: 'sunNode',
+    position: { x: -SUN_SIZE / 2, y: -SUN_SIZE / 2 },
+    data: { label: projectName || 'Proyecto', size: SUN_SIZE },
+    draggable: false,
+    selectable: false,
+  });
+
+  function layoutBranch(issue, originX, originY, angle, dist, depth) {
     const size = getSize(depth);
+    const x = originX + Math.cos(angle) * dist;
+    const y = originY + Math.sin(angle) * dist;
 
     nodes.push({
       id: String(issue.id),
       type: 'issueNode',
-      position: { x: x - size / 2, y },
+      position: { x: x - size / 2, y: y - size / 2 },
       data: {
         label: `#${issue.displayIndex || issue.id}`,
         size,
@@ -63,69 +73,71 @@ function buildGraph(issues, selectedId) {
     const children = childMap[issue.id] || [];
     if (children.length === 0) return;
 
-    const VERTICAL_GAP = 120 + size * 0.5;
-    const childY = y + VERTICAL_GAP;
+    const childDist = 100 + size * 0.8 + getSize(depth + 1) * 0.5;
+    const fanSpread = Math.min(Math.PI * 0.6, children.length * 0.35);
+    const startAngle = angle - fanSpread / 2;
 
-    const subtreeWidths = children.map(c => {
-      const cSize = getSize(depth + 1);
-      const stw = getSubtreeWidth(c.id, childMap, () => cSize * 2.2);
-      return Math.max(stw, cSize * 2.2);
-    });
-    const totalWidth = subtreeWidths.reduce((a, b) => a + b, 0);
+    const leafCounts = children.map(c => getSubtreeLeafCount(c.id, childMap));
+    const totalLeaves = leafCounts.reduce((a, b) => a + b, 0);
 
-    let startX = x - totalWidth / 2;
-
+    let accumulated = 0;
     children.forEach((child, ci) => {
-      const childX = startX + subtreeWidths[ci] / 2;
-      startX += subtreeWidths[ci];
+      const frac = (accumulated + leafCounts[ci] / 2) / totalLeaves;
+      accumulated += leafCounts[ci];
+      const childAngle = startAngle + frac * fanSpread;
 
-      layoutNode(child, childX, childY, depth + 1, subtreeWidths[ci]);
+      layoutBranch(child, x, y, childAngle, childDist, depth + 1);
 
       edges.push({
         id: `e-${issue.id}-${child.id}`,
         source: String(issue.id),
         target: String(child.id),
-        type: 'default',
+        type: 'straight',
         style: {
-          stroke: `rgba(140,200,160,${Math.max(0.2, 0.6 - depth * 0.1)})`,
-          strokeWidth: Math.max(1, 3 - depth * 0.5),
+          stroke: `rgba(140,200,160,${Math.max(0.15, 0.55 - depth * 0.1)})`,
+          strokeWidth: Math.max(1, 2.5 - depth * 0.4),
         },
-        animated: depth < 2,
+        animated: depth < 1,
       });
     });
   }
 
-  const ROOT_GAP = 500;
-  const rootSubtreeWidths = rootIssues.map(r => {
-    const stw = getSubtreeWidth(r.id, childMap, () => getSize(1) * 2.2);
-    return Math.max(stw, getSize(0) * 3);
-  });
-  const totalRootWidth = rootSubtreeWidths.reduce((a, b) => a + b, 0)
-    + (rootIssues.length - 1) * ROOT_GAP;
-
-  let rootStartX = -totalRootWidth / 2;
+  const ORBIT_RADIUS = 280;
+  const angleStep = (2 * Math.PI) / Math.max(rootIssues.length, 1);
+  const startOffset = -Math.PI / 2;
 
   rootIssues.forEach((issue, idx) => {
-    const w = rootSubtreeWidths[idx];
-    const cx = rootStartX + w / 2;
-    rootStartX += w + ROOT_GAP;
+    const angle = startOffset + idx * angleStep;
 
-    layoutNode(issue, cx, 0, 0, w);
+    layoutBranch(issue, 0, 0, angle, ORBIT_RADIUS, 0);
+
+    edges.push({
+      id: `e-sun-${issue.id}`,
+      source: 'sun',
+      target: String(issue.id),
+      type: 'straight',
+      style: {
+        stroke: 'rgba(232,112,42,0.35)',
+        strokeWidth: 2.5,
+      },
+      animated: true,
+    });
   });
 
   return { nodes, edges };
 }
 
-const UniverseFlow = ({ issues, sprintNames }) => {
+const UniverseFlow = ({ issues, sprintNames, projectName }) => {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const { setCenter } = useReactFlow();
 
   const { nodes, edges } = useMemo(
-    () => buildGraph(issues, selectedIssue?.id),
-    [issues, selectedIssue]
+    () => buildGraph(issues, selectedIssue?.id, projectName),
+    [issues, selectedIssue, projectName]
   );
 
   const onNodeClick = useCallback((_event, node) => {
+    if (node.id === 'sun') return;
     const issue = issues.find(i => String(i.id) === node.id);
     if (!issue) return;
     setSelectedIssue(issue);
@@ -152,7 +164,7 @@ const UniverseFlow = ({ issues, sprintNames }) => {
         onNodeClick={onNodeClick}
         onPaneClick={() => setSelectedIssue(null)}
         fitView
-        fitViewOptions={{ padding: 0.3 }}
+        fitViewOptions={{ padding: 0.25 }}
         minZoom={0.05}
         maxZoom={4}
         proOptions={{ hideAttribution: true }}
@@ -218,13 +230,20 @@ const IssueUniversePage = () => {
   const navigate = useNavigate();
   const [issues, setIssues] = useState([]);
   const [sprintNames, setSprintNames] = useState({});
+  const [projectName, setProjectName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const sprintsData = await sprintsRepository.getByProjectId(projectId);
+        const [sprintsData, projectData] = await Promise.all([
+          sprintsRepository.getByProjectId(projectId),
+          projectsRepository.getById(projectId).catch(() => null),
+        ]);
+
+        setProjectName(projectData?.name || 'Proyecto');
+
         const names = {};
         (sprintsData || []).forEach(s => { names[String(s.id)] = s.name; });
         setSprintNames(names);
@@ -263,6 +282,10 @@ const IssueUniversePage = () => {
           0%, 100% { transform: translateY(0px) scale(1); }
           50% { transform: translateY(-6px) scale(1.02); }
         }
+        @keyframes sunPulse {
+          0%, 100% { box-shadow: 0 0 60px rgba(232,112,42,0.6), 0 0 120px rgba(232,112,42,0.3), 0 0 200px rgba(192,57,43,0.2), inset 0 0 30px rgba(255,255,255,0.15); }
+          50% { box-shadow: 0 0 80px rgba(232,112,42,0.7), 0 0 160px rgba(232,112,42,0.4), 0 0 250px rgba(192,57,43,0.25), inset 0 0 40px rgba(255,255,255,0.2); }
+        }
         @keyframes cardIn {
           from { opacity: 0; transform: translateX(20px) scale(0.95); }
           to { opacity: 1; transform: translateX(0) scale(1); }
@@ -272,7 +295,7 @@ const IssueUniversePage = () => {
           50% { opacity: 0.8; }
         }
         .react-flow__edge path {
-          filter: drop-shadow(0 0 6px rgba(140,200,160,0.4));
+          filter: drop-shadow(0 0 6px rgba(140,200,160,0.3));
         }
       `}</style>
 
@@ -330,7 +353,7 @@ const IssueUniversePage = () => {
           </div>
         ) : (
           <ReactFlowProvider>
-            <UniverseFlow issues={issues} sprintNames={sprintNames} />
+            <UniverseFlow issues={issues} sprintNames={sprintNames} projectName={projectName} />
           </ReactFlowProvider>
         )}
       </div>
