@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal } from 'lucide-react';
 import { useSprints } from '../sprint/hooks/useSprints';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -49,6 +49,8 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sprintCapacity, setSprintCapacity] = useState('');
+  const [sprintSearch, setSprintSearch] = useState('');
+  const [showSprintCreate, setShowSprintCreate] = useState(false);
   
   const [localMembers, setLocalMembers] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -124,6 +126,15 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const canManageMembers = checkPermission('canManageMembers');
   const canEditProjectDates = checkPermission('canEditProjectDates');
 
+  const filteredSprints = useMemo(() => {
+    const q = sprintSearch.toLowerCase().trim();
+    return sprints.filter(s => {
+      if (!q) return true;
+      const blob = `${s.name || ''} ${s.goal || ''} ${s.startDate || ''} ${s.endDate || ''} ${getStatusDisplay(s.status)}`.toLowerCase();
+      return blob.includes(q);
+    });
+  }, [sprints, sprintSearch]);
+
   const handleAddSprint = (e) => {
     e.preventDefault();
     addSprint({
@@ -140,6 +151,7 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     setStartDate('');
     setEndDate('');
     setSprintCapacity('');
+    setShowSprintCreate(false);
   };
 
   const handleDeleteSprint = async (sprintId) => {
@@ -316,99 +328,141 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Sprints Section - always visible, actions gated */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-h-[600px] overflow-y-auto">
-              <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col h-[560px] max-h-[600px] overflow-hidden">
+              <h3 className="text-xl font-bold flex items-center gap-2 mb-4 shrink-0">
                 <LayoutList className="text-[#446E51]" /> Gestionar Sprints
               </h3>
-              
-              <div className="space-y-4 mb-8">
-                {sprints.map(s => (
-                  <div key={s.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                {editingSprintId === s.id ? (
-                  <div className="space-y-3">
-                    <input 
-                      value={editSprintName} 
-                      onChange={e => setEditSprintName(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm font-bold"
+
+              {!showSprintCreate ? (
+                <div className="flex items-center gap-2 mb-4 shrink-0">
+                  <div className="flex-1 relative">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={sprintSearch}
+                      onChange={e => setSprintSearch(e.target.value)}
+                      placeholder="Buscar sprint..."
+                      className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] focus:border-transparent outline-none text-sm"
                     />
-                    <select 
-                      value={editSprintStatus}
-                      onChange={e => setEditSprintStatus(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
+                  </div>
+                  {canCreateSprint && (
+                    <button
+                      type="button"
+                      onClick={() => { setShowSprintCreate(true); setEditingSprintId(null); }}
+                      className="shrink-0 h-10 w-10 rounded-xl bg-[#446E51] text-white flex items-center justify-center hover:opacity-90 transition-opacity"
+                      title="Nuevo sprint"
                     >
-                      <option value="planned">Planned</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Finished</option>
-                    </select>
-                    <div className="flex gap-2">
-                      <button onClick={saveEditSprint} className="flex-1 h-9 bg-[#446E51] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
-                        <Check size={14} /> Guardar
-                      </button>
-                      <button onClick={() => setEditingSprintId(null)} className="flex-1 h-9 bg-gray-100 text-slate-600 rounded-lg text-sm font-bold flex items-center justify-center gap-1">
-                        <X size={14} /> Cancelar
-                      </button>
-                    </div>
+                      <Plus size={20} />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2 mb-4 shrink-0">
+                  <h4 className="font-bold text-sm text-slate-700">Agregar Nuevo Sprint</h4>
+                  <button
+                    type="button"
+                    onClick={() => setShowSprintCreate(false)}
+                    className="text-xs font-bold text-slate-500 hover:text-[#446E51] px-2 py-1 rounded-lg hover:bg-slate-50"
+                  >
+                    Volver a la lista
+                  </button>
+                </div>
+              )}
+
+              <div className="flex-1 min-h-0 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                {!showSprintCreate ? (
+                  <div className="space-y-4">
+                    {filteredSprints.map(s => (
+                        <div key={s.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                          {editingSprintId === s.id ? (
+                            <div className="space-y-3">
+                              <input
+                                value={editSprintName}
+                                onChange={e => setEditSprintName(e.target.value)}
+                                className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm font-bold"
+                              />
+                              <select
+                                value={editSprintStatus}
+                                onChange={e => setEditSprintStatus(e.target.value)}
+                                className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
+                              >
+                                <option value="planned">Planned</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Finished</option>
+                              </select>
+                              <div className="flex gap-2">
+                                <button onClick={saveEditSprint} className="flex-1 h-9 bg-[#446E51] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
+                                  <Check size={14} /> Guardar
+                                </button>
+                                <button onClick={() => setEditingSprintId(null)} className="flex-1 h-9 bg-gray-100 text-slate-600 rounded-lg text-sm font-bold flex items-center justify-center gap-1">
+                                  <X size={14} /> Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="font-bold text-slate-800">{s.name}</h4>
+                                <p className="text-xs text-slate-500"><span className="font-semibold">Inicio:</span> {s.startDate} — <span className="font-semibold">Fin:</span> {s.endDate}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-1 text-[10px] font-black uppercase text-white bg-[#446E51] rounded">
+                                  {getStatusDisplay(s.status)}
+                                </span>
+                                {canCreateSprint && (
+                                  <>
+                                    <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
+                                      <Pencil size={14} />
+                                    </button>
+                                    <button onClick={() => handleDeleteSprint(s.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    {sprints.length === 0 && (
+                      <p className="text-sm text-slate-400 italic">No hay sprints creados.</p>
+                    )}
+                    {sprints.length > 0 && filteredSprints.length === 0 && (
+                      <p className="text-sm text-slate-400 text-center py-6">No se encontraron sprints.</p>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-bold text-slate-800">{s.name}</h4>
-                      <p className="text-xs text-slate-500"><span className="font-semibold">Inicio:</span> {s.startDate} — <span className="font-semibold">Fin:</span> {s.endDate}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 text-[10px] font-black uppercase text-white bg-[#446E51] rounded">
-                        {getStatusDisplay(s.status)}
-                      </span>
-                      {canCreateSprint && (
-                        <>
-                          <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
-                            <Pencil size={14} />
-                          </button>
-                          <button onClick={() => handleDeleteSprint(s.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                            <Trash2 size={14} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-                  </div>
-                ))}
-                {sprints.length === 0 && (
-                  <p className="text-sm text-slate-400 italic">No hay sprints creados.</p>
+                  canCreateSprint && (
+                    <form onSubmit={handleAddSprint} className="space-y-4 pb-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Nombre del Sprint</label>
+                        <input required value={sprintName} onChange={e => setSprintName(e.target.value)} placeholder="ej. Sprint 3" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Meta del Sprint</label>
+                        <input value={sprintGoal} onChange={e => setSprintGoal(e.target.value)} placeholder="ej. Completar módulo de autenticación" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Capacidad de Story Points</label>
+                        <input type="number" min="0" value={sprintCapacity} onChange={e => setSprintCapacity(e.target.value)} placeholder="ej. 40" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha de inicio</label>
+                          <input required type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm text-slate-600" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha final</label>
+                          <input required type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm text-slate-600" />
+                        </div>
+                      </div>
+                      <button type="submit" className="w-full h-12 bg-[#446E51] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90">
+                        <Plus size={18} /> Crear Sprint
+                      </button>
+                    </form>
+                  )
                 )}
               </div>
-
-              {canCreateSprint && (
-                <form onSubmit={handleAddSprint} className="space-y-4 border-t pt-6">
-                  <h4 className="font-bold text-sm text-slate-700">Agregar Nuevo Sprint</h4>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Nombre del Sprint</label>
-                    <input required value={sprintName} onChange={e=>setSprintName(e.target.value)} placeholder="ej. Sprint 3" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Meta del Sprint</label>
-                    <input value={sprintGoal} onChange={e=>setSprintGoal(e.target.value)} placeholder="ej. Completar módulo de autenticación" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Capacidad de Story Points</label>
-                    <input type="number" min="0" value={sprintCapacity} onChange={e=>setSprintCapacity(e.target.value)} placeholder="ej. 40" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha de inicio</label>
-                      <input required type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm text-slate-600" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha final</label>
-                      <input required type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm text-slate-600" />
-                    </div>
-                  </div>
-                  <button type="submit" className="w-full h-12 bg-[#446E51] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90">
-                    <Plus size={18} /> Crear Sprint
-                  </button>
-                </form>
-              )}
             </div>
 
             {/* Members Section - always visible, actions gated */}
