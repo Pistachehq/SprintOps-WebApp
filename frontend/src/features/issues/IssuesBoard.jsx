@@ -132,7 +132,7 @@ const IssuesBoard = () => {
                     
                     <DroppableColumn id={column.id}>
                       {columnIssues.map(issue => (
-                        <DraggableIssueCard key={issue.id} issue={issue} />
+                        <DraggableIssueCard key={issue.id} issue={issue} sprintId={id} />
                       ))}
                       
                       {canCreateIssue && column.id === 'todo' && (
