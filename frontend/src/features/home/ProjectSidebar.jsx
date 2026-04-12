@@ -10,9 +10,6 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
   const [displayProject, setDisplayProject] = useState(null);
   const { user } = useAuth();
   const [stats, setStats] = useState({
-    total: 0,
-    completed: 0,
-    blocked: 0,
     progress: 0,
     sprintCount: 0,
     issuesTotal: 0,
@@ -65,15 +62,11 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
 
         const total = relevant.length;
         const completed = relevant.filter(i => i.status === 'done').length;
-        const blocked = relevant.filter(i => i.status === 'blocked').length;
         const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-        setStats({ total, completed, blocked, progress, sprintCount, issuesTotal });
+        setStats({ progress, sprintCount, issuesTotal });
       } catch {
         setStats({
-          total: 0,
-          completed: 0,
-          blocked: 0,
           progress: 0,
           sprintCount: 0,
           issuesTotal: 0,
@@ -185,35 +178,6 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
             <div className="space-y-1">
               <p className="text-[10px] text-gray-400 font-bold uppercase">Fecha Fin</p>
               <p className="text-sm font-bold text-gray-700">{displayProject?.end}</p>
-            </div>
-          </div>
-
-          {/* Tasks Summary */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Resumen de Tareas</h3>
-            
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-sm font-medium text-gray-600">Totales</span>
-              </div>
-              <span className="font-bold text-gray-800">{stats.total}</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-sm font-medium text-gray-600">Completados</span>
-              </div>
-              <span className="font-bold text-gray-800">{stats.completed}</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-sm font-medium text-gray-600">Bloqueados</span>
-              </div>
-              <span className="font-bold text-gray-800">{stats.blocked}</span>
             </div>
           </div>
         </div>
