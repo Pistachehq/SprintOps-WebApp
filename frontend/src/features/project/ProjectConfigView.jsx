@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye } from 'lucide-react';
+import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal } from 'lucide-react';
 import { useSprints } from '../sprint/hooks/useSprints';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
@@ -112,6 +112,9 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   // Editing member inline
   const [editingMemberIdx, setEditingMemberIdx] = useState(null);
   const [editMemberRole, setEditMemberRole] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
+  const [memberRoleFilters, setMemberRoleFilters] = useState(new Set());
+  const [showRoleFilter, setShowRoleFilter] = useState(false);
 
   // Editing project end date
   const [isEditingProjectEndDate, setIsEditingProjectEndDate] = useState(false);
@@ -409,14 +412,74 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
             </div>
 
             {/* Members Section - always visible, actions gated */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-h-[600px] overflow-y-auto">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
           <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
             <Users className="text-[#446E51]" /> Roles de Equipo
           </h3>
-          <p className="text-sm text-slate-500 mb-6">Gestiona a los miembros asignados en general a este proyecto.</p>
-          
-          <div className="space-y-4">
-            {localMembers.map((m, idx) => (
+          <p className="text-sm text-slate-500 mb-4">Gestiona a los miembros asignados en general a este proyecto.</p>
+
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1 relative">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={memberSearch}
+                onChange={e => setMemberSearch(e.target.value)}
+                placeholder="Buscar miembro..."
+                className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] focus:border-transparent outline-none text-sm"
+              />
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowRoleFilter(!showRoleFilter)}
+                className={`h-10 px-3 rounded-xl border flex items-center gap-2 text-sm font-medium transition-colors ${memberRoleFilters.size > 0 ? 'border-[#446E51] bg-[#446E51]/10 text-[#446E51]' : 'border-gray-200 text-slate-500 hover:border-slate-300'}`}
+              >
+                <SlidersHorizontal size={15} />
+                Rol{memberRoleFilters.size > 0 && <span className="text-[10px] bg-[#446E51] text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">{memberRoleFilters.size}</span>}
+              </button>
+              {showRoleFilter && (
+                <div className="absolute right-0 top-12 bg-white border border-slate-100 rounded-xl shadow-lg z-20 min-w-[180px] py-2 animate-in fade-in zoom-in duration-150">
+                  {roles.map(r => {
+                    const active = memberRoleFilters.has(r.nombreRol);
+                    return (
+                      <button
+                        key={r.idRol}
+                        onClick={() => setMemberRoleFilters(prev => {
+                          const next = new Set(prev);
+                          if (next.has(r.nombreRol)) next.delete(r.nombreRol); else next.add(r.nombreRol);
+                          return next;
+                        })}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${active ? 'bg-[#446E51] border-[#446E51]' : 'border-slate-300'}`}>
+                          {active && <Check size={10} className="text-white" />}
+                        </div>
+                        <span className={active ? 'text-[#446E51] font-semibold' : 'text-slate-600'}>{r.nombreRol}</span>
+                      </button>
+                    );
+                  })}
+                  {memberRoleFilters.size > 0 && (
+                    <div className="border-t border-slate-100 mt-1 pt-1">
+                      <button
+                        onClick={() => { setMemberRoleFilters(new Set()); setShowRoleFilter(false); }}
+                        className="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-red-500 transition-colors font-medium"
+                      >
+                        Limpiar filtros
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4 max-h-[340px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+            {localMembers.map((m, origIdx) => ({ m, origIdx })).filter(({ m }) => {
+              const q = memberSearch.toLowerCase();
+              const matchesSearch = !q || m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
+              const matchesRole = memberRoleFilters.size === 0 || memberRoleFilters.has(m.role);
+              return matchesSearch && matchesRole;
+            }).map(({ m, origIdx: idx }) => (
               <div key={idx} className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
                 {editingMemberIdx === idx ? (
                   <div className="space-y-3">
@@ -464,6 +527,12 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
                 )}
               </div>
             ))}
+            {localMembers.filter(m => {
+              const q = memberSearch.toLowerCase();
+              return (!q || m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q)) && (memberRoleFilters.size === 0 || memberRoleFilters.has(m.role));
+            }).length === 0 && (
+              <p className="text-center text-sm text-slate-400 py-6">No se encontraron miembros.</p>
+            )}
           </div>
             </div>
           </div>
