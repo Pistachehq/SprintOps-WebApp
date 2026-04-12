@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Users, Layers, ListTodo } from 'lucide-react';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { issuesRepository } from '../../data/repositories/issuesRepository';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
 
 const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [displayProject, setDisplayProject] = useState(null);
   const { user } = useAuth();
-  const [stats, setStats] = useState({ total: 0, completed: 0, blocked: 0, progress: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    completed: 0,
+    blocked: 0,
+    progress: 0,
+    sprintCount: 0,
+    issuesTotal: 0,
+  });
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     if (project) {
@@ -26,10 +35,18 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
     if (!project?.id) return;
     const loadStats = async () => {
       try {
-        const sprints = await sprintsRepository.getByProjectId(project.id);
+        const [sprints, memberList] = await Promise.all([
+          sprintsRepository.getByProjectId(project.id),
+          projectsRepository.getMembers(project.id).catch(() => []),
+        ]);
+        setMembers(memberList || []);
+
         const allIssues = (await Promise.all(
           sprints.map(s => issuesRepository.getBySprintId(s.id))
         )).flat();
+
+        const issuesTotal = allIssues.length;
+        const sprintCount = sprints.length;
 
         const role = user?.role || 'developer';
         const relevant = role === 'developer'
@@ -41,9 +58,17 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
         const blocked = relevant.filter(i => i.status === 'blocked').length;
         const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-        setStats({ total, completed, blocked, progress });
+        setStats({ total, completed, blocked, progress, sprintCount, issuesTotal });
       } catch {
-        setStats({ total: 0, completed: 0, blocked: 0, progress: 0 });
+        setStats({
+          total: 0,
+          completed: 0,
+          blocked: 0,
+          progress: 0,
+          sprintCount: 0,
+          issuesTotal: 0,
+        });
+        setMembers([]);
       }
     };
     loadStats();
@@ -66,14 +91,65 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold text-gray-800">Detalles del Proyecto</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <h2 className="text-xl font-bold text-gray-800 leading-tight">Detalles del Proyecto</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0">
             <X size={20} className="text-gray-400" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-8 pr-2">
+        {displayProject?.name && (
+          <p className="text-lg font-black text-gray-900 leading-snug mb-5 pr-8 -mt-1">
+            {displayProject.name}
+          </p>
+        )}
+
+        <div className="flex-1 overflow-y-auto space-y-8 pr-2 min-h-0">
+          {/* Description */}
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Descripción</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {displayProject?.description?.trim()
+                ? displayProject.description
+                : 'Sin descripción registrada.'}
+            </p>
+          </div>
+
+          {/* Quick stats: sprints, issues, team */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-xl bg-[#446E51]/8 border border-[#446E51]/15 p-3 text-center">
+              <Layers size={16} className="text-[#446E51] mx-auto mb-1.5" />
+              <p className="text-lg font-black text-gray-800">{stats.sprintCount}</p>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Sprints</p>
+            </div>
+            <div className="rounded-xl bg-[#446E51]/8 border border-[#446E51]/15 p-3 text-center">
+              <ListTodo size={16} className="text-[#446E51] mx-auto mb-1.5" />
+              <p className="text-lg font-black text-gray-800">{stats.issuesTotal}</p>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Issues</p>
+            </div>
+            <div className="rounded-xl bg-[#446E51]/8 border border-[#446E51]/15 p-3 text-center">
+              <Users size={16} className="text-[#446E51] mx-auto mb-1.5" />
+              <p className="text-lg font-black text-gray-800">{members.length}</p>
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Equipo</p>
+            </div>
+          </div>
+
+          {members.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Miembros</h3>
+              <ul className="space-y-1.5 max-h-28 overflow-y-auto text-sm" style={{ scrollbarWidth: 'thin' }}>
+                {members.map((m) => (
+                  <li key={m.userId ?? m.email} className="flex items-center justify-between gap-2 text-gray-700">
+                    <span className="font-medium truncate">{m.name}</span>
+                    <span className="text-[10px] font-bold text-[#446E51] uppercase shrink-0 bg-[#446E51]/10 px-2 py-0.5 rounded">
+                      {m.role}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Progress Section */}
           <div>
             <div className="flex justify-between items-end mb-2">
