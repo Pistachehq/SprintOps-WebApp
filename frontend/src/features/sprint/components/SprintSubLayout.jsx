@@ -56,8 +56,8 @@ const SprintSubLayout = () => {
   };
 
   return (
-    <div className="h-full min-h-0 flex flex-col p-10 bg-oracle-bg">
-      <div className="max-w-7xl mx-auto w-full flex flex-col flex-1 min-h-0">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-10 bg-oracle-bg">
+      <div className="mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col overflow-hidden">
         {/* ── Static Header (Does not move during transitions) ── */}
         <header className="grid grid-cols-3 items-center mb-10 shrink-0">
           <div className="flex items-center gap-4">
@@ -90,7 +90,7 @@ const SprintSubLayout = () => {
         </header>
 
         {/* ── Animated Content Area ── */}
-        <main className="flex-1 min-h-0 relative flex flex-col overflow-hidden">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -101,7 +101,7 @@ const SprintSubLayout = () => {
                 duration: 0.5, 
                 ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic
               }}
-              className="h-full min-h-0 flex flex-col flex-1"
+              className="flex h-full min-h-0 flex-1 flex-col"
             >
               <Outlet context={{ setShowCreateIssue }} />
             </motion.div>

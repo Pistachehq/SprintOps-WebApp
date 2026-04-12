@@ -18,7 +18,7 @@ const ReflectionPage = () => {
   const isDev = role === 'developer';
 
   return (
-    <div className="h-full font-sans">
+    <div className="h-full min-h-0 flex-1 overflow-y-auto font-sans">
       {/* Metrics row - only for users with checkPermission('canViewMetrics') */}
         {checkPermission('canViewMetrics') && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

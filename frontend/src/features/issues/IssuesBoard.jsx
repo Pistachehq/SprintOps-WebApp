@@ -79,33 +79,46 @@ const IssuesBoard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col h-full bg-slate-50/50 rounded-2xl w-full border border-slate-100 items-center justify-center">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/50">
         <LoadingSpinner label="Cargando Tablero Kanban..." />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {/* Sprint Metrics Strip */}
         {checkPermission('canViewMetrics') && (
-          <SprintMetrics issues={visibleIssues} />
+          <div className="shrink-0">
+            <SprintMetrics issues={visibleIssues} />
+          </div>
         )}
 
-        {/* Kanban Board */}
-        <div className="flex-1 overflow-hidden">
+        {/* Kanban Board: md+ altura fija al viewport; scroll dentro de cada columna */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:overflow-hidden">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full overflow-hidden">
+            <div className="min-h-0 md:flex-1 md:min-h-0">
+              <div
+                className={[
+                  'grid min-h-0 gap-6',
+                  'grid-cols-1',
+                  'md:h-full md:overflow-hidden md:grid-cols-2 md:[grid-template-rows:repeat(2,minmax(0,1fr))]',
+                  'lg:grid-cols-4 lg:[grid-template-rows:minmax(0,1fr)]',
+                ].join(' ')}
+              >
               {columns.map(column => {
                 const columnIssues = visibleIssues.filter(i => i.status === column.id);
                 return (
-                  <div key={column.id} className="flex flex-col h-full bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                    <div className="flex items-center justify-between mb-4 px-2">
+                  <div
+                    key={column.id}
+                    className="flex min-h-0 flex-col rounded-2xl border border-slate-100 bg-slate-50 p-4 md:h-full md:max-h-full"
+                  >
+                    <div className="mb-4 flex shrink-0 items-center justify-between px-2">
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-900">{column.label}</h3>
                         <span className="bg-slate-200 text-slate-600 text-[10px] font-black px-2 py-0.5 rounded-full">
@@ -134,6 +147,7 @@ const IssuesBoard = () => {
                   </div>
                 );
               })}
+              </div>
             </div>
 
             <DragOverlay>
