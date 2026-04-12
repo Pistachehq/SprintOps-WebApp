@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { X, Trash2, Upload } from 'lucide-react';
 import BackButton from '../../components/ui/BackButton';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
@@ -109,6 +109,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
 
 const TimelinePage = () => {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [project, setProject] = useState(null);
@@ -133,7 +134,12 @@ const TimelinePage = () => {
       const all = []; const seen = new Set();
       for (const sp of (sd || [])) {
         const si = await issuesRepository.getBySprintId(sp.id).catch(() => []);
-        (si || []).forEach(i => { if (!seen.has(i.id)) { seen.add(i.id); all.push({ ...i, sprintName: sp.name }); } });
+        (si || []).forEach(i => {
+          if (!seen.has(i.id)) {
+            seen.add(i.id);
+            all.push({ ...i, sprintName: sp.name, sprintId: i.sprintId ?? sp.id });
+          }
+        });
       }
       setIssues(all.map((i, idx) => ({ ...i, displayIndex: idx + 1 })));
       const dt = await timelineRepository.getPhotoDates(projectId).catch(() => []);
@@ -216,6 +222,12 @@ const TimelinePage = () => {
     const dt = await timelineRepository.getPhotoDates(projectId).catch(() => []);
     setPhotoDates(new Set(dt || []));
   };
+
+  const openIssueDetail = useCallback((issue) => {
+    const sid = issue?.sprintId;
+    if (issue?.id == null || sid == null || sid === '') return;
+    navigate(`/sprint/${sid}/planning/task/${issue.id}`);
+  }, [navigate]);
 
   if (isLoading) return <div className="h-full bg-oracle-bg flex items-center justify-center"><LoadingSpinner label="Cargando cronograma..." fullPage /></div>;
 
@@ -360,11 +372,23 @@ const TimelinePage = () => {
                 const done = p.issue.status === 'done';
 
                 return (
-                  <div key={p.issue.id}
-                    className="absolute rounded-md flex items-center overflow-hidden cursor-default transition-all duration-150 hover:shadow-md hover:brightness-105 group"
+                  <div
+                    key={p.issue.id}
+                    role="button"
+                    tabIndex={0}
+                    className="absolute rounded-md flex items-center overflow-hidden cursor-pointer transition-all duration-150 hover:shadow-md hover:brightness-105 group"
                     style={{ left, width, top, height: h, background: color, opacity: done ? 0.45 : 0.85, zIndex: 10 }}
-                    onMouseEnter={() => setHoveredRow(idx)} onMouseLeave={() => setHoveredRow(null)}
-                    title={`#${p.issue.displayIndex || p.issue.id} — ${p.issue.title} (${p.dur} días)`}>
+                    onMouseEnter={() => setHoveredRow(idx)}
+                    onMouseLeave={() => setHoveredRow(null)}
+                    onClick={() => openIssueDetail(p.issue)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openIssueDetail(p.issue);
+                      }
+                    }}
+                    title={`#${p.issue.displayIndex || p.issue.id} — ${p.issue.title} (${p.dur} días) · Clic para abrir`}
+                  >
                     <span className="text-[10px] font-bold text-white px-2 whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-sm">
                       {width > 80 ? p.issue.title : width > 40 ? `#${p.issue.displayIndex || p.issue.id}` : ''}
                     </span>
