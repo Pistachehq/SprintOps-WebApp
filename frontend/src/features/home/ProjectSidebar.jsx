@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { X, ExternalLink, Users, Layers, ListTodo } from 'lucide-react';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
@@ -18,6 +18,16 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
     issuesTotal: 0,
   });
   const [members, setMembers] = useState([]);
+
+  const creatorMember = useMemo(() => {
+    const cid = displayProject?.creadorId;
+    if (cid == null) return null;
+    return members.find((m) => Number(m.userId) === Number(cid)) ?? null;
+  }, [members, displayProject?.creadorId]);
+
+  const showCreatorSection =
+    creatorMember != null ||
+    (displayProject?.creadorName && String(displayProject.creadorName).trim());
 
   useEffect(() => {
     if (project) {
@@ -134,19 +144,21 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
             </div>
           </div>
 
-          {members.length > 0 && (
+          {showCreatorSection && (
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Miembros</h3>
-              <ul className="space-y-1.5 max-h-28 overflow-y-auto text-sm" style={{ scrollbarWidth: 'thin' }}>
-                {members.map((m) => (
-                  <li key={m.userId ?? m.email} className="flex items-center justify-between gap-2 text-gray-700">
-                    <span className="font-medium truncate">{m.name}</span>
-                    <span className="text-[10px] font-bold text-[#446E51] uppercase shrink-0 bg-[#446E51]/10 px-2 py-0.5 rounded">
-                      {m.role}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Creador del proyecto
+              </h3>
+              <div className="flex items-center justify-between gap-2 p-3 bg-gray-50 rounded-xl text-sm text-gray-700">
+                <span className="font-semibold truncate min-w-0">
+                  {creatorMember?.name?.trim() || displayProject?.creadorName?.trim() || '—'}
+                </span>
+                {creatorMember?.role && (
+                  <span className="text-[10px] font-bold text-[#446E51] uppercase shrink-0 bg-[#446E51]/10 px-2 py-0.5 rounded">
+                    {creatorMember.role}
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
