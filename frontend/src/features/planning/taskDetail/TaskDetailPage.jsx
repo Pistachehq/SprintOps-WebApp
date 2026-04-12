@@ -146,12 +146,15 @@ const TaskDetailPage = () => {
         <TaskInfoCard task={task} role={role} members={members} onAssign={assignIssue} />
 
         {/* History Section - Always visible below */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8">
-          <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8 flex flex-col min-h-0">
+          <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2 shrink-0">
             <RotateCcw size={18} className="text-[#446E51]" /> Historial de Modificaciones
           </h3>
           {history.length > 0 ? (
-            <div className="space-y-4">
+            <div
+              className="space-y-4 overflow-y-auto max-h-[min(55vh,24rem)] pr-1 -mr-0.5"
+              style={{ scrollbarWidth: 'thin' }}
+            >
               {history.map((record, i) => {
                 const { icon: Icon, bg } = getHistoryIcon(record.action);
                 return (
