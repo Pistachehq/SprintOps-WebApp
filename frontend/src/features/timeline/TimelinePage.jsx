@@ -25,8 +25,8 @@ const BAR_COLORS = [
 
 function getDaysBetween(start, end) {
   const days = [];
-  const d = new Date(start);
-  const last = new Date(end);
+  const d = new Date(start + 'T00:00:00');
+  const last = new Date(end + 'T00:00:00');
   while (d <= last) { days.push(new Date(d)); d.setDate(d.getDate() + 1); }
   return days;
 }
