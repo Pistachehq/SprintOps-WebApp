@@ -12,6 +12,7 @@ import PlanningPage from '../features/planning/PlanningPage';
 import SprintSubLayout from '../features/sprint/components/SprintSubLayout';
 import TaskDetailPage from '../features/planning/taskDetail/TaskDetailPage';
 import ProfilePage from '../features/profile/ProfilePage';
+import IssueUniversePage from '../features/issueUniverse/IssueUniversePage';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -36,6 +37,7 @@ const AppRouter = () => {
         <Route path="projects" element={<HomePage />} />
         <Route path="project/:projectId" element={<ProjectPage />} />
         <Route path="project/:projectId/sprints" element={<SprintsPage />} />
+        <Route path="project/:projectId/universe" element={<IssueUniversePage />} />
         <Route path="sprint/:id">
           <Route index element={<SprintManagerPage />} />
           <Route element={<SprintSubLayout />}>
