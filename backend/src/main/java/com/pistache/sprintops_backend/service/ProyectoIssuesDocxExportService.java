@@ -101,8 +101,8 @@ public class ProyectoIssuesDocxExportService {
         XWPFTableRow row0 = table.getRow(0);
         int pts = issue.getStoryPointsIssue() != null ? issue.getStoryPointsIssue() : 0;
         setCellPlain(row0.getCell(0), "#" + numeroOrden, 10, true);
-        setCellPlain(row0.getCell(1), formatPriority(issue.getPrioridadIssue()), 10, true);
-        setCellPlain(row0.getCell(2), pts + " story points", 10, true);
+        setCellInlineLabeled(row0.getCell(1), "Prioridad: ", formatPriority(issue.getPrioridadIssue()), 10, true);
+        setCellInlineLabeled(row0.getCell(2), "Story Points: ", String.valueOf(pts), 10, true);
 
         // Filas 2–5: combinadas, tamaño 12, etiqueta en negrita
         setMergedRowLabeled(table, 1, "Título del Issue:",
@@ -115,8 +115,8 @@ public class ProyectoIssuesDocxExportService {
 
         // Fila 6: inicio | fin — tamaño 10
         XWPFTableRow row5 = table.getRow(5);
-        setCellPlain(row5.getCell(0), "Fecha de inicio: " + formatDate(issue.getFechaCreacionIssue()), 10, true);
-        setCellPlain(row5.getCell(1), "Fecha de fin: " + formatDate(issue.getFechaFinIssue()), 10, true);
+        setCellInlineLabeled(row5.getCell(0), "Fecha de Inicio: ", formatDate(issue.getFechaCreacionIssue()), 10, true);
+        setCellInlineLabeled(row5.getCell(1), "Fecha de Fin: ", formatDate(issue.getFechaFinIssue()), 10, true);
         if (row5.getTableCells().size() > 2) {
             row5.removeCell(2);
         }
@@ -180,6 +180,25 @@ public class ProyectoIssuesDocxExportService {
         run.setFontFamily(FONT_TNR);
         run.setFontSize(fontSizePt);
         run.setText(text != null ? text : "—");
+    }
+
+    /** Misma línea: etiqueta en negrita y cuerpo en regular (Times New Roman). */
+    private void setCellInlineLabeled(XWPFTableCell cell, String label, String body, int fontSizePt, boolean justify) {
+        clearCellParagraphs(cell);
+        XWPFParagraph p = cell.addParagraph();
+        if (justify) {
+            p.setAlignment(ParagraphAlignment.BOTH);
+        }
+        XWPFRun rLabel = p.createRun();
+        rLabel.setFontFamily(FONT_TNR);
+        rLabel.setFontSize(fontSizePt);
+        rLabel.setBold(true);
+        rLabel.setText(label);
+        XWPFRun rBody = p.createRun();
+        rBody.setFontFamily(FONT_TNR);
+        rBody.setFontSize(fontSizePt);
+        rBody.setBold(false);
+        rBody.setText(body != null ? body : "—");
     }
 
     private void applyTableBorders(XWPFTable table) {
