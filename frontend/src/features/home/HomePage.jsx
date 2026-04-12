@@ -60,11 +60,11 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-oracle-bg p-10">
-      <div className="max-w-7xl mx-auto">
-        <header className="flex justify-between items-center mb-10">
+    <div className="flex-1 min-h-0 flex flex-col bg-oracle-bg p-10">
+      <div className="max-w-7xl mx-auto w-full flex flex-col flex-1 min-h-0">
+        <header className="flex justify-between items-center gap-4 mb-6 shrink-0">
           <h1 className="text-4xl font-black text-gray-800">Proyectos</h1>
-          <div className="flex gap-3">
+          <div className="flex gap-3 shrink-0">
             {canCreate && (
               <button
                 onClick={() => setShowCreateModal(true)}
@@ -82,26 +82,33 @@ const HomePage = () => {
           </div>
         </header>
 
-        {isLoading ? (
-          <LoadingSpinner label="Cargando proyectos..." />
-        ) : filteredProjects.length === 0 ? (
-          <EmptyState 
-            title={searchQuery ? "No se encontraron proyectos" : "Aún no tienes proyectos"}
-            description={searchQuery ? "Prueba con otro término de búsqueda." : "Crea un nuevo proyecto para comenzar a organizar tus Sprints."}
-            actionButton={
-              !searchQuery && canCreate && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="px-6 py-3 bg-oracle-main text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
-                >
-                  Crear Proyecto
-                </button>
-              )
-            }
-          />
-        ) : (
-          <ProjectGrid projects={filteredProjects} onSelect={handleSelectProject} />
-        )}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 pb-2"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          {isLoading ? (
+            <div className="flex justify-center py-16">
+              <LoadingSpinner label="Cargando proyectos..." />
+            </div>
+          ) : filteredProjects.length === 0 ? (
+            <EmptyState 
+              title={searchQuery ? "No se encontraron proyectos" : "Aún no tienes proyectos"}
+              description={searchQuery ? "Prueba con otro término de búsqueda." : "Crea un nuevo proyecto para comenzar a organizar tus Sprints."}
+              actionButton={
+                !searchQuery && canCreate && (
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-6 py-3 bg-oracle-main text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
+                  >
+                    Crear Proyecto
+                  </button>
+                )
+              }
+            />
+          ) : (
+            <ProjectGrid projects={filteredProjects} onSelect={handleSelectProject} />
+          )}
+        </div>
       </div>
 
       <ProjectSidebar
