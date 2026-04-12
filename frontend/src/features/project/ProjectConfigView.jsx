@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal } from 'lucide-react';
-import { useSprints } from '../sprint/hooks/useSprints';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
@@ -40,8 +39,15 @@ const formatDateDisplay = (dateString) => {
   return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 };
 
-const ProjectConfigView = ({ projectId, project, onClose }) => {
-  const { sprints, addSprint, updateSprint } = useSprints(projectId);
+const ProjectConfigView = ({
+  projectId,
+  project,
+  onClose,
+  sprints = [],
+  sprintActions,
+  onProjectUpdated,
+}) => {
+  const { addSprint, updateSprint, refetchSprints } = sprintActions || {};
   const { user, checkPermission, refreshPermissions, refreshPermissionsForProject } = useAuth();
   
   const [sprintName, setSprintName] = useState('');
@@ -62,28 +68,36 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   const [expandedRoleId, setExpandedRoleId] = useState(null);
   const [rolePermisos, setRolePermisos] = useState({});
 
-  useEffect(() => {
-    projectsRepository.getMembers(projectId).then(members => {
-      setLocalMembers(members);
-    }).catch(() => {});
-    loadRoles();
-    refreshPermissionsForProject(projectId);
+  const loadMembers = useCallback(async () => {
+    try {
+      const members = await projectsRepository.getMembers(projectId);
+      setLocalMembers(members || []);
+    } catch {
+      setLocalMembers([]);
+    }
   }, [projectId]);
 
-  const loadRoles = async () => {
+  const loadRoles = useCallback(async () => {
     try {
       const projectRoles = await rolesRepository.getByProject(projectId);
       setRoles(projectRoles);
     } catch (err) {
       console.error('Error loading roles:', err);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadMembers();
+    loadRoles();
+    refreshPermissionsForProject(projectId);
+  }, [projectId, loadMembers, loadRoles, refreshPermissionsForProject]);
 
   const handleDeleteRole = async (roleId) => {
     if (confirm('¿Estás seguro de eliminar este rol?')) {
       try {
         await rolesRepository.delete(roleId);
-        loadRoles();
+        await loadRoles();
+        await refreshPermissionsForProject(projectId);
       } catch (err) {
         console.error('Error deleting role:', err);
       }
@@ -121,7 +135,13 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   // Editing project end date
   const [isEditingProjectEndDate, setIsEditingProjectEndDate] = useState(false);
   const [newProjectEndDate, setNewProjectEndDate] = useState(formatDateForInput(project?.end || ''));
-  
+
+  useEffect(() => {
+    if (!isEditingProjectEndDate) {
+      setNewProjectEndDate(formatDateForInput(project?.end || ''));
+    }
+  }, [project?.end, isEditingProjectEndDate]);
+
   const canCreateSprint = checkPermission('canCreateSprint');
   const canManageMembers = checkPermission('canManageMembers');
   const canEditProjectDates = checkPermission('canEditProjectDates');
@@ -135,28 +155,37 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     });
   }, [sprints, sprintSearch]);
 
-  const handleAddSprint = (e) => {
+  const handleAddSprint = async (e) => {
     e.preventDefault();
-    addSprint({
-      projectId,
-      name: sprintName,
-      goal: sprintGoal,
-      status: 'planned',
-      startDate,
-      endDate,
-      capacity: sprintCapacity ? parseInt(sprintCapacity) : null
-    });
-    setSprintName('');
-    setSprintGoal('');
-    setStartDate('');
-    setEndDate('');
-    setSprintCapacity('');
-    setShowSprintCreate(false);
+    if (!addSprint) return;
+    try {
+      await addSprint({
+        projectId,
+        name: sprintName,
+        goal: sprintGoal,
+        status: 'planned',
+        startDate,
+        endDate,
+        capacity: sprintCapacity ? parseInt(sprintCapacity) : null
+      });
+      setSprintName('');
+      setSprintGoal('');
+      setStartDate('');
+      setEndDate('');
+      setSprintCapacity('');
+      setShowSprintCreate(false);
+    } catch (err) {
+      console.error('Error al crear sprint:', err);
+    }
   };
 
   const handleDeleteSprint = async (sprintId) => {
-    if (confirm('¿Estás seguro de eliminar este sprint?')) {
+    if (!confirm('¿Estás seguro de eliminar este sprint?')) return;
+    try {
       await sprintsRepository.delete(sprintId);
+      await refetchSprints?.();
+    } catch (err) {
+      console.error('Error al eliminar sprint:', err);
     }
   };
 
@@ -171,8 +200,9 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
     setEditingSprintId(null);
   };
 
-  const handleDeleteMember = (idx) => {
+  const handleDeleteMember = async (idx) => {
     setLocalMembers(localMembers.filter((_, i) => i !== idx));
+    await loadMembers();
   };
 
   const startEditMember = (idx) => {
@@ -187,10 +217,11 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
       const updated = [...localMembers];
       updated[editingMemberIdx] = { ...updated[editingMemberIdx], role: editMemberRole };
       setLocalMembers(updated);
-      // If editing the current user's role, update auth with the new role
       if (member.userId === user?.id) {
         refreshPermissions(editMemberRole);
       }
+      await loadMembers();
+      await refreshPermissionsForProject(projectId);
     } catch (err) {
       console.error('Error updating member role:', err);
     }
@@ -206,9 +237,13 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
   };
 
   const handleSaveProjectEndDate = async () => {
-    if (newProjectEndDate) {
+    if (!newProjectEndDate) return;
+    try {
       await projectsRepository.update(projectId, { end: newProjectEndDate });
       setIsEditingProjectEndDate(false);
+      await onProjectUpdated?.();
+    } catch (err) {
+      console.error('Error al actualizar fecha del proyecto:', err);
     }
   };
 
@@ -689,11 +724,11 @@ const ProjectConfigView = ({ projectId, project, onClose }) => {
       <CreateRoleModal
         isOpen={showCreateRoleModal}
         onClose={() => { setShowCreateRoleModal(false); setEditingRole(null); }}
-        onRoleCreated={() => {
-          loadRoles();
+        onRoleCreated={async () => {
+          await loadRoles();
           setRolePermisos({});
           setExpandedRoleId(null);
-          refreshPermissions();
+          await refreshPermissionsForProject(projectId);
         }}
         editRole={editingRole}
         projectId={projectId}

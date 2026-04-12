@@ -12,8 +12,8 @@ const DevTasksView = ({ sprintId, issuesData }) => {
   const myTasks = issues.filter(t => t.assigneeIds?.includes(user?.id));
 
   return (
-    <div className="bg-white rounded-[24px] p-10 shadow-sm border border-gray-100 max-w-5xl mx-auto h-full flex flex-col">
-      <div className="flex items-center gap-4 mb-3">
+    <div className="bg-white rounded-[24px] p-10 shadow-sm border border-gray-100 max-w-5xl mx-auto h-full min-h-0 flex flex-col">
+      <div className="flex items-center gap-4 mb-3 shrink-0">
         <div className="w-12 h-12 bg-[#446E51]/10 rounded-xl flex items-center justify-center">
           <ClipboardList size={24} className="text-[#446E51]" />
         </div>
@@ -25,7 +25,7 @@ const DevTasksView = ({ sprintId, issuesData }) => {
         </div>
       </div>
 
-      <div className="border-t border-gray-100 my-6" />
+      <div className="border-t border-gray-100 my-6 shrink-0" />
 
       {myTasks.length === 0 ? (
         <div className="text-center py-20">
@@ -38,7 +38,7 @@ const DevTasksView = ({ sprintId, issuesData }) => {
           </p>
         </div>
       ) : (
-        <div className="space-y-5 overflow-y-auto flex-1">
+        <div className="space-y-5 overflow-y-auto flex-1 min-h-0" style={{ scrollbarWidth: 'thin' }}>
           {myTasks.map(task => (
             <div
               key={task.id}

@@ -16,23 +16,22 @@ const PlanningPage = () => {
   const { setShowCreateIssue } = useOutletContext();
 
   return (
-    <div className="h-full font-sans">
-
+    <div className="h-full min-h-0 flex flex-col font-sans overflow-y-auto lg:overflow-hidden">
         {!canViewAllIssues ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
-            <div className="lg:col-span-2 flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 flex-1 min-h-0 lg:items-stretch">
+            <div className="lg:col-span-2 flex min-h-0 flex-col lg:h-full">
               <DevTasksView sprintId={id} issuesData={issuesData} />
             </div>
-            <div className="flex flex-col">
+            <div className="flex min-h-0 flex-col lg:h-full">
               <SprintMetrics role={role} sprintId={id} issues={issuesData.issues} />
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
-            <div className="lg:col-span-2 flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 flex-1 min-h-0 lg:items-stretch">
+            <div className="lg:col-span-2 flex min-h-0 flex-col lg:h-full">
               <TaskList role={role} sprintId={id} issuesData={issuesData} />
             </div>
-            <div className="flex flex-col">
+            <div className="flex min-h-0 flex-col lg:h-full">
               <SprintMetrics role={role} sprintId={id} issues={issuesData.issues} />
             </div>
           </div>

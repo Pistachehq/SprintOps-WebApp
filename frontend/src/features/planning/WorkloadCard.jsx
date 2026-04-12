@@ -3,7 +3,7 @@ import { AlertTriangle, Scale, UserX } from 'lucide-react';
 import apiClient from '../../data/api/apiClient';
 
 const WorkloadCard = ({ issues = [] }) => {
-  const [userNames, setUserNames] = useState({});
+  const [userCache, setUserCache] = useState({});
 
   const { workload, unassignedSP, unassignedCount } = useMemo(() => {
     const wl = {};
@@ -31,29 +31,43 @@ const WorkloadCard = ({ issues = [] }) => {
   useEffect(() => {
     if (userIds.length === 0) return;
 
-    const idsToFetch = userIds.filter(id => !userNames[id]);
+    const idsToFetch = userIds.filter(id => !userCache[id]);
     if (idsToFetch.length === 0) return;
 
     Promise.all(
       idsToFetch.map(id =>
         apiClient.get(`/usuarios/${id}`)
-          .then(u => ({ id, name: u.name || `Usuario ${id}` }))
-          .catch(() => ({ id, name: `Usuario ${id}` }))
+          .then(u => ({
+            id,
+            name: u.name || `Usuario ${id}`,
+            avatarUrl: u.avatarUrl || null,
+          }))
+          .catch(() => ({ id, name: `Usuario ${id}`, avatarUrl: null }))
       )
     ).then(results => {
-      setUserNames(prev => {
+      setUserCache(prev => {
         const next = { ...prev };
-        results.forEach(r => { next[r.id] = r.name; });
+        results.forEach(r => {
+          next[r.id] = { name: r.name, avatarUrl: r.avatarUrl };
+        });
         return next;
       });
     });
-  }, [userIds]);
+  }, [userIds, userCache]);
 
   const sortedUsers = useMemo(() => {
     return userIds
-      .map(id => ({ id, name: userNames[id] || `Usuario ${id}`, sp: Math.round(workload[id] * 10) / 10 }))
+      .map(id => {
+        const u = userCache[id];
+        return {
+          id,
+          name: u?.name || `Usuario ${id}`,
+          avatarUrl: u?.avatarUrl || null,
+          sp: Math.round(workload[id] * 10) / 10,
+        };
+      })
       .sort((a, b) => b.sp - a.sp);
-  }, [userIds, userNames, workload]);
+  }, [userIds, userCache, workload]);
 
   const maxSP = sortedUsers.length > 0 ? sortedUsers[0].sp : 0;
   const minSP = sortedUsers.length > 0 ? sortedUsers[sortedUsers.length - 1].sp : 0;
@@ -144,10 +158,22 @@ const WorkloadCard = ({ issues = [] }) => {
 
           return (
             <div key={user.id} className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${
-                highLoad ? 'bg-yellow-500' : lowLoad ? 'bg-blue-400' : 'bg-[#446E51]'
-              }`}>
-                {getInitial(user.name)}
+              <div
+                className={`w-8 h-8 rounded-full shrink-0 overflow-hidden ring-2 ring-offset-1 ring-offset-white ${
+                  highLoad ? 'ring-yellow-400' : lowLoad ? 'ring-blue-300' : 'ring-[#446E51]/35'
+                }`}
+              >
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div
+                    className={`w-full h-full flex items-center justify-center text-xs font-bold text-white ${
+                      highLoad ? 'bg-yellow-500' : lowLoad ? 'bg-blue-400' : 'bg-[#446E51]'
+                    }`}
+                  >
+                    {getInitial(user.name)}
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-center mb-1">

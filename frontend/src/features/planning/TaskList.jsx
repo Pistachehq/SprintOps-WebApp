@@ -26,8 +26,8 @@ const TaskList = ({ role, sprintId, issuesData }) => {
   };
 
   return (
-    <div className="bg-white rounded-[24px] p-8 shadow-sm border border-gray-100 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-8">
+    <div className="bg-white rounded-[24px] p-8 shadow-sm border border-gray-100 h-full min-h-0 flex flex-col">
+      <div className="flex justify-between items-center mb-8 shrink-0">
         <h2 className="text-2xl font-black text-gray-800">Backlog del Sprint</h2>
         <div className="flex items-center gap-3">
           {canEditIssue && (
@@ -53,7 +53,7 @@ const TaskList = ({ role, sprintId, issuesData }) => {
         </div>
       </div>
 
-      <div className="overflow-y-auto space-y-4 flex-1">
+      <div className="overflow-y-auto space-y-4 flex-1 min-h-0" style={{ scrollbarWidth: 'thin' }}>
         {issues.map((task) => (
           <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} members={members} onAssign={assignIssue} editMode={editMode} onDelete={deleteIssue} />
         ))}

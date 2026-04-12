@@ -43,7 +43,7 @@ const SprintManagerPage = () => {
   const progress = totalIssues > 0 ? Math.round((doneIssues / totalIssues) * 100) : 0;
 
   return (
-    <div className="h-full bg-[#F0EFED] flex flex-col items-center py-12 px-10 relative overflow-hidden">
+    <div className="h-full bg-[#F0EFED] flex flex-col items-center py-6 px-10 relative overflow-x-hidden overflow-y-auto min-h-0">
       <div className="absolute top-10 left-10">
         <BackButton to={`/project/${projectId}/sprints`} />
       </div>
@@ -56,15 +56,15 @@ const SprintManagerPage = () => {
         <Trash2 size={18} /> Papelera
       </button>
 
-      <h1 className="text-[52px] font-black text-gray-800 mb-20 tracking-tight">
+      <h1 className="text-[52px] font-black text-gray-800 mb-5 tracking-tight shrink-0">
         {sprint?.name || 'Cargando...'}
       </h1>
 
-      <div className="w-full max-w-6xl flex-1 flex justify-center items-center">
+      <div className="w-full max-w-[1100px] flex-1 flex justify-center items-start px-2 py-5 overflow-visible min-h-0">
         <SprintFlow sprintId={id} progress={progress} />
       </div>
 
-      <div className="mt-8 mb-4 text-center">
+      <div className="mt-4 mb-3 text-center shrink-0">
         <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-1">Nombre del Proyecto:</p>
         <p className="text-[28px] font-black text-gray-800">{projectName}</p>
       </div>

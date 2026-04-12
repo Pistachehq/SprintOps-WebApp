@@ -9,7 +9,7 @@ const SprintMetrics = ({ role, sprintId, issues }) => {
   const canViewMetrics = checkPermission('canViewMetrics');
 
   return (
-    <div className="space-y-6 flex-1">
+    <div className="space-y-6 flex-1 min-h-0 overflow-y-auto flex flex-col" style={{ scrollbarWidth: 'thin' }}>
       {canViewMetrics && (
         <>
           <CapacityCard sprintId={sprintId} issues={issues} />

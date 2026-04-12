@@ -12,7 +12,7 @@ const AssignedTasksCard = ({ sprintId, issues = [] }) => {
   return (
     <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b pb-2">Mis Tareas Asignadas</h3>
-      <div className="space-y-3 overflow-y-auto" style={{ maxHeight: '20rem' }}>
+      <div className="space-y-3">
         {myTasks.length > 0 ? myTasks.map(t => (
           <div 
             key={t.id} 

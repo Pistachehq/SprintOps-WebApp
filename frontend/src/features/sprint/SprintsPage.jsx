@@ -18,8 +18,8 @@ const SprintsPage = () => {
   const [addedUsers, setAddedUsers] = useState([]);
 
   const { checkPermission } = useAuth();
-  const { sprints, isLoading: isLoadingSprints } = useSprints(projectId);
-  const { projects, isLoading: isLoadingProjects } = useProjects();
+  const { sprints, isLoading: isLoadingSprints, addSprint, updateSprint, refetch: refetchSprints } = useSprints(projectId);
+  const { projects, isLoading: isLoadingProjects, refetch: refetchProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
   const canManageProject = checkPermission('canManageSprints');
 
@@ -111,10 +111,13 @@ const SprintsPage = () => {
       </main>
 
       {showConfig && (
-        <ProjectConfigView 
-          projectId={projectId} 
-          project={project} 
-          onClose={() => setShowConfig(false)} 
+        <ProjectConfigView
+          projectId={projectId}
+          project={project}
+          onClose={() => setShowConfig(false)}
+          sprints={sprints}
+          sprintActions={{ addSprint, updateSprint, refetchSprints }}
+          onProjectUpdated={refetchProjects}
         />
       )}
     </div>

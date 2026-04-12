@@ -56,10 +56,10 @@ const SprintSubLayout = () => {
   };
 
   return (
-    <div className="h-full flex flex-col p-10 bg-oracle-bg overflow-hidden">
-      <div className="max-w-7xl mx-auto w-full flex flex-col flex-1">
+    <div className="h-full min-h-0 flex flex-col p-10 bg-oracle-bg">
+      <div className="max-w-7xl mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* ── Static Header (Does not move during transitions) ── */}
-        <header className="grid grid-cols-3 items-center mb-10">
+        <header className="grid grid-cols-3 items-center mb-10 shrink-0">
           <div className="flex items-center gap-4">
             <BackButton to={`/sprint/${id}`} />
             <h1 className="text-4xl font-black text-slate-800 tracking-tight transition-all duration-300">
@@ -90,7 +90,7 @@ const SprintSubLayout = () => {
         </header>
 
         {/* ── Animated Content Area ── */}
-        <main className="flex-1 relative">
+        <main className="flex-1 min-h-0 relative flex flex-col overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -101,7 +101,7 @@ const SprintSubLayout = () => {
                 duration: 0.5, 
                 ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic
               }}
-              className="h-full"
+              className="h-full min-h-0 flex flex-col flex-1"
             >
               <Outlet context={{ setShowCreateIssue }} />
             </motion.div>
