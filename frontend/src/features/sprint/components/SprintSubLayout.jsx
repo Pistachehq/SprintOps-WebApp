@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useParams, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Activity, Plus, Target } from 'lucide-react';
 import BackButton from '../../../components/ui/BackButton';
 import SprintTabs from '../../../components/ui/SprintTabs';
+import Modal from '../../../components/Modal';
 import CreateIssueModal from '../../issues/CreateIssueModal';
+import VelocityChart from '../../reflection/VelocityChart';
+import SprintIndicatorCard from '../../reflection/SprintIndicatorCard';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useIssues } from '../../issues/hooks/useIssues';
 import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
@@ -16,6 +19,8 @@ const SprintSubLayout = () => {
   const { issues, addIssue } = useIssues(id);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [sprintName, setSprintName] = useState('');
+  const [velocityModalOpen, setVelocityModalOpen] = useState(false);
+  const [sprintIndicatorModalOpen, setSprintIndicatorModalOpen] = useState(false);
 
   useEffect(() => {
     sprintsRepository.getById(id).then(sprint => {
@@ -25,8 +30,6 @@ const SprintSubLayout = () => {
       }
     }).catch(() => {});
   }, [id]);
-
-  const canCreateIssue = checkPermission('canCreateIssue');
 
   /**
    * Determine page-specific header content based on route
@@ -46,6 +49,15 @@ const SprintSubLayout = () => {
   };
 
   const { title, showButton, tab } = getHeaderInfo();
+  const canCreateIssue = checkPermission('canCreateIssue');
+  const canViewMetrics = checkPermission('canViewMetrics');
+
+  useEffect(() => {
+    if (tab !== 'reflection') {
+      setVelocityModalOpen(false);
+      setSprintIndicatorModalOpen(false);
+    }
+  }, [tab]);
 
   const handleCreateIssue = (newIssue) => {
     addIssue({
@@ -67,8 +79,30 @@ const SprintSubLayout = () => {
             </h1>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             <SprintTabs activeTab={tab} sprintId={id} />
+            {tab === 'reflection' && canViewMetrics && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setVelocityModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-3 sm:text-xs"
+                >
+                  <Activity size={15} className="shrink-0 text-oracle-red sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Velocidad histórica</span>
+                  <span className="sm:hidden">Velocidad</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSprintIndicatorModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-black uppercase tracking-wider text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-3 sm:text-xs"
+                >
+                  <Target size={15} className="shrink-0 text-oracle-red sm:h-4 sm:w-4" />
+                  <span className="hidden min-[420px]:inline">Sprint indicator</span>
+                  <span className="min-[420px]:hidden">Indicador</span>
+                </button>
+              </>
+            )}
           </div>
 
           <div className="flex justify-end items-center gap-4 h-11">
@@ -115,6 +149,29 @@ const SprintSubLayout = () => {
         onCreate={handleCreateIssue}
         sprintIssues={issues}
       />
+
+      {canViewMetrics && (
+        <>
+          <Modal
+            isOpen={velocityModalOpen}
+            onClose={() => setVelocityModalOpen(false)}
+            title="Velocidad histórica"
+            maxWidthClass="max-w-4xl"
+            bodyClassName="p-4 sm:p-6"
+          >
+            <VelocityChart embedded />
+          </Modal>
+          <Modal
+            isOpen={sprintIndicatorModalOpen}
+            onClose={() => setSprintIndicatorModalOpen(false)}
+            title="Sprint indicator"
+            maxWidthClass="max-w-lg"
+            bodyClassName="p-4 sm:p-6"
+          >
+            <SprintIndicatorCard embedded />
+          </Modal>
+        </>
+      )}
     </div>
   );
 };
