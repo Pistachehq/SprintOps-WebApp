@@ -42,6 +42,16 @@ async function getRaw(path) {
   return response;
 }
 
+async function requestBlob(path) {
+  const url = `${API_BASE}${path}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    throw new Error(errText || `HTTP ${response.status}`);
+  }
+  return response.blob();
+}
+
 const apiClient = {
   get: (path) => request(path),
   post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
@@ -49,6 +59,7 @@ const apiClient = {
   delete: (path) => request(path, { method: 'DELETE' }),
   upload: (path, formData) => uploadRequest(path, formData),
   getRaw: (path) => getRaw(path),
+  getBlob: (path) => requestBlob(path),
 };
 
 export default apiClient;

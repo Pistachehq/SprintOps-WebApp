@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X, Trash2, Upload } from 'lucide-react';
+import { X, Trash2, Upload, Download } from 'lucide-react';
 import BackButton from '../../components/ui/BackButton';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
@@ -113,6 +113,7 @@ const TimelinePage = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [photoDates, setPhotoDates] = useState(new Set());
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [exportingDocx, setExportingDocx] = useState(false);
   const [viewH, setViewH] = useState(2000);
   const gridRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -218,6 +219,27 @@ const TimelinePage = () => {
     setPhotoDates(new Set(dt || []));
   };
 
+  const handleExportDocx = async () => {
+    if (!projectId) return;
+    setExportingDocx(true);
+    try {
+      const blob = await projectsRepository.downloadIssuesDocx(projectId);
+      const safe = (project?.name || 'proyecto').replace(/[^\w\s.-]/g, '_').replace(/\s+/g, ' ').trim() || 'proyecto';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safe}-Issues.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exportando .docx:', err);
+    } finally {
+      setExportingDocx(false);
+    }
+  };
+
   const openIssueDetail = useCallback((issue) => {
     const sid = issue?.sprintId;
     if (issue?.id == null || sid == null || sid === '') return;
@@ -249,7 +271,15 @@ const TimelinePage = () => {
             <p className="text-[11px] text-gray-400 font-medium">Cronograma del Proyecto</p>
           </div>
         </div>
-        <button onClick={scrollToToday} className="btn-oracle text-xs !py-2 !px-4">Hoy</button>
+        <button
+          type="button"
+          onClick={handleExportDocx}
+          disabled={exportingDocx}
+          className="flex items-center gap-2 text-xs font-semibold py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:hover:bg-blue-600 transition-colors"
+        >
+          <Download size={14} />
+          {exportingDocx ? 'Exportando…' : 'Exportar a .docx'}
+        </button>
       </div>
 
       {/* Chart */}

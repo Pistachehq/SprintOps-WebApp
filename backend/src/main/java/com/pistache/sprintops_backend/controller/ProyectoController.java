@@ -5,13 +5,17 @@ import com.pistache.sprintops_backend.dto.ProyectoDTO;
 import com.pistache.sprintops_backend.dto.MiembroEquipoDTO;
 import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.ProyectoService;
+import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
 import com.pistache.sprintops_backend.service.EquipoService;
 import com.pistache.sprintops_backend.service.UsuarioService;
 import com.pistache.sprintops_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,6 +37,8 @@ public class ProyectoController {
     private RolesDeUsuariosRepository rolesDeUsuariosRepository;
     @Autowired
     private RolRepository rolRepository;
+    @Autowired
+    private ProyectoIssuesDocxExportService proyectoIssuesDocxExportService;
 
     @GetMapping
     public List<ProyectoDTO> getAll() {
@@ -46,6 +52,30 @@ public class ProyectoController {
         return proyectoService.findById(id)
                 .map(p -> ResponseEntity.ok(ProyectoDTO.fromEntity(p)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/export/issues-docx")
+    public ResponseEntity<byte[]> exportIssuesDocx(@PathVariable Integer id) {
+        try {
+            var opt = proyectoService.findById(id);
+            if (opt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            byte[] bytes = proyectoIssuesDocxExportService.export(opt.get());
+            String base = opt.get().getNombreProyecto() != null ? opt.get().getNombreProyecto() : "proyecto";
+            String safe = base.replaceAll("[^a-zA-Z0-9._\\- ]", "_").replaceAll("\\s+", " ").trim();
+            if (safe.isEmpty()) {
+                safe = "proyecto";
+            }
+            String filename = safe + "-Issues.docx";
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType(
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                    .body(bytes);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/codigo/{codigo}")

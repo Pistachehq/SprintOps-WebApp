@@ -10,4 +10,5 @@ export const projectsRepository = {
   getMembers: (projectId) => apiClient.get(`/proyectos/${projectId}/miembros`),
   updateMemberRole: (projectId, userId, role) => apiClient.put(`/proyectos/${projectId}/miembros/${userId}/rol`, { role }),
   joinProject: (projectId, userId) => apiClient.post(`/proyectos/${projectId}/unirse`, { userId }),
+  downloadIssuesDocx: (projectId) => apiClient.getBlob(`/proyectos/${projectId}/export/issues-docx`),
 };
