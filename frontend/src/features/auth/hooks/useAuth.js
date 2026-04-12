@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, createContext, useCallback, createElement } from 'react';
+import { useState, useEffect, useContext, createContext, useCallback, useRef, createElement } from 'react';
 import apiClient from '../../../data/api/apiClient';
 
 const normalizeRole = (backendRole) => {
@@ -35,6 +35,10 @@ export const AuthProvider = ({ children }) => {
     }
     return {};
   });
+
+  /** Evita que callbacks que dependían de `user` cambien en cada render y disparen useEffects en bucle */
+  const userRef = useRef(user);
+  userRef.current = user;
 
   // Fetch permissions from backend for the user's role
   const loadPermissions = useCallback(async (role) => {
@@ -101,20 +105,25 @@ export const AuthProvider = ({ children }) => {
 
   // Load permissions based on the user's role in a specific project
   const refreshPermissionsForProject = useCallback(async (projectId) => {
-    if (!user) return;
+    const u = userRef.current;
+    if (!u?.id) return;
     try {
       const members = await apiClient.get(`/proyectos/${projectId}/miembros`);
-      const me = members.find(m => m.userId === user.id);
-      if (me && me.role) {
-        const updatedUser = { ...user, role: me.role };
-        setUser(updatedUser);
-        localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      const me = members.find(m => m.userId === u.id);
+      if (me?.role) {
+        setUser(prev => {
+          if (!prev) return prev;
+          if (prev.role === me.role) return prev;
+          const next = { ...prev, role: me.role };
+          localStorage.setItem("auth_user", JSON.stringify(next));
+          return next;
+        });
         await loadPermissions(me.role);
       }
     } catch (err) {
       console.error('Error loading project permissions:', err);
     }
-  }, [user, loadPermissions]);
+  }, [loadPermissions]);
 
   const isAuthenticated = !!user;
 

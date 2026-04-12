@@ -1,14 +1,18 @@
 package com.pistache.sprintops_backend.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import java.io.Serializable;
 
 @Entity
 @Table(name = "tabla_permisos")
 @Data
+@EqualsAndHashCode(exclude = {"rol", "permiso"})
+@ToString(exclude = {"rol", "permiso"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class TablaPermisos {

@@ -11,6 +11,7 @@ import com.pistache.sprintops_backend.repository.RolRepository;
 import com.pistache.sprintops_backend.repository.TablaPermisosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -62,13 +63,20 @@ public class RolController {
         return rolService.save(rol);
     }
 
+    /**
+     * Actualiza solo campos enviados. Evita merge de un JSON parcial que pondría {@code proyecto} o {@code sistema} en null.
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<Rol> update(@PathVariable Integer id, @RequestBody Rol rol) {
-        if (!rolService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        rol.setIdRol(id);
-        return ResponseEntity.ok(rolService.save(rol));
+    public ResponseEntity<Rol> update(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+        return rolService.findById(id)
+                .map(existing -> {
+                    Object name = body.get("nombreRol");
+                    if (name instanceof String s && !s.isBlank()) {
+                        existing.setNombreRol(s.trim());
+                    }
+                    return ResponseEntity.ok(rolService.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -96,19 +104,21 @@ public class RolController {
         return ResponseEntity.ok(permisos);
     }
 
+    @Transactional
     @PutMapping("/{id}/permisos")
     public ResponseEntity<Void> setPermisosByRol(@PathVariable Integer id, @RequestBody List<Integer> permisoIds) {
         if (!rolService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         Rol rol = rolService.findById(id).get();
+        List<Integer> ids = permisoIds != null ? permisoIds : List.of();
 
         // Remove existing permissions for this role
         List<TablaPermisos> existing = tablaPermisosRepository.findByRolIdRol(id);
         tablaPermisosRepository.deleteAll(existing);
 
         // Add new permissions
-        for (Integer permisoId : permisoIds) {
+        for (Integer permisoId : ids) {
             permisoService.findById(permisoId).ifPresent(permiso -> {
                 TablaPermisos tp = new TablaPermisos();
                 tp.setId(new TablaPermisosId(id, permisoId));
