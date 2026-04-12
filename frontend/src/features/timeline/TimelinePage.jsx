@@ -8,6 +8,7 @@ import { issuesRepository } from '../../data/repositories/issuesRepository';
 import { timelineRepository } from '../../data/repositories/timelineRepository';
 import { useAuth } from '../auth/hooks/useAuth';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { ISSUE_TAG_COLORS, isAllowedIssueTagColor, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
 const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const DAYS_SHORT = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
@@ -16,12 +17,6 @@ const DAYS_FULL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vierne
 const COL_W = 40;
 const ROW_H = 44;
 const HEADER_H = 56;
-
-const BAR_COLORS = [
-  '#446E51', '#e8702a', '#3b82f6', '#a855f7',
-  '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6',
-  '#ef4444', '#06b6d4', '#d97706', '#10b981',
-];
 
 function getDaysBetween(start, end) {
   const days = [];
@@ -271,7 +266,11 @@ const TimelinePage = () => {
           <div ref={sidebarRef} className="flex-1 overflow-y-auto overflow-x-hidden" onScroll={() => syncScroll('sidebar')} style={{ scrollbarWidth: 'thin' }}>
             <div style={{ height: gridH }}>
               {positions.map((p, idx) => {
-                const color = BAR_COLORS[p.ci % BAR_COLORS.length];
+                const fromTag =
+                  p.issue.tagLabel && isAllowedIssueTagColor(p.issue.tagColor)
+                    ? normalizeIssueTagColor(p.issue.tagColor)
+                    : null;
+                const color = fromTag ?? ISSUE_TAG_COLORS[p.ci % ISSUE_TAG_COLORS.length];
                 const dur = p.issue.createdAt ? diffDays(p.issue.createdAt, p.issue.completedAt || today.toISOString().split('T')[0]) : 0;
                 const done = p.issue.status === 'done';
                 return (
@@ -364,7 +363,11 @@ const TimelinePage = () => {
               {/* Issue bars */}
               {positions.map((p, idx) => {
                 if (p.s < 0) return null;
-                const color = BAR_COLORS[p.ci % BAR_COLORS.length];
+                const fromTag =
+                  p.issue.tagLabel && isAllowedIssueTagColor(p.issue.tagColor)
+                    ? normalizeIssueTagColor(p.issue.tagColor)
+                    : null;
+                const color = fromTag ?? ISSUE_TAG_COLORS[p.ci % ISSUE_TAG_COLORS.length];
                 const left = p.s * COL_W + 2;
                 const width = Math.max(p.dur * COL_W - 4, 14);
                 const top = idx * ROW_H + 8;

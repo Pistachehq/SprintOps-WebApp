@@ -46,6 +46,12 @@ public class Issues {
     @Column(name = "parent_issue_id")
     private Integer parentIssueId;
 
+    @Column(name = "tag_label", length = 100)
+    private String tagLabel;
+
+    @Column(name = "tag_color", length = 20)
+    private String tagColor;
+
     @ManyToOne
     @JoinColumn(name = "Proyecto_id_proyecto")
     private Proyecto proyecto;

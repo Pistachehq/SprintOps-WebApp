@@ -17,4 +17,6 @@ public class CreateIssueRequest {
     private Integer parentIssueId;
     private List<Integer> assigneeIds;
     private LocalDate endDate;
+    private String tagLabel;
+    private String tagColor;
 }

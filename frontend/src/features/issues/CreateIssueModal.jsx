@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search } from 'lucide-react';
+import { X } from 'lucide-react';
+import IssueTagPicker from '../../components/ui/IssueTagPicker';
+import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
 const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [] }) => {
   const [title, setTitle] = useState('');
@@ -11,6 +13,9 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   const [endDate, setEndDate] = useState('');
   const [isSubIssue, setIsSubIssue] = useState(false);
   const [parentIssueId, setParentIssueId] = useState('');
+  const [useTag, setUseTag] = useState(false);
+  const [tagLabel, setTagLabel] = useState('');
+  const [tagColor, setTagColor] = useState(DEFAULT_ISSUE_TAG_COLOR);
 
   useEffect(() => {
     if (issue) {
@@ -23,6 +28,10 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setEndDate(issue.completedAt || '');
       setIsSubIssue(!!issue.parentIssueId);
       setParentIssueId(issue.parentIssueId || '');
+      const has = !!(issue.tagLabel && issue.tagColor);
+      setUseTag(has);
+      setTagLabel(issue.tagLabel || '');
+      setTagColor(normalizeIssueTagColor(issue.tagColor) || DEFAULT_ISSUE_TAG_COLOR);
     } else {
       setTitle('');
       setPurpose('');
@@ -33,6 +42,9 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setEndDate('');
       setIsSubIssue(false);
       setParentIssueId('');
+      setUseTag(false);
+      setTagLabel('');
+      setTagColor(DEFAULT_ISSUE_TAG_COLOR);
     }
   }, [issue, isOpen]);
 
@@ -40,6 +52,14 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const tagPayload =
+      useTag && tagLabel.trim()
+        ? {
+            tagLabel: tagLabel.trim(),
+            tagColor: normalizeIssueTagColor(tagColor) || DEFAULT_ISSUE_TAG_COLOR,
+          }
+        : { tagLabel: null, tagColor: null };
+
     const issueData = {
       title,
       purpose,
@@ -50,7 +70,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       storyPoints: Number(points) || 0,
       endDate: endDate || null,
       parentIssueId: isSubIssue && parentIssueId ? Number(parentIssueId) : null,
-      assigneeIds: issue ? issue.assigneeIds : []
+      assigneeIds: issue ? issue.assigneeIds : [],
+      ...tagPayload,
     };
 
     if (issue && onEdit) {
@@ -63,16 +84,19 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
+      <div className="flex max-h-[min(92vh,calc(100dvh-2rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-gray-50 p-6">
           <h2 className="text-xl font-black text-gray-800 tracking-tight">{issue ? "Editar Issue" : "Crear Issue"}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button type="button" onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
             <X size={24} />
           </button>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4 [scrollbar-width:thin] flex flex-col gap-4"
+          >
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Título</label>
             <input 
@@ -154,6 +178,16 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             </div>
           </div>
 
+          <IssueTagPicker
+            idPrefix="issue-modal"
+            enabled={useTag}
+            onEnabledChange={setUseTag}
+            tagLabel={tagLabel}
+            tagColor={tagColor}
+            onLabelChange={setTagLabel}
+            onColorChange={setTagColor}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">¿Es Sub Issue?</label>
@@ -191,12 +225,13 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
               </select>
             </div>
           )}
-          
-          <div className="mt-4 flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">
+          </div>
+
+          <div className="flex shrink-0 gap-3 border-t border-gray-100 bg-white px-6 py-4">
+            <button type="button" onClick={onClose} className="h-12 flex-1 rounded-xl bg-gray-100 font-bold text-slate-600 transition-colors hover:bg-gray-200">
               Cancelar
             </button>
-            <button type="submit" className="flex-1 h-12 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors shadow-lg shadow-green-900/20">
+            <button type="submit" className="h-12 flex-1 rounded-xl bg-[#446E51] font-bold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[#355640]">
               {issue ? "Guardar Cambios" : "Crear Issue"}
             </button>
           </div>

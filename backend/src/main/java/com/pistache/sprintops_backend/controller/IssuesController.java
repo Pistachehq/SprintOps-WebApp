@@ -27,6 +27,14 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class IssuesController {
 
+    private static final String DEFAULT_TAG_COLOR = "#446e51";
+
+    private static final Set<String> ALLOWED_TAG_COLORS = Set.of(
+            "#446e51", "#e8702a", "#3b82f6", "#a855f7",
+            "#14b8a6", "#f59e0b", "#ec4899", "#8b5cf6",
+            "#ef4444", "#06b6d4", "#d97706", "#10b981"
+    );
+
     @Autowired
     private IssuesService issuesService;
     @Autowired
@@ -90,6 +98,7 @@ public class IssuesController {
         issue.setParentIssueId(request.getParentIssueId());
         issue.setFechaCreacionIssue(LocalDate.now());
         issue.setFechaFinIssue(request.getEndDate());
+        applyIssueTags(issue, request.getTagLabel(), request.getTagColor());
 
         if (request.getProjectId() != null) {
             proyectoService.findById(request.getProjectId()).ifPresent(issue::setProyecto);
@@ -163,6 +172,16 @@ public class IssuesController {
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
         if (updates.containsKey("parentIssueId")) issue.setParentIssueId((Integer) updates.get("parentIssueId"));
+
+        if (updates.containsKey("tagLabel") || updates.containsKey("tagColor")) {
+            String label = updates.containsKey("tagLabel")
+                    ? (updates.get("tagLabel") == null ? null : String.valueOf(updates.get("tagLabel")))
+                    : issue.getTagLabel();
+            String color = updates.containsKey("tagColor")
+                    ? (updates.get("tagColor") == null ? null : String.valueOf(updates.get("tagColor")))
+                    : issue.getTagColor();
+            applyIssueTags(issue, label, color);
+        }
 
         issue = issuesService.save(issue);
 
@@ -244,5 +263,31 @@ public class IssuesController {
         }
 
         return IssueDTO.fromEntity(issue, assigneeIds, sprintId);
+    }
+
+    private static String sanitizeTagLabel(String raw) {
+        if (raw == null) return null;
+        String t = raw.trim();
+        if (t.isEmpty()) return null;
+        return t.length() > 100 ? t.substring(0, 100) : t;
+    }
+
+    private static String normalizeTagColor(String raw) {
+        if (raw == null) return null;
+        String c = raw.trim().toLowerCase(Locale.ROOT);
+        return ALLOWED_TAG_COLORS.contains(c) ? c : null;
+    }
+
+    /** Si no hay etiqueta, limpia color. Si hay etiqueta y color inválido, usa el predeterminado. */
+    private static void applyIssueTags(Issues issue, String labelRaw, String colorRaw) {
+        String label = sanitizeTagLabel(labelRaw);
+        if (label == null) {
+            issue.setTagLabel(null);
+            issue.setTagColor(null);
+            return;
+        }
+        String color = normalizeTagColor(colorRaw);
+        issue.setTagLabel(label);
+        issue.setTagColor(color != null ? color : DEFAULT_TAG_COLOR);
     }
 }

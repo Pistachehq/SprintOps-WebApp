@@ -46,10 +46,22 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
               : 'bg-gray-50 hover:bg-white hover:shadow-md cursor-pointer group'
           }`}
         >
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-gray-800 text-lg">#{formattedId} {title}</h3>
-            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase text-white ${getPriorityColor(priority)}`}>
-              {priority || 'Normal'}
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <h3 className="min-w-0 flex-1 text-lg font-bold text-gray-800">
+              #{formattedId} {title}
+            </h3>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase text-white ${getPriorityColor(priority)}`}>
+                {priority || 'Normal'}
+              </div>
+              {task.tagLabel && task.tagColor && (
+                <span
+                  className="max-w-[140px] truncate rounded-full px-2.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
+                  style={{ backgroundColor: task.tagColor }}
+                >
+                  {task.tagLabel}
+                </span>
+              )}
             </div>
           </div>
           

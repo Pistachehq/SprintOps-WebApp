@@ -75,7 +75,9 @@ const TaskDetailPage = () => {
       priority: 'Prioridad',
       type: 'Tipo',
       storyPoints: 'Story Points',
-      status: 'Estado'
+      status: 'Estado',
+      tagLabel: 'Etiqueta',
+      tagColor: 'Color de etiqueta',
     };
 
     const changedFields = [];
@@ -100,23 +102,39 @@ const TaskDetailPage = () => {
     <div className="h-full bg-[#F0EFED] flex flex-col font-sans p-10 overflow-y-auto">
       {/* Header: Back + Title */}
       <div className="max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-4 mt-4">
-          <div className="flex items-center gap-6">
+        <div className="mb-4 mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-6">
             <BackButton />
-            <div>
-              <p className="text-xs font-bold text-[#446E51] uppercase tracking-widest mb-1">Sprint {sprintId} · Tarea #{task.displayIndex || task.id}</p>
-              <h1 className="text-4xl lg:text-5xl font-black text-slate-900">
-                {task.title}
-              </h1>
+            <div className="min-w-0">
+              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[#446E51]">
+                Sprint {sprintId} · Tarea #{task.displayIndex || task.id}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="min-w-0 text-4xl font-black text-slate-900 lg:text-5xl">{task.title}</h1>
+                {task.tagLabel && task.tagColor && (
+                  <span
+                    className="max-w-full shrink-0 truncate rounded-lg px-3 py-1.5 text-sm font-bold text-white shadow-md sm:max-w-xs sm:text-base"
+                    style={{ backgroundColor: task.tagColor }}
+                  >
+                    {task.tagLabel}
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm font-medium text-slate-500">
+                <span className="font-black text-slate-700">{task.storyPoints ?? 0}</span> story points
+              </p>
             </div>
           </div>
           {canEditIssue && (
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-2 bg-white border border-gray-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-            >
-              <Pencil size={18} /> Editar Tarea
-            </button>
+            <div className="flex shrink-0 sm:pt-1">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 font-bold text-slate-700 transition-colors hover:bg-gray-50 lg:self-start"
+              >
+                <Pencil size={18} /> Editar Tarea
+              </button>
+            </div>
           )}
         </div>
 

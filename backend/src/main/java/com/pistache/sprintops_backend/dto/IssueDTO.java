@@ -21,6 +21,8 @@ public class IssueDTO {
     private Integer reporterId;
     private LocalDate createdAt;
     private LocalDate completedAt;
+    private String tagLabel;
+    private String tagColor;
 
     public static IssueDTO fromEntity(Issues i, List<Integer> assigneeIds, String sprintId) {
         IssueDTO dto = new IssueDTO();
@@ -34,6 +36,8 @@ public class IssueDTO {
         dto.setParentIssueId(i.getParentIssueId());
         dto.setCreatedAt(i.getFechaCreacionIssue());
         dto.setCompletedAt(i.getFechaFinIssue());
+        dto.setTagLabel(i.getTagLabel());
+        dto.setTagColor(i.getTagColor());
         dto.setAssigneeIds(assigneeIds);
         dto.setSprintId(sprintId);
         if (i.getProyecto() != null) {
