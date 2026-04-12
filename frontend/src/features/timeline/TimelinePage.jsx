@@ -246,10 +246,14 @@ const TimelinePage = () => {
     navigate(`/sprint/${sid}/planning/task/${issue.id}`);
   }, [navigate]);
 
-  if (isLoading) return <div className="h-full bg-oracle-bg flex items-center justify-center"><LoadingSpinner label="Cargando cronograma..." fullPage /></div>;
+  if (isLoading) return (
+    <div className="flex min-h-0 flex-1 items-center justify-center bg-oracle-bg">
+      <LoadingSpinner label="Cargando cronograma..." fullPage />
+    </div>
+  );
 
   if (!project || days.length === 0) return (
-    <div className="h-full bg-oracle-bg flex flex-col">
+    <div className="flex min-h-0 flex-1 flex-col bg-oracle-bg">
       <div className="h-[72px] px-10 flex items-center"><BackButton to={`/project/${projectId}/sprints`} /></div>
       <div className="flex-1 flex items-center justify-center"><p className="text-gray-500">No se pudo cargar el cronograma del proyecto.</p></div>
     </div>
@@ -260,7 +264,7 @@ const TimelinePage = () => {
   const sidebarW = 300;
 
   return (
-    <div className="h-full flex flex-col bg-oracle-bg overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-oracle-bg">
 
       {/* Top bar */}
       <div className="h-[60px] px-6 flex items-center justify-between shrink-0 border-b border-gray-200 bg-white">

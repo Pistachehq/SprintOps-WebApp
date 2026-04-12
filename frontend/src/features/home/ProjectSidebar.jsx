@@ -221,9 +221,9 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
         <div className="mt-auto pt-6 flex flex-col gap-3">
           <button 
             onClick={onViewSprints}
-            className="w-full py-4 bg-[#446E51] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-green-100"
+            className="w-full py-4 bg-[#446E51] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
-            Gestionar Sprints <ExternalLink size={18} />
+            Gestionar proyecto <ExternalLink size={18} />
           </button>
         </div>
       </div>

@@ -61,7 +61,7 @@ const ReflectionPage = () => {
           type="button"
           onClick={handleSaveAll}
           disabled={!canSubmit || showToast}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#446E51] py-3.5 text-sm font-black text-white shadow-lg shadow-green-100 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#446E51] py-3.5 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {showToast ? (
             <>

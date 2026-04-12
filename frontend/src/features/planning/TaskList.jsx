@@ -46,7 +46,7 @@ const TaskList = ({ role, sprintId, issuesData }) => {
           {canCreateIssue && (
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="w-10 h-10 bg-[#446E51] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg shadow-green-100">
+              className="w-10 h-10 bg-[#446E51] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity">
               <Plus size={24} />
             </button>
           )}
