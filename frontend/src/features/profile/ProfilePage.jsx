@@ -188,7 +188,7 @@ const ProfilePage = () => {
       : undefined;
 
   return (
-    <div className="flex min-h-0 flex-col bg-[#F0EFED] px-5 pb-8 pt-3 sm:px-6 lg:px-10 lg:pb-10 lg:pt-4">
+    <div className="flex min-h-0 flex-col bg-[#F0EFED] px-5 pb-8 pt-8 sm:px-6 sm:pt-10 lg:px-10 lg:pb-10 lg:pt-10">
       <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
         <div className="mb-5 flex shrink-0 items-center gap-3 sm:mb-6 sm:gap-4">
           <BackButton />

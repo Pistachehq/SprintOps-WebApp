@@ -71,10 +71,10 @@ const SprintSubLayout = () => {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-10 bg-oracle-bg">
       <div className="mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col overflow-hidden">
         {/* ── Static Header (Does not move during transitions) ── */}
-        <header className="grid grid-cols-3 items-center mb-10 shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="mb-10 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <BackButton to={`/sprint/${id}`} />
-            <h1 className="text-4xl font-black text-slate-800 tracking-tight transition-all duration-300">
+            <h1 className="truncate text-4xl font-black tracking-tight text-slate-800 transition-all duration-300">
               {title === 'Kanban' ? `${sprintName || `Sprint ${id}`}: ${title}` : title}
             </h1>
           </div>
@@ -83,8 +83,8 @@ const SprintSubLayout = () => {
             <SprintTabs activeTab={tab} sprintId={id} />
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            <AnimatePresence>
+          <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2 sm:gap-3">
+            <AnimatePresence mode="popLayout">
               {showButton && canCreateIssue && (
                 <motion.button
                   key="create-button"
@@ -92,14 +92,14 @@ const SprintSubLayout = () => {
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.9, x: 10 }}
                   onClick={() => setShowCreateIssue(true)}
-                  className="btn-primary flex items-center gap-2"
+                  className="btn-primary flex shrink-0 items-center gap-2"
                 >
                   <Plus size={16} /> Crear Issue
                 </motion.button>
               )}
             </AnimatePresence>
             {tab === 'reflection' && canViewMetrics && (
-              <>
+              <div className="flex shrink-0 flex-nowrap items-center gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setVelocityModalOpen(true)}
@@ -118,7 +118,7 @@ const SprintSubLayout = () => {
                   <span className="hidden min-[420px]:inline">Sprint indicator</span>
                   <span className="min-[420px]:hidden">Indicador</span>
                 </button>
-              </>
+              </div>
             )}
           </div>
         </header>
