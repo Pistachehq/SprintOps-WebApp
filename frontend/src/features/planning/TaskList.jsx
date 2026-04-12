@@ -53,10 +53,19 @@ const TaskList = ({ role, sprintId, issuesData }) => {
         </div>
       </div>
 
-      <div className="overflow-y-auto space-y-4 flex-1 min-h-0 pb-4 pr-1 -mr-1" style={{ scrollbarWidth: 'thin' }}>
-        {issues.map((task) => (
-          <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} members={members} onAssign={assignIssue} editMode={editMode} onDelete={deleteIssue} />
-        ))}
+      <div
+        className={`overflow-y-auto flex-1 min-h-0 pb-4 pr-1 -mr-1 ${issues.length === 0 ? 'flex flex-col' : 'space-y-4'}`}
+        style={{ scrollbarWidth: 'thin' }}
+      >
+        {issues.length === 0 ? (
+          <div className="flex flex-1 min-h-[12rem] items-center justify-center">
+            <p className="text-sm text-gray-400 italic text-center px-4">No hay issues creados</p>
+          </div>
+        ) : (
+          issues.map((task) => (
+            <TaskCard key={task.id} task={task} role={role} sprintId={sprintId} members={members} onAssign={assignIssue} editMode={editMode} onDelete={deleteIssue} />
+          ))
+        )}
       </div>
 
       <CreateIssueModal 
