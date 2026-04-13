@@ -6,11 +6,11 @@ const LoginPage = () => {
     <div className="min-h-screen flex flex-col bg-[#F0EFED] font-sans">
       {/* Header Section */}
       <header className="w-full h-[80px] bg-oracle-header flex items-center justify-center shrink-0 shadow-sm px-4">
-        <div className="flex items-center justify-center h-full w-[350px]">
-          <img 
-            src="/logo-SprintOps.png" 
-            alt="Oracle SprintOps" 
-            className="min-w-[450px] h-auto block mix-blend-lighten contrast-125"
+        <div className="flex items-center justify-center h-full w-full max-w-xl px-4">
+          <img
+            src="/logo-pistache.png"
+            alt="Pistache"
+            className="h-12 sm:h-14 w-auto max-w-full object-contain"
           />
         </div>
       </header>

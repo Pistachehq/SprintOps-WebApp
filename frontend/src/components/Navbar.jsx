@@ -16,11 +16,11 @@ const Navbar = ({ onSearch }) => {
   
   return (
     <nav className="h-[70px] bg-oracle-header px-10 flex items-center sticky top-0 z-40 shadow-sm justify-between">
-      <Link to="/home" className="flex items-center justify-center h-full w-[280px] overflow-hidden cursor-pointer">
-        <img 
-          src="/logo-SprintOps.png" 
-          alt="Oracle SprintOps" 
-          className="min-w-[350px] h-auto block mix-blend-lighten contrast-125"
+      <Link to="/home" className="flex items-center h-full min-w-0 max-w-[min(100%,380px)] shrink-0 cursor-pointer">
+        <img
+          src="/logo-pistache.png"
+          alt="Pistache"
+          className="h-10 sm:h-11 w-auto max-w-full object-contain object-left"
         />
       </Link>
 
