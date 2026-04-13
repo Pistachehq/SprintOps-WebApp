@@ -8,23 +8,23 @@ const TaskInfoCard = ({ task, role, members = [], onAssign }) => {
     <div className="bg-white rounded-[24px] p-10 shadow-sm border border-gray-100 w-full space-y-8">
       {/* Propósito */}
       <section>
-        <h3 className="text-lg font-bold text-[#446E51] mb-3">Propósito</h3>
-        <div className="border-l-4 border-[#446E51] bg-gray-50 rounded-r-xl p-5 text-sm text-gray-600 leading-relaxed">
+        <h3 className="text-lg font-bold text-[#67BFA1] mb-3">Propósito</h3>
+        <div className="border-l-4 border-[#67BFA1] bg-gray-50 rounded-r-xl p-5 text-sm text-gray-600 leading-relaxed">
           {task.purpose || 'Sin propósito definido.'}
         </div>
       </section>
 
       {/* Descripción */}
       <section>
-        <h3 className="text-lg font-bold text-[#446E51] mb-3">Descripción</h3>
-        <div className="border-l-4 border-[#446E51] bg-gray-50 rounded-r-xl p-5 text-sm text-gray-600 leading-relaxed">
+        <h3 className="text-lg font-bold text-[#67BFA1] mb-3">Descripción</h3>
+        <div className="border-l-4 border-[#67BFA1] bg-gray-50 rounded-r-xl p-5 text-sm text-gray-600 leading-relaxed">
           {task.description}
         </div>
       </section>
 
       {/* Equipo */}
       <section>
-        <h3 className="text-lg font-bold text-[#446E51] mb-3">Equipo Asignado</h3>
+        <h3 className="text-lg font-bold text-[#67BFA1] mb-3">Equipo Asignado</h3>
         <TeamAvatars
           assignedMembers={assignedMembers}
           allMembers={members}

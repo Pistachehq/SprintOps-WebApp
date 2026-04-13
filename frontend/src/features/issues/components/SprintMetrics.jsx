@@ -58,7 +58,7 @@ const SprintMetrics = ({ issues }) => {
             <span>{totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0}%</span>
           </div>
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-[#446E51] rounded-full transition-all" style={{ width: `${totalPoints > 0 ? (donePoints / totalPoints) * 100 : 0}%` }} />
+            <div className="h-full bg-[#67BFA1] rounded-full transition-all" style={{ width: `${totalPoints > 0 ? (donePoints / totalPoints) * 100 : 0}%` }} />
           </div>
         </div>
         <p className="text-xs text-slate-400 font-medium">{doneIssues.length} de {issues.length} tareas completadas</p>

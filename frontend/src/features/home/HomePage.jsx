@@ -75,7 +75,7 @@ const HomePage = () => {
             )}
             <button
               onClick={() => setShowJoinModal(true)}
-              className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-oracle-main/10 transition-colors flex items-center gap-2"
             >
               <span className="text-xl">+</span> Unirse a Proyecto
             </button>

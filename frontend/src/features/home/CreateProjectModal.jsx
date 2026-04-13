@@ -55,7 +55,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Nombre del Proyecto</label>
               <input 
                 required
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Ej. Reestructuración de API"
@@ -65,7 +65,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Descripción</label>
               <textarea 
                 required
-                className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 resize-none h-24"
+                className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 resize-none h-24"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Breve descripción del proyecto..."
@@ -76,7 +76,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha Inicio</label>
                 <input 
                   required type="date"
-                  className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                  className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                   value={start} onChange={e => setStart(e.target.value)}
                 />
               </div>
@@ -84,7 +84,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha Fin</label>
                 <input 
                   required type="date"
-                  className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                  className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                   value={end} onChange={e => setEnd(e.target.value)}
                 />
               </div>
@@ -94,7 +94,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
               <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">
                 Cancelar
               </button>
-              <button type="submit" className="flex-1 h-12 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors shadow-lg shadow-green-900/20">
+              <button type="submit" className="flex-1 h-12 bg-[#67BFA1] text-white font-bold rounded-xl hover:bg-[#52A88C] transition-colors shadow-lg shadow-oracle-main/20">
                 Crear Proyecto
               </button>
             </div>

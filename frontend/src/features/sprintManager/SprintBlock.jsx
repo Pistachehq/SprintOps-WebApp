@@ -1,7 +1,7 @@
 import React from 'react';
 
 const SprintBlock = ({ label, vertical, isMain, onClick, icon: Icon, stats, progress }) => {
-  const baseClasses = "relative bg-[#446E51] rounded-[28px] shadow-[0_16px_40px_rgba(68,110,81,0.2)] hover:shadow-[0_18px_44px_rgba(68,110,81,0.32)] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center overflow-hidden group border border-white/10";
+  const baseClasses = "relative bg-[#67BFA1] rounded-[28px] shadow-[0_16px_40px_rgba(103, 191, 161,0.2)] hover:shadow-[0_18px_44px_rgba(103, 191, 161,0.32)] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center overflow-hidden group border border-white/10";
   
   const width = isMain ? "w-[480px]" : "w-[148px]";
   const height = "h-[400px]";

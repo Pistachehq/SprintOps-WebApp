@@ -211,7 +211,7 @@ const ProfilePage = () => {
                   )}
                   <button
                     onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                    className="absolute bottom-0 right-0 w-9 h-9 bg-[#446E51] text-white rounded-full flex items-center justify-center hover:bg-[#3a5d45] transition-colors shadow-md"
+                    className="absolute bottom-0 right-0 w-9 h-9 bg-[#67BFA1] text-white rounded-full flex items-center justify-center hover:bg-[#52A88C] transition-colors shadow-md"
                   >
                     <Camera size={15} />
                   </button>
@@ -226,11 +226,11 @@ const ProfilePage = () => {
                           onChange={(e) => setUsername(e.target.value)}
                           autoFocus
                           onKeyDown={(e) => e.key === 'Enter' && setEditing(false)}
-                          className="text-2xl font-black text-gray-800 bg-transparent border-b-2 border-[#446E51] outline-none flex-1"
+                          className="text-2xl font-black text-gray-800 bg-transparent border-b-2 border-[#67BFA1] outline-none flex-1"
                         />
                         <button
                           onClick={() => setEditing(false)}
-                          className="w-8 h-8 rounded-full bg-[#446E51]/10 text-[#446E51] flex items-center justify-center hover:bg-[#446E51]/20 transition-colors"
+                          className="w-8 h-8 rounded-full bg-[#67BFA1]/10 text-[#67BFA1] flex items-center justify-center hover:bg-[#67BFA1]/20 transition-colors"
                         >
                           <Check size={16} />
                         </button>
@@ -246,7 +246,7 @@ const ProfilePage = () => {
                         <h2 className="text-2xl font-black text-gray-800">{username}</h2>
                         <button
                           onClick={() => setEditing(true)}
-                          className="text-gray-400 hover:text-[#446E51] transition-colors"
+                          className="text-gray-400 hover:text-[#67BFA1] transition-colors"
                         >
                           <Pencil size={16} />
                         </button>
@@ -266,7 +266,7 @@ const ProfilePage = () => {
                         key={url}
                         type="button"
                         onClick={() => { setAvatarUrl(url); setShowAvatarPicker(false); }}
-                        className={`h-12 w-12 rounded-full overflow-hidden border-2 transition-all hover:scale-105 sm:h-14 sm:w-14 ${avatarUrl === url ? 'border-[#446E51] ring-2 ring-[#446E51]/30 scale-105' : 'border-gray-200'}`}
+                        className={`h-12 w-12 rounded-full overflow-hidden border-2 transition-all hover:scale-105 sm:h-14 sm:w-14 ${avatarUrl === url ? 'border-[#67BFA1] ring-2 ring-[#67BFA1]/30 scale-105' : 'border-gray-200'}`}
                       >
                         <img src={url} alt="" className="h-full w-full object-cover" />
                       </button>
@@ -290,7 +290,7 @@ const ProfilePage = () => {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex shrink-0 items-center gap-2 bg-[#446E51] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#3a5d45] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex shrink-0 items-center gap-2 bg-[#67BFA1] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#52A88C] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   <Save size={18} />
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
@@ -302,8 +302,8 @@ const ProfilePage = () => {
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shrink-0 shadow-sm">
               <div className="grid grid-cols-3 gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-xl bg-[#446E51]/10 flex items-center justify-center">
-                    <CalendarDays size={20} className="text-[#446E51]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#67BFA1]/10 flex items-center justify-center">
+                    <CalendarDays size={20} className="text-[#67BFA1]" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Miembro desde</p>
@@ -311,8 +311,8 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-xl bg-[#446E51]/10 flex items-center justify-center">
-                    <Shield size={20} className="text-[#446E51]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#67BFA1]/10 flex items-center justify-center">
+                    <Shield size={20} className="text-[#67BFA1]" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rol principal</p>
@@ -320,8 +320,8 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-xl bg-[#446E51]/10 flex items-center justify-center">
-                    <Hash size={20} className="text-[#446E51]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#67BFA1]/10 flex items-center justify-center">
+                    <Hash size={20} className="text-[#67BFA1]" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Proyectos</p>
@@ -339,7 +339,7 @@ const ProfilePage = () => {
           >
             <div className="flex h-full min-h-0 w-full min-w-0 flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8 lg:max-h-full">
               <h2 className="mb-4 flex shrink-0 items-center gap-3 text-lg font-black text-gray-800 lg:mb-5">
-                <FolderKanban size={22} className="text-[#446E51]" />
+                <FolderKanban size={22} className="text-[#67BFA1]" />
                 Mis Proyectos
               </h2>
               {projects.length === 0 ? (
@@ -358,7 +358,7 @@ const ProfilePage = () => {
                         <p className="font-bold text-gray-800">{project.name}</p>
                         <p className="line-clamp-1 text-xs font-medium text-gray-400">{project.description}</p>
                       </div>
-                      <span className="shrink-0 rounded-full bg-[#446E51]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#446E51]">
+                      <span className="shrink-0 rounded-full bg-[#67BFA1]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#67BFA1]">
                         {project.role || 'Developer'}
                       </span>
                     </div>

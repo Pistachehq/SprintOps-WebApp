@@ -89,7 +89,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
           </div>
         ) : (
           <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-            className="w-full h-44 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-oracle-main hover:bg-green-50/30 transition-all cursor-pointer">
+            className="w-full h-44 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-oracle-main hover:bg-oracle-main/10 transition-all cursor-pointer">
             {uploading
               ? <div className="animate-spin rounded-full h-8 w-8 border-2 border-oracle-main border-t-transparent" />
               : <><Upload size={20} className="text-gray-300" /><span className="text-[11px] text-gray-400 font-medium">Subir foto</span></>
@@ -389,7 +389,7 @@ const TimelinePage = () => {
 
               {/* Today line */}
               {todayIdx >= 0 && (
-                <div className="absolute top-0 pointer-events-none z-20" style={{ left: todayIdx * COL_W + COL_W / 2 - 1, width: 2, height: gridH, background: '#446E51' }}>
+                <div className="absolute top-0 pointer-events-none z-20" style={{ left: todayIdx * COL_W + COL_W / 2 - 1, width: 2, height: gridH, background: '#67BFA1' }}>
                   <div className="absolute -top-1 -left-[3px] w-2 h-2 rounded-full bg-oracle-main" />
                 </div>
               )}

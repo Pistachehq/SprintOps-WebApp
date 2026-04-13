@@ -35,7 +35,7 @@ const VelocityChart = ({ embedded = false }) => {
             />
             <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
             <Bar dataKey="planned" name="Planeados" fill="#E2E8F0" radius={[4, 4, 0, 0]} barSize={20} />
-            <Bar dataKey="completed" name="Completados" fill="#446E51" radius={[4, 4, 0, 0]} barSize={20} />
+            <Bar dataKey="completed" name="Completados" fill="#67BFA1" radius={[4, 4, 0, 0]} barSize={20} />
           </BarChart>
         </ResponsiveContainer>
       </div>

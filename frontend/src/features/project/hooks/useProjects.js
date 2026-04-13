@@ -12,7 +12,7 @@ const enrichProject = (project) => {
     tasksCompleted: project.tasksCompleted ?? 0,
     tasksLate: project.tasksLate ?? 0,
     image: project.image ?? "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800",
-    colorOverlay: project.colorOverlay ?? "rgba(68, 110, 81, 0.7)"
+    colorOverlay: project.colorOverlay ?? "rgba(103, 191, 161, 0.7)"
   };
 };
 

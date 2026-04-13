@@ -101,7 +101,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Título</label>
             <input 
               required
-              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50"
+              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="¿Qué se debe hacer?"
@@ -111,7 +111,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Propósito</label>
             <input 
-              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50"
+              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50"
               value={purpose}
               onChange={e => setPurpose(e.target.value)}
               placeholder="¿Cuál es el propósito o beneficio de este issue?"
@@ -121,7 +121,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Descripción</label>
             <textarea
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 resize-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 resize-none text-sm"
               rows={3}
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -133,7 +133,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tipo</label>
               <select 
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                 value={type} onChange={e => setType(e.target.value)}
               >
                 <option value="Task">Task</option>
@@ -145,7 +145,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Prioridad</label>
               <select 
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                 value={priority} onChange={e => setPriority(e.target.value)}
               >
                 <option value="high">Alta</option>
@@ -161,7 +161,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
               <input 
                 type="number"
                 min="0"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50"
                 value={points}
                 onChange={e => setPoints(e.target.value)}
                 placeholder="0"
@@ -171,7 +171,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha fin tentativa</label>
               <input 
                 type="date"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
               />
@@ -192,7 +192,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">¿Es Sub Issue?</label>
               <select
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                 value={isSubIssue ? 'yes' : 'no'}
                 onChange={e => {
                   const val = e.target.value === 'yes';
@@ -211,7 +211,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Issue padre</label>
               <select
                 required
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                 value={parentIssueId}
                 onChange={e => setParentIssueId(e.target.value)}
               >
@@ -231,7 +231,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             <button type="button" onClick={onClose} className="h-12 flex-1 rounded-xl bg-gray-100 font-bold text-slate-600 transition-colors hover:bg-gray-200">
               Cancelar
             </button>
-            <button type="submit" className="h-12 flex-1 rounded-xl bg-[#446E51] font-bold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[#355640]">
+            <button type="submit" className="h-12 flex-1 rounded-xl bg-[#67BFA1] font-bold text-white shadow-lg shadow-oracle-main/20 transition-colors hover:bg-[#52A88C]">
               {issue ? "Guardar Cambios" : "Crear Issue"}
             </button>
           </div>

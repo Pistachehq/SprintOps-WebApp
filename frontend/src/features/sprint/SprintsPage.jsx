@@ -40,21 +40,21 @@ const SprintsPage = () => {
         <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(`/project/${projectId}/timeline`)}
-              className="px-6 py-3 bg-[#446E51] text-white rounded-xl font-bold text-sm hover:bg-[#3a5f45] transition-colors flex items-center gap-2 shadow-sm"
+              className="px-6 py-3 bg-[#67BFA1] text-white rounded-xl font-bold text-sm hover:bg-[#52A88C] transition-colors flex items-center gap-2 shadow-sm"
               title="Calendario"
             >
               <CalendarDays size={18} /> Calendario
             </button>
             <button
               onClick={() => navigate(`/project/${projectId}/universe`)}
-              className="px-6 py-3 bg-[#446E51] text-white rounded-xl font-bold text-sm hover:bg-[#3a5f45] transition-colors flex items-center gap-2 shadow-sm"
+              className="px-6 py-3 bg-[#67BFA1] text-white rounded-xl font-bold text-sm hover:bg-[#52A88C] transition-colors flex items-center gap-2 shadow-sm"
               title="Universo de Issues"
             >
               <GitFork size={18} className="rotate-180" /> Universo de Issues
             </button>
             <button
               onClick={() => setShowConfig(true)}
-              className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-oracle-main/10 transition-colors flex items-center gap-2"
               title="Configurar Proyecto"
             >
               <Settings size={18} /> Configurar Proyecto

@@ -184,7 +184,7 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
           <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-6 relative overflow-hidden">
             <div
               className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl"
-              style={{ background: 'linear-gradient(90deg, #446E51, #6B9F7B, #446E51)' }}
+              style={{ background: 'linear-gradient(90deg, #67BFA1, #8FD4BE, #67BFA1)' }}
             />
 
             <button
@@ -194,7 +194,7 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
               <X size={14} className="text-gray-500" />
             </button>
 
-            <p className="text-5xl font-black text-[#446E51] mb-1 tracking-tight">
+            <p className="text-5xl font-black text-[#67BFA1] mb-1 tracking-tight">
               #{selectedIssue.displayIndex || selectedIssue.id}
             </p>
             <h3 className="text-lg font-bold text-gray-800 mb-4 leading-snug pr-6">
@@ -202,8 +202,8 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
             </h3>
 
             {selectedIssue.purpose && (
-              <div className="mb-4 p-3 bg-[#446E51]/5 rounded-xl">
-                <p className="text-[10px] font-bold text-[#446E51] uppercase tracking-widest mb-1">Propósito</p>
+              <div className="mb-4 p-3 bg-[#67BFA1]/5 rounded-xl">
+                <p className="text-[10px] font-bold text-[#67BFA1] uppercase tracking-widest mb-1">Propósito</p>
                 <p className="text-sm text-gray-600 leading-relaxed">{selectedIssue.purpose}</p>
               </div>
             )}
@@ -215,7 +215,7 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Story Points</p>
-                <p className="text-sm font-bold text-[#446E51]">{selectedIssue.storyPoints || 0} SP</p>
+                <p className="text-sm font-bold text-[#67BFA1]">{selectedIssue.storyPoints || 0} SP</p>
               </div>
             </div>
           </div>
@@ -308,7 +308,7 @@ const IssueUniversePage = () => {
             <ArrowLeft size={18} className="text-white/80" />
           </button>
           <div className="flex items-center gap-2">
-            <Orbit size={20} className="text-[#6B9F7B]" />
+            <Orbit size={20} className="text-[#8FD4BE]" />
             <h1 className="text-xl font-black text-white tracking-tight">Universo de Issues</h1>
           </div>
         </div>
@@ -339,7 +339,7 @@ const IssueUniversePage = () => {
         {isLoading ? (
           <div className="h-full flex items-center justify-center relative z-10">
             <div className="text-center">
-              <div className="w-14 h-14 border-4 border-white/10 border-t-[#6B9F7B] rounded-full animate-spin mx-auto mb-4" />
+              <div className="w-14 h-14 border-4 border-white/10 border-t-[#8FD4BE] rounded-full animate-spin mx-auto mb-4" />
               <p className="text-white/50 font-bold">Cargando universo...</p>
             </div>
           </div>

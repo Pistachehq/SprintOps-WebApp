@@ -14,8 +14,8 @@ const DevTasksView = ({ sprintId, issuesData }) => {
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[24px] border border-gray-100 bg-white p-10 pb-8 shadow-sm">
       <div className="flex items-center gap-4 mb-3 shrink-0">
-        <div className="w-12 h-12 bg-[#446E51]/10 rounded-xl flex items-center justify-center">
-          <ClipboardList size={24} className="text-[#446E51]" />
+        <div className="w-12 h-12 bg-[#67BFA1]/10 rounded-xl flex items-center justify-center">
+          <ClipboardList size={24} className="text-[#67BFA1]" />
         </div>
         <div>
           <h2 className="text-3xl font-black text-gray-800">Mis Tareas</h2>
@@ -43,19 +43,19 @@ const DevTasksView = ({ sprintId, issuesData }) => {
             <div
               key={task.id}
               onClick={() => navigate(`/sprint/${sprintId}/planning/task/${task.id}`)}
-              className="p-6 bg-[#F0EFED] rounded-2xl flex items-center justify-between group hover:bg-[#446E51]/10 hover:shadow-md transition-all cursor-pointer"
+              className="p-6 bg-[#F0EFED] rounded-2xl flex items-center justify-between group hover:bg-[#67BFA1]/10 hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="font-black text-[#446E51] text-sm bg-[#446E51]/10 px-2 py-0.5 rounded">#{task.displayIndex || task.id}</span>
-                  <h3 className="text-lg font-bold text-gray-800 group-hover:text-[#446E51] transition-colors">{task.title}</h3>
+                  <span className="font-black text-[#67BFA1] text-sm bg-[#67BFA1]/10 px-2 py-0.5 rounded">#{task.displayIndex || task.id}</span>
+                  <h3 className="text-lg font-bold text-gray-800 group-hover:text-[#67BFA1] transition-colors">{task.title}</h3>
                 </div>
                 {task.description && (
                   <p className="text-sm text-gray-500 leading-relaxed">{task.description}</p>
                 )}
               </div>
               
-              <ChevronRight size={24} className="text-gray-300 group-hover:text-[#446E51] transition-colors ml-6 shrink-0" />
+              <ChevronRight size={24} className="text-gray-300 group-hover:text-[#67BFA1] transition-colors ml-6 shrink-0" />
             </div>
           ))}
 

@@ -100,7 +100,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId }) => {
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <Loader2 size={32} className="text-[#446E51] animate-spin mx-auto mb-3" />
+              <Loader2 size={32} className="text-[#67BFA1] animate-spin mx-auto mb-3" />
               <p className="text-sm text-gray-400 font-medium">Cargando...</p>
             </div>
           </div>
@@ -109,7 +109,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId }) => {
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-500 uppercase tracking-widest">¿Qué hice?</label>
               <textarea 
-                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#446E51] focus:bg-white transition-all text-gray-700 resize-none"
+                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#67BFA1] focus:bg-white transition-all text-gray-700 resize-none"
                 placeholder="Describe tus logros de ayer..."
                 value={formData.done}
                 onChange={(e) => setFormData({...formData, done: e.target.value})}
@@ -119,7 +119,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId }) => {
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-500 uppercase tracking-widest">¿Qué haré?</label>
               <textarea 
-                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#446E51] focus:bg-white transition-all text-gray-700 resize-none"
+                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#67BFA1] focus:bg-white transition-all text-gray-700 resize-none"
                 placeholder="¿Cuáles son tus objetivos para hoy?"
                 value={formData.doing}
                 onChange={(e) => setFormData({...formData, doing: e.target.value})}
@@ -138,7 +138,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId }) => {
 
             <button 
               type="submit"
-              className="w-full py-4 bg-[#446E51] text-white rounded-2xl font-black text-lg hover:opacity-90 transition-opacity shadow-lg shadow-green-100 mt-auto flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#67BFA1] text-white rounded-2xl font-black text-lg hover:opacity-90 transition-opacity shadow-lg shadow-oracle-main/20 mt-auto flex items-center justify-center gap-2"
               disabled={showToast || isSaving}
             >
               {showToast ? (

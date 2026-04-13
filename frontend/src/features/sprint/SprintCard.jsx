@@ -6,11 +6,11 @@ const SprintCard = ({ sprint, onClick }) => {
       onClick={() => onClick(sprint.id)}
       className="flex flex-col items-center cursor-pointer group transition-all"
     >
-      <h3 className="text-2xl font-bold text-slate-800 mb-6 group-hover:text-[#446E51] transition-colors">
+      <h3 className="text-2xl font-bold text-slate-800 mb-6 group-hover:text-[#67BFA1] transition-colors">
         {sprint.name}
       </h3>
       
-      <div className="w-[450px] h-[320px] border-[6px] border-[#446E51] rounded-[32px] bg-white shadow-xl p-8 flex flex-col gap-4 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all overflow-hidden relative">
+      <div className="w-[450px] h-[320px] border-[6px] border-[#67BFA1] rounded-[32px] bg-white shadow-xl p-8 flex flex-col gap-4 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all overflow-hidden relative">
         {/* Simulated UI Content */}
         <div className="flex gap-4 h-full">
           {/* Left Column / Sidebar area */}

@@ -28,7 +28,7 @@ const LoginForm = () => {
   return (
     <div className="relative w-full">
       {/* Superposed User Icon Circle */}
-      <div className="absolute -top-[120px] left-1/2 -translate-x-1/2 w-[80px] h-[80px] bg-[#446E51] rounded-full flex items-center justify-center shadow-lg border-4 border-white z-10">
+      <div className="absolute -top-[120px] left-1/2 -translate-x-1/2 w-[80px] h-[80px] bg-[#67BFA1] rounded-full flex items-center justify-center shadow-lg border-4 border-white z-10">
         <User size={36} className="text-white" />
       </div>
 
@@ -37,7 +37,7 @@ const LoginForm = () => {
           <input
             type="email"
             placeholder="Correo electrónico"
-            className="w-full h-[50px] px-[16px] rounded-[10px] border border-[#dcdcdc] bg-[#f9f9f9] text-base focus:outline-none focus:ring-1 focus:ring-[#446E51] transition-all"
+            className="w-full h-[50px] px-[16px] rounded-[10px] border border-[#dcdcdc] bg-[#f9f9f9] text-base focus:outline-none focus:ring-1 focus:ring-[#67BFA1] transition-all"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -49,7 +49,7 @@ const LoginForm = () => {
           <input
             type="password"
             placeholder="Contraseña"
-            className="w-full h-[50px] px-[16px] rounded-[10px] border border-[#dcdcdc] bg-[#f9f9f9] text-base focus:outline-none focus:ring-1 focus:ring-[#446E51] transition-all"
+            className="w-full h-[50px] px-[16px] rounded-[10px] border border-[#dcdcdc] bg-[#f9f9f9] text-base focus:outline-none focus:ring-1 focus:ring-[#67BFA1] transition-all"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -61,7 +61,7 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-[48px] bg-[#446E51] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4 disabled:opacity-60"
+            className="w-full h-[48px] bg-[#67BFA1] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4 disabled:opacity-60"
           >
             {loading ? 'Iniciando...' : 'Iniciar Sesion'}
           </button>

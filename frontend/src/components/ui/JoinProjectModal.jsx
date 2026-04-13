@@ -54,7 +54,7 @@ const JoinProjectModal = ({ isOpen, onClose, onJoin }) => {
                 const num = e.target.value.replace(/\D/g, '');
                 setCode(num.slice(0, 5));
               }}
-              className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] focus:border-transparent bg-gray-50 text-center text-2xl font-bold tracking-widest"
+              className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] focus:border-transparent bg-gray-50 text-center text-2xl font-bold tracking-widest"
               placeholder="00000"
             />
             {error && (
@@ -72,7 +72,7 @@ const JoinProjectModal = ({ isOpen, onClose, onJoin }) => {
             </button>
             <button 
               type="submit" 
-              className="flex-1 h-12 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors shadow-lg shadow-green-900/20"
+              className="flex-1 h-12 bg-[#67BFA1] text-white font-bold rounded-xl hover:bg-[#52A88C] transition-colors shadow-lg shadow-oracle-main/20"
             >
               Unirse
             </button>

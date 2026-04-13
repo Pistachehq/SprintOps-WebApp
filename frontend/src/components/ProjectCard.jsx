@@ -18,7 +18,7 @@ const ProjectCard = ({ project, onSelect }) => {
             }}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#446E51] to-[#2d4a36] flex flex-col items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-[#67BFA1] to-[#3a7562] flex flex-col items-center justify-center">
             <span className="text-white/30 text-5xl font-black tracking-tighter">{name?.charAt(0) || '?'}</span>
           </div>
         )}
@@ -37,7 +37,7 @@ const ProjectCard = ({ project, onSelect }) => {
         
         <button 
           onClick={() => onSelect(project)}
-          className="px-8 py-2 bg-[#446E51] text-white rounded-lg font-bold text-sm hover:opacity-90 transition-opacity"
+          className="px-8 py-2 bg-[#67BFA1] text-white rounded-lg font-bold text-sm hover:opacity-90 transition-opacity"
         >
           Detalles
         </button>

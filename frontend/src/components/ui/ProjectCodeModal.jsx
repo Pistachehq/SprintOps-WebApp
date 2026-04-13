@@ -15,7 +15,7 @@ const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="bg-gradient-to-r from-[#446E51] to-[#2d4f39] p-8 text-center">
+        <div className="bg-gradient-to-r from-[#67BFA1] to-[#3a7562] p-8 text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
               <Check size={32} className="text-white" />
@@ -36,13 +36,13 @@ const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
             </p>
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <p className="text-4xl font-black text-[#446E51] tracking-widest text-center">
+                <p className="text-4xl font-black text-[#67BFA1] tracking-widest text-center">
                   {projectCode}
                 </p>
               </div>
               <button
                 onClick={handleCopy}
-                className="p-3 bg-[#446E51] text-white rounded-lg hover:bg-[#355640] transition-colors flex items-center justify-center"
+                className="p-3 bg-[#67BFA1] text-white rounded-lg hover:bg-[#52A88C] transition-colors flex items-center justify-center"
                 title="Copiar código"
               >
                 {copied ? <Check size={20} /> : <Copy size={20} />}
@@ -55,7 +55,7 @@ const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
 
           <button
             onClick={onClose}
-            className="w-full h-12 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors shadow-lg shadow-green-900/20"
+            className="w-full h-12 bg-[#67BFA1] text-white font-bold rounded-xl hover:bg-[#52A88C] transition-colors shadow-lg shadow-oracle-main/20"
           >
             Continuar
           </button>

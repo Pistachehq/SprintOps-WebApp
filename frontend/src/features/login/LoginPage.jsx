@@ -5,7 +5,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F0EFED] font-sans">
       {/* Header Section */}
-      <header className="w-full h-[80px] bg-[#312D2A] flex items-center justify-center shrink-0 shadow-sm px-4">
+      <header className="w-full h-[80px] bg-oracle-header flex items-center justify-center shrink-0 shadow-sm px-4">
         <div className="flex items-center justify-center h-full w-[350px]">
           <img 
             src="/logo-SprintOps.png" 

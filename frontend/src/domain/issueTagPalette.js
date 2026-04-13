@@ -1,6 +1,6 @@
 /** Misma paleta que el cronograma (Gantt); el backend solo acepta estos hex en minúsculas. */
 export const ISSUE_TAG_COLORS = [
-  '#446e51',
+  '#67BFA1',
   '#e8702a',
   '#3b82f6',
   '#a855f7',
