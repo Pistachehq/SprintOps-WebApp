@@ -9,6 +9,7 @@ import { useSprints } from './hooks/useSprints';
 import { useProjects } from '../project/hooks/useProjects';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
+import PistacheChatbot from './components/PistacheChatbot';
 
 const SprintsPage = () => {
   const { projectId } = useParams();
@@ -109,6 +110,9 @@ const SprintsPage = () => {
           )}
         </div>
       </main>
+
+      {/* Pistache AI Chatbot — solo visible en la página de Sprints */}
+      <PistacheChatbot />
 
       {showConfig && (
         <ProjectConfigView
