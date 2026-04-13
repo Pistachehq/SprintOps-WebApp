@@ -25,7 +25,10 @@ public class Issues {
     @Column(name = "descripcion_issue", length = 500)
     private String descripcionIssue;
 
-    @Column(name = "estado_issue", length = 1)
+    @Column(name = "proposito_issue", length = 500)
+    private String propositoIssue;
+
+    @Column(name = "estado_issue", length = 50)
     private String estadoIssue;
 
     @Column(name = "prioridad_issue", length = 250)
@@ -36,6 +39,18 @@ public class Issues {
 
     @Column(name = "fecha_creacion_issue")
     private LocalDate fechaCreacionIssue;
+
+    @Column(name = "fecha_fin_issue")
+    private LocalDate fechaFinIssue;
+
+    @Column(name = "parent_issue_id")
+    private Integer parentIssueId;
+
+    @Column(name = "tag_label", length = 100)
+    private String tagLabel;
+
+    @Column(name = "tag_color", length = 20)
+    private String tagColor;
 
     @ManyToOne
     @JoinColumn(name = "Proyecto_id_proyecto")

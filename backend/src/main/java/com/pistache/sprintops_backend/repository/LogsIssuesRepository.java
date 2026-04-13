@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface LogsIssuesRepository extends JpaRepository<LogsIssues, Integer> {
     List<LogsIssues> findByIssue(Issues issue);
+    List<LogsIssues> findByIssueIdIssue(Integer issueId);
     List<LogsIssues> findByTipoAccion(String tipoAccion);
 }

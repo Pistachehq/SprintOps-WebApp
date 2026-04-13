@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { UserPlus, Settings } from 'lucide-react';
+import { Settings, GitFork, CalendarDays } from 'lucide-react';
 import SprintFlow from './SprintFlow';
 import BackButton from '../../components/ui/BackButton';
-import AddUserModal from '../../components/ui/AddUserModal';
 import ProjectConfigView from '../project/ProjectConfigView';
 import { useAuth } from '../auth/hooks/useAuth';
 import { useSprints } from './hooks/useSprints';
@@ -14,28 +13,21 @@ import EmptyState from '../../components/ui/EmptyState';
 const SprintsPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { checkPermission } = useAuth();
   
-  const [showAddUser, setShowAddUser] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [addedUsers, setAddedUsers] = useState([]);
 
-  const { sprints, isLoading: isLoadingSprints } = useSprints(projectId);
-  const { projects, isLoading: isLoadingProjects } = useProjects();
+  const { checkPermission } = useAuth();
+  const { sprints, isLoading: isLoadingSprints, addSprint, updateSprint, refetch: refetchSprints } = useSprints(projectId);
+  const { projects, isLoading: isLoadingProjects, refetch: refetchProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
-
-  const canAddMember = checkPermission('canManageMembers');
-  const canManageProject = checkPermission('canCreateProject') || checkPermission('canCreateSprint');
+  const canManageProject = checkPermission('canManageSprints');
 
   // Find current project info
-  const project = projects.find(p => p.id === projectId) || { name: 'Cargando Proyecto...' };
+  const project = projects.find(p => String(p.id) === String(projectId)) || { name: 'Cargando Proyecto...' };
 
   const handleSprintClick = (sprintId) => {
     navigate(`/sprint/${sprintId}`);
-  };
-
-  const handleAddUser = (newUser) => {
-    setAddedUsers(prev => [...prev, newUser]);
   };
 
   return (
@@ -46,7 +38,20 @@ const SprintsPage = () => {
         <BackButton to="/home" />
         
         <div className="flex items-center gap-4">
-          {canManageProject && (
+            <button
+              onClick={() => navigate(`/project/${projectId}/timeline`)}
+              className="px-6 py-3 bg-[#446E51] text-white rounded-xl font-bold text-sm hover:bg-[#3a5f45] transition-colors flex items-center gap-2 shadow-sm"
+              title="Calendario"
+            >
+              <CalendarDays size={18} /> Calendario
+            </button>
+            <button
+              onClick={() => navigate(`/project/${projectId}/universe`)}
+              className="px-6 py-3 bg-[#446E51] text-white rounded-xl font-bold text-sm hover:bg-[#3a5f45] transition-colors flex items-center gap-2 shadow-sm"
+              title="Universo de Issues"
+            >
+              <GitFork size={18} className="rotate-180" /> Universo de Issues
+            </button>
             <button
               onClick={() => setShowConfig(true)}
               className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center gap-2"
@@ -54,16 +59,6 @@ const SprintsPage = () => {
             >
               <Settings size={18} /> Configurar Proyecto
             </button>
-          )}
-          {canAddMember && (
-            <button
-              onClick={() => setShowAddUser(true)}
-              className="w-[50px] h-[50px] bg-oracle-main text-white flex items-center justify-center rounded-full shadow-md hover:opacity-90 transition-opacity"
-              title="Agregar usuario al sprint"
-            >
-              <UserPlus size={24} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -77,21 +72,23 @@ const SprintsPage = () => {
             onSprintClick={handleSprintClick}
           />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full -mt-20">
-            <EmptyState 
-              title="No hay Sprints Planificados"
-              description="Inicia la configuración de tu proyecto y agrega tu primer Sprint para comenzar."
-              actionButton={
-                canManageProject && (
-                  <button 
-                    onClick={() => setShowConfig(true)}
-                    className="px-8 py-4 bg-oracle-main text-white rounded-2xl font-bold hover:opacity-90 transition-opacity shadow-lg"
-                  >
-                    Configurar Sprints
-                  </button>
-                )
-              }
-            />
+          <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
+            <div className="max-w-xl w-full">
+              <EmptyState 
+                title="No hay Sprints Planificados"
+                description="Inicia la configuración de tu proyecto y agrega tu primer Sprint para comenzar."
+                actionButton={
+                  canManageProject && (
+                    <button 
+                      onClick={() => setShowConfig(true)}
+                      className="px-8 py-4 bg-oracle-main text-white rounded-2xl font-bold hover:opacity-90 transition-opacity shadow-lg"
+                    >
+                      Configurar Sprints
+                    </button>
+                  )
+                }
+              />
+            </div>
           </div>
         )}
         
@@ -113,17 +110,14 @@ const SprintsPage = () => {
         </div>
       </main>
 
-      <AddUserModal
-        isOpen={showAddUser}
-        onClose={() => setShowAddUser(false)}
-        onAdd={handleAddUser}
-      />
-
       {showConfig && (
-        <ProjectConfigView 
-          projectId={projectId} 
-          project={project} 
-          onClose={() => setShowConfig(false)} 
+        <ProjectConfigView
+          projectId={projectId}
+          project={project}
+          onClose={() => setShowConfig(false)}
+          sprints={sprints}
+          sprintActions={{ addSprint, updateSprint, refetchSprints }}
+          onProjectUpdated={refetchProjects}
         />
       )}
     </div>

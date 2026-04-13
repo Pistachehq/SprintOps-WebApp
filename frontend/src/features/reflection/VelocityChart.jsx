@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const VelocityChart = () => {
+const VelocityChart = ({ embedded = false }) => {
   const velocity = [
     { name: 'Sprint 1', planned: 40, completed: 35 },
     { name: 'Sprint 2', planned: 45, completed: 45 },
@@ -14,15 +14,16 @@ const VelocityChart = () => {
   // Calculate average of completed points
   const avg = (velocity.reduce((sum, sprint) => sum + sprint.completed, 0) / velocity.length).toFixed(1);
 
-  return (
-    <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-      <h2 className="text-lg font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-3">
-        <Activity size={20} className="text-oracle-red" />
-        Velocidad Histórica
-      </h2>
+  const body = (
+    <>
+      {!embedded && (
+        <h2 className="mb-6 flex items-center gap-3 text-lg font-black uppercase tracking-widest text-slate-900">
+          <Activity size={20} className="text-oracle-red" />
+          Velocidad Histórica
+        </h2>
+      )}
 
-      {/* Bar Chart con recharts */}
-      <div className="h-48 w-full mb-4">
+      <div className={`w-full ${embedded ? 'mb-3 h-44' : 'mb-4 h-48'}`}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={velocity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -39,17 +40,26 @@ const VelocityChart = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Promedio</p>
+      <div className={`grid grid-cols-2 gap-4 ${embedded ? 'mt-4' : 'mt-6'}`}>
+        <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Promedio</p>
           <p className="text-xl font-black text-slate-900">{avg} pts</p>
         </div>
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tendencia</p>
+        <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Tendencia</p>
           <p className="text-xl font-black text-green-600">Estable ↗</p>
         </div>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-2">{body}</div>;
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+      {body}
     </div>
   );
 };

@@ -1,15 +1,11 @@
-import { db } from '../db/dbClient';
+import apiClient from '../api/apiClient';
 
 export const issuesRepository = {
-  getAll: () => db.getCollection('issues'),
-  getById: (id) => db.getById('issues', id),
-  getBySprintId: (sprintId) => {
-    return db.getCollection('issues').filter(i => i.sprintId === sprintId);
-  },
-  getByProjectId: (projectId) => {
-    return db.getCollection('issues').filter(i => i.projectId === projectId);
-  },
-  create: (data) => db.insert('issues', data),
-  update: (id, data) => db.update('issues', id, data),
-  delete: (id) => db.delete('issues', id)
+  getAll: () => apiClient.get('/issues'),
+  getById: (id) => apiClient.get(`/issues/${id}`),
+  getBySprintId: (sprintId) => apiClient.get(`/issues/sprint/${sprintId}`),
+  getByProjectId: (projectId) => apiClient.get(`/issues/proyecto/${projectId}`),
+  create: (data) => apiClient.post('/issues', data),
+  update: (id, data) => apiClient.put(`/issues/${id}`, data),
+  delete: (id) => apiClient.delete(`/issues/${id}`),
 };

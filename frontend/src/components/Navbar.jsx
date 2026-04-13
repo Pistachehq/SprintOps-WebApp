@@ -1,11 +1,13 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Avatar from './Avatar';
 import SearchBar from './SearchBar';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
-const Navbar = () => {
+const Navbar = ({ onSearch }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === '/home' || location.pathname === '/projects';
 
   const handleLogout = () => {
     logout();
@@ -22,18 +24,20 @@ const Navbar = () => {
         />
       </Link>
 
-      <div className="hidden md:flex flex-1 justify-center px-4">
-        <SearchBar />
-      </div>
+      {isHome && (
+        <div className="hidden md:flex flex-1 justify-center px-4">
+          <SearchBar onSearch={onSearch} />
+        </div>
+      )}
 
       <div className="flex items-center gap-6 min-w-[200px] justify-end">        
         <div className="relative group">
           <button className="flex items-center gap-3 transition-all hover:opacity-80">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-white">{user?.name || 'Usuario'}</p>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">{user?.role || 'Guest'}</p>
+              <p className="text-[10px] text-gray-400 tracking-widest">{user?.email || ''}</p>
             </div>
-            <Avatar name={user?.name} className="border-2 border-white/20" />
+            <Avatar name={user?.name} avatarUrl={user?.avatarUrl} className="border-2 border-white/20" />
           </button>
 
           {/* User Menu Dropdown */}
@@ -41,8 +45,10 @@ const Navbar = () => {
             <div className="p-4 border-b border-gray-50 bg-gray-50/50">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Ajustes</p>
             </div>
-            <button className="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
-              Mi Cuenta
+            <button 
+              onClick={() => navigate('/profile')}
+              className="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
+              Perfil
             </button>
             <button 
               onClick={handleLogout}

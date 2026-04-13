@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search } from 'lucide-react';
+import { X } from 'lucide-react';
+import IssueTagPicker from '../../components/ui/IssueTagPicker';
+import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
-const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) => {
+const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [] }) => {
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('Task');
   const [priority, setPriority] = useState('Medium');
   const [points, setPoints] = useState(0);
-  const [assignee, setAssignee] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isSubIssue, setIsSubIssue] = useState(false);
+  const [parentIssueId, setParentIssueId] = useState('');
+  const [useTag, setUseTag] = useState(false);
+  const [tagLabel, setTagLabel] = useState('');
+  const [tagColor, setTagColor] = useState(DEFAULT_ISSUE_TAG_COLOR);
 
   useEffect(() => {
     if (issue) {
@@ -18,7 +25,13 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
       setType(issue.type || 'Task');
       setPriority(issue.priority || 'Medium');
       setPoints(issue.storyPoints || 0);
-      setAssignee(issue.assigneeIds && issue.assigneeIds.length > 0 ? issue.assigneeIds[0] : '');
+      setEndDate(issue.completedAt || '');
+      setIsSubIssue(!!issue.parentIssueId);
+      setParentIssueId(issue.parentIssueId || '');
+      const has = !!(issue.tagLabel && issue.tagColor);
+      setUseTag(has);
+      setTagLabel(issue.tagLabel || '');
+      setTagColor(normalizeIssueTagColor(issue.tagColor) || DEFAULT_ISSUE_TAG_COLOR);
     } else {
       setTitle('');
       setPurpose('');
@@ -26,7 +39,12 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
       setType('Task');
       setPriority('Medium');
       setPoints(0);
-      setAssignee('');
+      setEndDate('');
+      setIsSubIssue(false);
+      setParentIssueId('');
+      setUseTag(false);
+      setTagLabel('');
+      setTagColor(DEFAULT_ISSUE_TAG_COLOR);
     }
   }, [issue, isOpen]);
 
@@ -34,6 +52,14 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const tagPayload =
+      useTag && tagLabel.trim()
+        ? {
+            tagLabel: tagLabel.trim(),
+            tagColor: normalizeIssueTagColor(tagColor) || DEFAULT_ISSUE_TAG_COLOR,
+          }
+        : { tagLabel: null, tagColor: null };
+
     const issueData = {
       title,
       purpose,
@@ -42,7 +68,10 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
       priority,
       type,
       storyPoints: Number(points) || 0,
-      assigneeIds: assignee ? [assignee] : []
+      endDate: endDate || null,
+      parentIssueId: isSubIssue && parentIssueId ? Number(parentIssueId) : null,
+      assigneeIds: issue ? issue.assigneeIds : [],
+      ...tagPayload,
     };
 
     if (issue && onEdit) {
@@ -55,16 +84,19 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
+      <div className="flex max-h-[min(92vh,calc(100dvh-2rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-gray-50 p-6">
           <h2 className="text-xl font-black text-gray-800 tracking-tight">{issue ? "Editar Issue" : "Crear Issue"}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button type="button" onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
             <X size={24} />
           </button>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4 [scrollbar-width:thin] flex flex-col gap-4"
+          >
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Título</label>
             <input 
@@ -125,23 +157,6 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Asignado a (Opcional)</label>
-              <select
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
-                value={assignee}
-                onChange={e => setAssignee(e.target.value)}
-              >
-                <option value="">Sin asignar</option>
-                <option value="developer">Developer</option>
-                <option value="scrumMaster">Scrum Master</option>
-                <option value="productOwner">Product Owner</option>
-                <option value="axel">Axel</option>
-                <option value="sm">SM</option>
-                <option value="po">PO</option>
-                <option value="u1">Axel (Sistema)</option>
-              </select>
-            </div>
-            <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Story Points</label>
               <input 
                 type="number"
@@ -152,13 +167,71 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null }) =
                 placeholder="0"
               />
             </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha fin tentativa</label>
+              <input 
+                type="date"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
-          
-          <div className="mt-4 flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">
+
+          <IssueTagPicker
+            idPrefix="issue-modal"
+            enabled={useTag}
+            onEnabledChange={setUseTag}
+            tagLabel={tagLabel}
+            tagColor={tagColor}
+            onLabelChange={setTagLabel}
+            onColorChange={setTagColor}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">¿Es Sub Issue?</label>
+              <select
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                value={isSubIssue ? 'yes' : 'no'}
+                onChange={e => {
+                  const val = e.target.value === 'yes';
+                  setIsSubIssue(val);
+                  if (!val) setParentIssueId('');
+                }}
+              >
+                <option value="no">No</option>
+                <option value="yes">Sí</option>
+              </select>
+            </div>
+          </div>
+
+          {isSubIssue && (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Issue padre</label>
+              <select
+                required
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+                value={parentIssueId}
+                onChange={e => setParentIssueId(e.target.value)}
+              >
+                <option value="">Selecciona un issue...</option>
+                {sprintIssues
+                  .filter(i => String(i.id) !== String(issue?.id))
+                  .map(i => (
+                    <option key={i.id} value={i.id}>#{i.displayIndex || i.id} — {i.title}</option>
+                  ))
+                }
+              </select>
+            </div>
+          )}
+          </div>
+
+          <div className="flex shrink-0 gap-3 border-t border-gray-100 bg-white px-6 py-4">
+            <button type="button" onClick={onClose} className="h-12 flex-1 rounded-xl bg-gray-100 font-bold text-slate-600 transition-colors hover:bg-gray-200">
               Cancelar
             </button>
-            <button type="submit" className="flex-1 h-12 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors shadow-lg shadow-green-900/20">
+            <button type="submit" className="h-12 flex-1 rounded-xl bg-[#446E51] font-bold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[#355640]">
               {issue ? "Guardar Cambios" : "Crear Issue"}
             </button>
           </div>

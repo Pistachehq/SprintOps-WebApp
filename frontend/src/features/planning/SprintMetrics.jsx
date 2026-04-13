@@ -1,22 +1,22 @@
 import React from 'react';
 import CapacityCard from './CapacityCard';
-import PredictionCard from './PredictionCard';
+import WorkloadCard from './WorkloadCard';
 import AssignedTasksCard from './AssignedTasksCard';
+import { useAuth } from '../auth/hooks/useAuth';
 
-const SprintMetrics = ({ role, sprintId }) => {
-  const isDev = role === 'developer';
-  const isScrum = role === 'scrumMaster';
-  const isOwner = role === 'productOwner';
+const SprintMetrics = ({ role, sprintId, issues }) => {
+  const { checkPermission } = useAuth();
+  const canViewMetrics = checkPermission('canViewMetrics');
 
   return (
-    <div className="space-y-6">
-      {(isScrum || isOwner) && (
+    <div className="space-y-6 flex-1 min-h-0 overflow-y-auto flex flex-col pb-6 pr-1 -mr-1" style={{ scrollbarWidth: 'thin' }}>
+      {canViewMetrics && (
         <>
-          <CapacityCard />
-          <PredictionCard />
+          <CapacityCard sprintId={sprintId} issues={issues} />
+          <WorkloadCard issues={issues} />
         </>
       )}
-      <AssignedTasksCard role={role} sprintId={sprintId} />
+      <AssignedTasksCard role={role} sprintId={sprintId} issues={issues} />
     </div>
   );
 };

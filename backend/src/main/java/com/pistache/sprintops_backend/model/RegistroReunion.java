@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "registro_reunion")
 @Data
@@ -17,14 +19,18 @@ public class RegistroReunion {
     @Column(name = "id_registro")
     private Integer idRegistro;
 
-    @Column(name = "que_hice", length = 250)
+    @Column(name = "que_hice", columnDefinition = "TEXT")
     private String queHice;
 
-    @Column(name = "que_hare", length = 250)
+    @Column(name = "que_hare", columnDefinition = "TEXT")
     private String queHare;
 
-    @Column(name = "impedimentos", length = 250)
+    @Column(name = "impedimentos", columnDefinition = "TEXT")
     private String impedimentos;
+
+    /** Última vez que este usuario guardó sus respuestas para esta reunión. */
+    @Column(name = "fecha_hora_registro")
+    private LocalDateTime fechaHoraRegistro;
 
     @ManyToOne
     @JoinColumn(name = "Usuario_id_usuario")

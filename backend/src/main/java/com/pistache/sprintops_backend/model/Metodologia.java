@@ -1,13 +1,17 @@
 package com.pistache.sprintops_backend.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "metodologia")
 @Data
+@EqualsAndHashCode(exclude = {"proyecto"})
+@ToString(exclude = {"proyecto"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Metodologia {

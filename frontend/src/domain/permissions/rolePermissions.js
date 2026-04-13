@@ -6,38 +6,58 @@ export const ROLES = {
 
 const permissions = {
   [ROLES.DEVELOPER]: {
-    canCreateProject: false,
-    canCreateSprint: true, // Requested by user
-    canManageMembers: false, // UI will provide "Join" directly, not full admin
-    canMoveAnyIssue: true, // Requested by user (modify for all)
-    canCreateIssue: true, // Requested by user
-    canFillStandup: true,
-    canFillReflection: true,
-    canViewMetrics: false
+    canCreateSprint: false,
+    canCreateIssue: true,
+    canEditIssue: true,
+    canManageMembers: false,
+    canViewMetrics: false,
+    canViewOnlyOwnIssues: true,
+    canViewAllIssues: false
   },
   [ROLES.SCRUM_MASTER]: {
-    canCreateProject: false,
     canCreateSprint: true,
-    canManageMembers: true,
-    canMoveAnyIssue: true,
     canCreateIssue: true,
-    canFillStandup: false,
-    canFillReflection: true,
-    canViewMetrics: true
+    canEditIssue: true,
+    canManageMembers: true,
+    canViewMetrics: true,
+    canViewOnlyOwnIssues: false,
+    canViewAllIssues: true
   },
   [ROLES.PRODUCT_OWNER]: {
-    canCreateProject: true,
-    canCreateSprint: true, // Ensure PO can also create Sprints to match config
-    canManageMembers: true,
-    canMoveAnyIssue: true,
+    canCreateSprint: true,
     canCreateIssue: true,
-    canFillStandup: false,
-    canFillReflection: true,
-    canViewMetrics: true
+    canEditIssue: true,
+    canManageMembers: true,
+    canViewMetrics: true,
+    canViewOnlyOwnIssues: false,
+    canViewAllIssues: true
   }
 };
 
+// Cache for dynamically loaded role permissions
+let dynamicPermissions = {};
+
+export const setDynamicPermissions = (roleName, permisoNames) => {
+  const normalizedRole = roleName.toLowerCase().replace(/\s+/g, '');
+  dynamicPermissions[normalizedRole] = {};
+  permisoNames.forEach(name => {
+    dynamicPermissions[normalizedRole][name] = true;
+  });
+};
+
+export const clearDynamicPermissions = () => {
+  dynamicPermissions = {};
+};
+
 export const hasPermission = (role, action) => {
-  if (!permissions[role]) return false;
-  return !!permissions[role][action];
+  // Check static permissions first
+  if (permissions[role]) {
+    return !!permissions[role][action];
+  }
+  // Check dynamic permissions for custom roles
+  const normalizedRole = role?.toLowerCase().replace(/\s+/g, '');
+  if (dynamicPermissions[normalizedRole]) {
+    return !!dynamicPermissions[normalizedRole][action];
+  }
+  return false;
 };

@@ -26,6 +26,10 @@ public class LogsIssuesService {
         return logsIssuesRepository.findByIssue(issue);
     }
 
+    public List<LogsIssues> findByIssueId(Integer issueId) {
+        return logsIssuesRepository.findByIssueIdIssue(issueId);
+    }
+
     public List<LogsIssues> findByTipoAccion(String tipoAccion) {
         return logsIssuesRepository.findByTipoAccion(tipoAccion);
     }

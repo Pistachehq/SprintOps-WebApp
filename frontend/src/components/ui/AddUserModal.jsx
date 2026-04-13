@@ -2,16 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { usersRepository } from '../../data/repositories/usersRepository';
 
+const roleLabel = (role) => {
+  const map = { developer: 'Developer', scrumMaster: 'Scrum Master', productOwner: 'Product Owner' };
+  return map[role] || role;
+};
+
 const AddUserModal = ({ isOpen, onClose, onAdd }) => {
   const [name, setName] = useState('');
-  const [role, setRole] = useState('Desarrollador');
+  const [selectedUser, setSelectedUser] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
-      setAllUsers(usersRepository.getAll() || []);
+      usersRepository.getAll().then(users => setAllUsers(users || [])).catch(() => setAllUsers([]));
+      setName('');
+      setSelectedUser(null);
     }
   }, [isOpen]);
 
@@ -31,15 +38,19 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAdd({ name, role });
+    if (selectedUser) {
+      onAdd(selectedUser);
+    } else {
+      onAdd({ name });
+    }
     setName('');
-    setRole('Desarrollador');
+    setSelectedUser(null);
     onClose();
   };
 
   const selectUser = (user) => {
     setName(user.name);
-    setRole(user.role === 'scrumMaster' ? 'Scrum Master' : user.role === 'productOwner' ? 'Product Owner' : 'Desarrollador');
+    setSelectedUser(user);
     setShowSuggestions(false);
   };
 
@@ -63,6 +74,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                 value={name}
                 onChange={e => {
                   setName(e.target.value);
+                  setSelectedUser(null);
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
@@ -71,7 +83,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
               <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
 
-            {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 max-h-40 overflow-y-auto">
                 {suggestions.map(u => (
@@ -81,23 +92,11 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
                     className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
                   >
                     <p className="font-bold text-sm text-gray-800">{u.name}</p>
-                    <p className="text-[10px] text-gray-400">@{u.username} · {u.role}</p>
+                    <p className="text-[10px] text-gray-400">@{u.username} · {roleLabel(u.role)}</p>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Rol en el equipo</label>
-            <select 
-              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50"
-              value={role}
-              onChange={e => setRole(e.target.value)}
-            >
-              <option value="Desarrollador">Desarrollador</option>
-              <option value="Scrum Master">Scrum Master</option>
-              <option value="Product Owner">Product Owner</option>
-            </select>
           </div>
           
           <div className="mt-4 flex gap-3">

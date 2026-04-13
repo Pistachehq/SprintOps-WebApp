@@ -11,6 +11,9 @@ import SprintManagerPage from '../features/sprintManager/SprintManagerPage';
 import PlanningPage from '../features/planning/PlanningPage';
 import SprintSubLayout from '../features/sprint/components/SprintSubLayout';
 import TaskDetailPage from '../features/planning/taskDetail/TaskDetailPage';
+import ProfilePage from '../features/profile/ProfilePage';
+import IssueUniversePage from '../features/issueUniverse/IssueUniversePage';
+import TimelinePage from '../features/timeline/TimelinePage';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -19,22 +22,25 @@ const PrivateRoute = ({ children }) => {
 };
 
 const AppRouter = () => {
-  const { user } = useAuth();
-
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      
-      <Route path="/" element={
-        <PrivateRoute>
-          <Layout />
-        </PrivateRoute>
-      }>
-        <Route index element={<Navigate to="/home" />} />
+
+      <Route
+        path="/*"
+        element={
+          <PrivateRoute>
+            <Layout />
+          </PrivateRoute>
+        }
+      >
+        <Route index element={<Navigate to="/home" replace />} />
         <Route path="home" element={<HomePage />} />
         <Route path="projects" element={<HomePage />} />
-        <Route path="project/:projectId" element={<ProjectPage />} />
         <Route path="project/:projectId/sprints" element={<SprintsPage />} />
+        <Route path="project/:projectId/timeline" element={<TimelinePage />} />
+        <Route path="project/:projectId/universe" element={<IssueUniversePage />} />
+        <Route path="project/:projectId" element={<ProjectPage />} />
         <Route path="sprint/:id">
           <Route index element={<SprintManagerPage />} />
           <Route element={<SprintSubLayout />}>
@@ -44,9 +50,9 @@ const AppRouter = () => {
           </Route>
         </Route>
         <Route path="sprint/:sprintId/planning/task/:taskId" element={<TaskDetailPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Route>
-
-      <Route path="*" element={<Navigate to="/home" />} />
     </Routes>
   );
 };

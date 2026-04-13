@@ -1,5 +1,6 @@
 package com.pistache.sprintops_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class Permiso {
     @Column(name = "descripcion_permisos", length = 250)
     private String descripcionPermisos;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "permiso")
     private Set<TablaPermisos> tablaPermisos;
 }

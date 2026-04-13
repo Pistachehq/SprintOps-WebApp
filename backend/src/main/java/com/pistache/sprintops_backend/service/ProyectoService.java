@@ -26,6 +26,10 @@ public class ProyectoService {
         return proyectoRepository.findByNombreProyecto(nombreProyecto);
     }
 
+    public Optional<Proyecto> findByCodigoProyecto(String codigo) {
+        return proyectoRepository.findByCodigoProyecto(codigo);
+    }
+
     public List<Proyecto> findByEquipo(Equipo equipo) {
         return proyectoRepository.findByEquipo(equipo);
     }

@@ -1,37 +1,27 @@
 import React, { useState } from 'react';
-import { User, Lock } from 'lucide-react';
+import { User, Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
 
 const LoginForm = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Usuarios simulados (Usernames)
-  const users = [
-    { username: "developer", password: "123", role: "developer" },
-    { username: "scrum", password: "123", role: "scrumMaster" },
-    { username: "owner", password: "123", role: "productOwner" },
-    { username: "axel", password: "123", role: "developer" },
-    { username: "sm", password: "123", role: "scrumMaster" },
-    { username: "po", password: "123", role: "productOwner" }
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const userMatched = users.find(
-      (u) => (u.username === username || u.username === username.toLowerCase()) && u.password === password
-    );
-
-    if (userMatched) {
-      // Inicia sesion dentro del manejador central global (db)
-      login(userMatched.role, userMatched.username);
+    setError('');
+    setLoading(true);
+    try {
+      await login(email, password);
       navigate('/home');
-    } else {
-      setError('Usuario o contraseña incorrectos');
+    } catch (err) {
+      setError(err.message || 'Correo o contraseña incorrectos');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,14 +35,14 @@ const LoginForm = () => {
       <form onSubmit={handleLogin} className="mt-8 space-y-[15px]">
         <div className="relative">
           <input
-            type="text"
-            placeholder="Usuario"
+            type="email"
+            placeholder="Correo electrónico"
             className="w-full h-[50px] px-[16px] rounded-[10px] border border-[#dcdcdc] bg-[#f9f9f9] text-base focus:outline-none focus:ring-1 focus:ring-[#446E51] transition-all"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <User size={24} className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400" />
+          <Mail size={24} className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
 
         <div className="relative">
@@ -70,9 +60,10 @@ const LoginForm = () => {
         <div className="pt-[10px]">
           <button
             type="submit"
-            className="w-full h-[48px] bg-[#446E51] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4"
+            disabled={loading}
+            className="w-full h-[48px] bg-[#446E51] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4 disabled:opacity-60"
           >
-            Iniciar Sesion
+            {loading ? 'Iniciando...' : 'Iniciar Sesion'}
           </button>
         </div>
 
@@ -83,7 +74,7 @@ const LoginForm = () => {
 
       <div className="mt-[10px] text-center">
         <p className="text-[12px] text-slate-500">
-          Usuarios demo: <strong>axel, sm, po</strong> (Contraseña general: <strong>123</strong>)
+          Correos demo: <strong>axel@example.com, sm@example.com, po@example.com</strong> (Contraseña: <strong>123</strong>)
         </p>
       </div>
     </div>

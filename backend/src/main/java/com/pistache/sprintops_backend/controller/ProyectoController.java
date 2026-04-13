@@ -1,11 +1,24 @@
 package com.pistache.sprintops_backend.controller;
 
-import com.pistache.sprintops_backend.model.Proyecto;
+import com.pistache.sprintops_backend.dto.CreateProyectoRequest;
+import com.pistache.sprintops_backend.dto.ProyectoDTO;
+import com.pistache.sprintops_backend.dto.MiembroEquipoDTO;
+import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.ProyectoService;
+import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
+import com.pistache.sprintops_backend.service.EquipoService;
+import com.pistache.sprintops_backend.service.UsuarioService;
+import com.pistache.sprintops_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/proyectos")
@@ -14,31 +27,248 @@ public class ProyectoController {
 
     @Autowired
     private ProyectoService proyectoService;
+    @Autowired
+    private EquipoService equipoService;
+    @Autowired
+    private UsuarioService usuarioService;
+    @Autowired
+    private InfoUsuarioEquipoRepository infoUsuarioEquipoRepository;
+    @Autowired
+    private RolesDeUsuariosRepository rolesDeUsuariosRepository;
+    @Autowired
+    private RolRepository rolRepository;
+    @Autowired
+    private ProyectoIssuesDocxExportService proyectoIssuesDocxExportService;
 
     @GetMapping
-    public List<Proyecto> getAll() {
-        return proyectoService.findAll();
+    public List<ProyectoDTO> getAll() {
+        return proyectoService.findAll().stream()
+                .map(ProyectoDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Proyecto> getById(@PathVariable Integer id) {
+    public ResponseEntity<ProyectoDTO> getById(@PathVariable Integer id) {
         return proyectoService.findById(id)
-                .map(ResponseEntity::ok)
+                .map(p -> ResponseEntity.ok(ProyectoDTO.fromEntity(p)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/export/issues-docx")
+    public ResponseEntity<byte[]> exportIssuesDocx(@PathVariable Integer id) {
+        try {
+            var opt = proyectoService.findById(id);
+            if (opt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            byte[] bytes = proyectoIssuesDocxExportService.export(opt.get());
+            String base = opt.get().getNombreProyecto() != null ? opt.get().getNombreProyecto() : "proyecto";
+            String safe = base.replaceAll("[^a-zA-Z0-9._\\- ]", "_").replaceAll("\\s+", " ").trim();
+            if (safe.isEmpty()) {
+                safe = "proyecto";
+            }
+            String filename = safe + "-Issues.docx";
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType(
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                    .body(bytes);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/codigo/{codigo}")
+    public ResponseEntity<ProyectoDTO> getByCodigo(@PathVariable String codigo) {
+        return proyectoService.findByCodigoProyecto(codigo)
+                .map(p -> ResponseEntity.ok(ProyectoDTO.fromEntity(p)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/usuario/{userId}")
+    public List<ProyectoDTO> getByUserId(@PathVariable Integer userId) {
+        // Find all equipos where user is a member
+        List<InfoUsuarioEquipo> memberships = infoUsuarioEquipoRepository.findByUsuarioIdUsuario(userId);
+        Set<Integer> equipoIds = memberships.stream()
+                .map(m -> m.getEquipo().getIdEquipo())
+                .collect(Collectors.toSet());
+
+        // Get all projects from those equipos
+        return proyectoService.findAll().stream()
+                .filter(p -> p.getEquipo() != null && equipoIds.contains(p.getEquipo().getIdEquipo()))
+                .map(ProyectoDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}/miembros")
+    public List<MiembroEquipoDTO> getMembers(@PathVariable Integer id) {
+        var proyecto = proyectoService.findById(id);
+        if (proyecto.isEmpty() || proyecto.get().getEquipo() == null) {
+            return List.of();
+        }
+        Integer equipoId = proyecto.get().getEquipo().getIdEquipo();
+        List<InfoUsuarioEquipo> members = infoUsuarioEquipoRepository.findByEquipoIdEquipo(equipoId);
+        List<RolesDeUsuarios> roles = rolesDeUsuariosRepository.findByEquipoIdEquipo(equipoId);
+
+        Map<Integer, String> roleMap = new HashMap<>();
+        for (RolesDeUsuarios r : roles) {
+            roleMap.put(r.getUsuario().getIdUsuario(), r.getRol().getNombreRol());
+        }
+
+        return members.stream().map(m -> {
+            MiembroEquipoDTO dto = new MiembroEquipoDTO();
+            dto.setUserId(m.getUsuario().getIdUsuario());
+            dto.setName(m.getUsuario().getNombreUsuario());
+            dto.setEmail(m.getUsuario().getEmailUsuario());
+            dto.setRole(roleMap.getOrDefault(m.getUsuario().getIdUsuario(), "Developer"));
+            dto.setAvatarUrl(m.getUsuario().getAvatarUrl());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
     @PostMapping
-    public Proyecto create(@RequestBody Proyecto proyecto) {
-        return proyectoService.save(proyecto);
+    public ResponseEntity<ProyectoDTO> create(@RequestBody CreateProyectoRequest request) {
+        // Create equipo for project
+        Equipo equipo = new Equipo();
+        equipo.setNombreEquipo("Equipo " + request.getName());
+        equipo.setDescripcion("Equipo del proyecto " + request.getName());
+        equipo.setFechaCreacionEquipo(LocalDate.now());
+        final Equipo savedEquipo = equipoService.save(equipo);
+
+        // Generate 5-digit code
+        String codigo = String.valueOf(new Random().nextInt(90000) + 10000);
+
+        Proyecto proyecto = new Proyecto();
+        proyecto.setNombreProyecto(request.getName());
+        proyecto.setDescripcionProyecto(request.getDescription());
+        proyecto.setCodigoProyecto(codigo);
+        proyecto.setFechaInicioProyecto(request.getStart());
+        proyecto.setFechaFinProyecto(request.getEnd());
+        proyecto.setEstadoDelProyecto("A");
+        proyecto.setEquipo(savedEquipo);
+
+        // Set creator
+        if (request.getOwnerId() != null) {
+            usuarioService.findById(request.getOwnerId()).ifPresent(proyecto::setCreador);
+        }
+
+        proyecto = proyectoService.save(proyecto);
+
+        // Add owner to equipo
+        if (request.getOwnerId() != null) {
+            var owner = usuarioService.findById(request.getOwnerId());
+            if (owner.isPresent()) {
+                InfoUsuarioEquipo info = new InfoUsuarioEquipo();
+                info.setId(new InfoUsuarioEquipo.InfoUsuarioEquipoId(savedEquipo.getIdEquipo(), owner.get().getIdUsuario()));
+                info.setEquipo(savedEquipo);
+                info.setUsuario(owner.get());
+                info.setFechaUnionEquipo(LocalDate.now());
+                infoUsuarioEquipoRepository.save(info);
+
+                // Assign Product Owner role to the creator
+                rolRepository.findByNombreRol("Product Owner").ifPresent(poRol -> {
+                    RolesDeUsuarios roleEntry = new RolesDeUsuarios();
+                    roleEntry.setId(new RolesDeUsuarios.RolesDeUsuariosId(
+                        poRol.getIdRol(), savedEquipo.getIdEquipo(), owner.get().getIdUsuario()));
+                    roleEntry.setRol(poRol);
+                    roleEntry.setEquipo(savedEquipo);
+                    roleEntry.setUsuario(owner.get());
+                    rolesDeUsuariosRepository.save(roleEntry);
+                });
+            }
+        }
+
+        return ResponseEntity.ok(ProyectoDTO.fromEntity(proyecto));
+    }
+
+    @PostMapping("/{id}/unirse")
+    public ResponseEntity<?> joinProject(@PathVariable Integer id, @RequestBody Map<String, Integer> body) {
+        Integer userId = body.get("userId");
+        var proyecto = proyectoService.findById(id);
+        var usuario = usuarioService.findById(userId);
+
+        if (proyecto.isEmpty() || usuario.isEmpty() || proyecto.get().getEquipo() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Proyecto o usuario no encontrado"));
+        }
+
+        Equipo equipo = proyecto.get().getEquipo();
+
+        // Check if already a member
+        var existing = infoUsuarioEquipoRepository.findById(
+                new InfoUsuarioEquipo.InfoUsuarioEquipoId(equipo.getIdEquipo(), userId));
+        if (existing.isPresent()) {
+            return ResponseEntity.ok(Map.of("message", "Ya eres miembro de este proyecto"));
+        }
+
+        InfoUsuarioEquipo info = new InfoUsuarioEquipo();
+        info.setId(new InfoUsuarioEquipo.InfoUsuarioEquipoId(equipo.getIdEquipo(), userId));
+        info.setEquipo(equipo);
+        info.setUsuario(usuario.get());
+        info.setFechaUnionEquipo(LocalDate.now());
+        infoUsuarioEquipoRepository.save(info);
+
+        return ResponseEntity.ok(Map.of("message", "Te has unido al proyecto exitosamente"));
+    }
+
+    @PutMapping("/{id}/miembros/{userId}/rol")
+    public ResponseEntity<?> updateMemberRole(
+            @PathVariable Integer id,
+            @PathVariable Integer userId,
+            @RequestBody Map<String, String> body) {
+        String roleName = body.get("role");
+        if (roleName == null || roleName.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Role name is required"));
+        }
+
+        var proyecto = proyectoService.findById(id);
+        if (proyecto.isEmpty() || proyecto.get().getEquipo() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Integer equipoId = proyecto.get().getEquipo().getIdEquipo();
+
+        var usuario = usuarioService.findById(userId);
+        if (usuario.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var newRol = rolRepository.findByNombreRol(roleName);
+        if (newRol.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Rol no encontrado: " + roleName));
+        }
+
+        // Delete old role entry for this user in this team
+        List<RolesDeUsuarios> existing = rolesDeUsuariosRepository.findByEquipoIdEquipo(equipoId);
+        existing.stream()
+                .filter(r -> r.getUsuario().getIdUsuario().equals(userId))
+                .forEach(rolesDeUsuariosRepository::delete);
+
+        // Insert new role entry
+        RolesDeUsuarios entry = new RolesDeUsuarios();
+        entry.setId(new RolesDeUsuarios.RolesDeUsuariosId(
+                newRol.get().getIdRol(), equipoId, userId));
+        entry.setRol(newRol.get());
+        entry.setEquipo(proyecto.get().getEquipo());
+        entry.setUsuario(usuario.get());
+        rolesDeUsuariosRepository.save(entry);
+
+        return ResponseEntity.ok(Map.of("message", "Rol actualizado exitosamente"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Proyecto> update(@PathVariable Integer id, @RequestBody Proyecto proyecto) {
-        if (!proyectoService.existsById(id)) {
+    public ResponseEntity<ProyectoDTO> update(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+        var optProyecto = proyectoService.findById(id);
+        if (optProyecto.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        proyecto.setIdProyecto(id);
-        return ResponseEntity.ok(proyectoService.save(proyecto));
+        Proyecto proyecto = optProyecto.get();
+
+        if (updates.containsKey("name")) proyecto.setNombreProyecto((String) updates.get("name"));
+        if (updates.containsKey("description")) proyecto.setDescripcionProyecto((String) updates.get("description"));
+        if (updates.containsKey("status")) proyecto.setEstadoDelProyecto((String) updates.get("status"));
+        if (updates.containsKey("end")) proyecto.setFechaFinProyecto(LocalDate.parse((String) updates.get("end")));
+        if (updates.containsKey("start")) proyecto.setFechaInicioProyecto(LocalDate.parse((String) updates.get("start")));
+
+        return ResponseEntity.ok(ProyectoDTO.fromEntity(proyectoService.save(proyecto)));
     }
 
     @DeleteMapping("/{id}")
@@ -48,5 +278,14 @@ public class ProyectoController {
         }
         proyectoService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private String mapRoleName(String dbRole) {
+        if (dbRole == null) return "developer";
+        return switch (dbRole.toLowerCase()) {
+            case "product owner", "productowner" -> "productOwner";
+            case "scrum master", "scrummaster" -> "scrumMaster";
+            default -> "developer";
+        };
     }
 }
