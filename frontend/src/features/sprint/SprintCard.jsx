@@ -1,57 +1,123 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { timelineRepository } from '../../data/repositories/timelineRepository';
+import {
+  buildSprintCollageUrls,
+  filterPhotoDatesInSprintRange,
+  FALLBACK_COLLAGE_IMAGES,
+} from './utils/sprintCollagePhotos';
 
-const SprintCard = ({ sprint, onClick }) => {
+function CollageSlot({ src, alt, className, fallbackIndex }) {
+  const fb =
+    FALLBACK_COLLAGE_IMAGES[fallbackIndex % FALLBACK_COLLAGE_IMAGES.length];
+  const [current, setCurrent] = useState(src);
+
+  useEffect(() => {
+    setCurrent(src);
+  }, [src]);
+
+  const onError = useCallback(() => {
+    setCurrent((prev) => (prev !== fb ? fb : prev));
+  }, [fb]);
+
   return (
-    <div 
+    <img src={current} alt={alt} className={className} onError={onError} loading="lazy" />
+  );
+}
+
+const SprintCard = ({ sprint, projectId, onClick }) => {
+  const [collageUrls, setCollageUrls] = useState(() => buildSprintCollageUrls(projectId, sprint, []));
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!projectId) {
+        setCollageUrls(buildSprintCollageUrls(0, sprint, []));
+        return;
+      }
+      try {
+        const allDates = await timelineRepository.getPhotoDates(projectId);
+        if (cancelled) return;
+        const inRange = filterPhotoDatesInSprintRange(
+          allDates,
+          sprint?.startDate,
+          sprint?.endDate
+        );
+        setCollageUrls(buildSprintCollageUrls(projectId, sprint, inRange));
+      } catch {
+        if (!cancelled) {
+          setCollageUrls(buildSprintCollageUrls(projectId, sprint, []));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, sprint?.id, sprint?.startDate, sprint?.endDate]);
+
+  const [u0, u1, u2, u3] = collageUrls;
+
+  return (
+    <div
       onClick={() => onClick(sprint.id)}
-      className="flex flex-col items-center cursor-pointer group transition-all"
+      className="group flex cursor-pointer flex-col items-center transition-all"
     >
-      <h3 className="text-2xl font-bold text-slate-800 mb-6 group-hover:text-[#446E51] transition-colors">
+      <h3 className="mb-6 text-2xl font-bold text-slate-800 transition-colors group-hover:text-[#446E51]">
         {sprint.name}
       </h3>
-      
-      <div className="w-[450px] h-[320px] border-[6px] border-[#446E51] rounded-[32px] bg-white shadow-xl p-8 flex flex-col gap-4 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all overflow-hidden relative">
-        {/* Simulated UI Content */}
-        <div className="flex gap-4 h-full">
-          {/* Left Column / Sidebar area */}
-          <div className="w-1/4 bg-gray-100 rounded-xl flex flex-col gap-2 p-3 overflow-hidden">
-             <img src="https://images.unsplash.com/photo-1512314889357-e157c22f938d?auto=format&fit=crop&q=80&w=200" alt="sidebar header" className="h-6 w-full rounded-md object-cover grayscale opacity-60" />
-             <div className="h-4 w-3/4 bg-gray-200 rounded-md"></div>
-             <div className="h-4 w-1/2 bg-gray-200 rounded-md"></div>
+
+      <div className="relative flex h-[320px] w-[450px] flex-col gap-4 overflow-hidden rounded-[32px] border-[6px] border-[#446E51] bg-white p-8 shadow-xl transition-all group-hover:-translate-y-2 group-hover:shadow-2xl">
+        <div className="flex h-full gap-4">
+          {/* Columna izquierda (mini barra tipo sidebar) */}
+          <div className="flex w-1/4 flex-col gap-2 overflow-hidden rounded-xl bg-gray-100 p-3">
+            <CollageSlot
+              src={u0}
+              alt=""
+              fallbackIndex={(Number(sprint.id) || 0) * 2}
+              className="h-6 w-full rounded-md object-cover grayscale opacity-80"
+            />
+            <div className="h-4 w-3/4 rounded-md bg-gray-200" />
+            <div className="h-4 w-1/2 rounded-md bg-gray-200" />
           </div>
 
-          {/* Main Area with "Images" / Task blocks */}
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="h-1/3 bg-gray-50 border border-gray-100 rounded-xl p-3 flex gap-3 min-h-0">
-               <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="avatar" className="w-12 h-12 rounded-lg shrink-0 object-cover grayscale" />
-               <div className="flex-1 flex flex-col gap-2 justify-center">
-                  <div className="h-3 w-3/4 bg-gray-200 rounded-full"></div>
-                  <div className="h-2 w-1/2 bg-gray-200 rounded-full"></div>
-               </div>
+          {/* Área principal */}
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="flex min-h-0 h-1/3 gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+              <CollageSlot
+                src={u1}
+                alt=""
+                fallbackIndex={(Number(sprint.id) || 0) * 2 + 1}
+                className="h-12 w-12 shrink-0 rounded-lg object-cover grayscale opacity-90"
+              />
+              <div className="flex flex-1 flex-col justify-center gap-2">
+                <div className="h-3 w-3/4 rounded-full bg-gray-200" />
+                <div className="h-2 w-1/2 rounded-full bg-gray-200" />
+              </div>
             </div>
-            
-            <div className="flex-1 grid grid-cols-2 gap-4 min-h-0 overflow-hidden">
-               <div className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden flex flex-col">
-                  <img 
-                    src={`https://picsum.photos/seed/${sprint.id + 10}/200/120`} 
-                    alt="Task preview" 
-                    className="flex-1 w-full object-cover grayscale opacity-80 min-h-0"
-                  />
-                  <div className="p-2 space-y-1 h-10 shrink-0">
-                     <div className="h-2 w-full bg-gray-300 rounded-full"></div>
-                     <div className="h-2 w-2/3 bg-gray-300 rounded-full"></div>
-                  </div>
-               </div>
-               <div className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden flex flex-col">
-                  <img 
-                    src={`https://picsum.photos/seed/${sprint.id + 20}/200/150`} 
-                    alt="Task preview" 
-                    className="flex-1 w-full object-cover grayscale opacity-80 min-h-0"
-                  />
-                  <div className="p-2 h-10 shrink-0">
-                     <div className="h-2 w-full bg-gray-300 rounded-full"></div>
-                  </div>
-               </div>
+
+            <div className="grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-hidden">
+              <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                <CollageSlot
+                  src={u2}
+                  alt=""
+                  fallbackIndex={(Number(sprint.id) || 0) + 3}
+                  className="min-h-0 w-full flex-1 object-cover grayscale opacity-85"
+                />
+                <div className="h-10 shrink-0 space-y-1 p-2">
+                  <div className="h-2 w-full rounded-full bg-gray-300" />
+                  <div className="h-2 w-2/3 rounded-full bg-gray-300" />
+                </div>
+              </div>
+              <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                <CollageSlot
+                  src={u3}
+                  alt=""
+                  fallbackIndex={(Number(sprint.id) || 0) + 5}
+                  className="min-h-0 w-full flex-1 object-cover grayscale opacity-85"
+                />
+                <div className="h-10 shrink-0 p-2">
+                  <div className="h-2 w-full rounded-full bg-gray-300" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

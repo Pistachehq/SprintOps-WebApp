@@ -84,6 +84,7 @@ const SprintsPage = () => {
           <SprintFlow
             sprints={sprints}
             onSprintClick={handleSprintClick}
+            projectId={projectId}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
