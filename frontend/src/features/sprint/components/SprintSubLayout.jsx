@@ -19,12 +19,16 @@ const SprintSubLayout = () => {
   const { issues, addIssue } = useIssues(id);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [sprintName, setSprintName] = useState('');
+  const [projectId, setProjectId] = useState(null);
   const [velocityModalOpen, setVelocityModalOpen] = useState(false);
   const [sprintIndicatorModalOpen, setSprintIndicatorModalOpen] = useState(false);
 
   useEffect(() => {
+    setSprintName('');
+    setProjectId(null);
     sprintsRepository.getById(id).then(sprint => {
       if (sprint?.name) setSprintName(sprint.name);
+      if (sprint?.projectId != null) setProjectId(sprint.projectId);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
       }
@@ -159,7 +163,7 @@ const SprintSubLayout = () => {
             maxWidthClass="max-w-4xl"
             bodyClassName="p-4 sm:p-6"
           >
-            <VelocityChart embedded />
+            <VelocityChart embedded projectId={projectId} currentSprintId={id} />
           </Modal>
           <Modal
             isOpen={sprintIndicatorModalOpen}
