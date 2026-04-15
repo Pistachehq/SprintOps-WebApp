@@ -26,6 +26,7 @@ async function uploadRequest(path, formData) {
   const response = await fetch(url, {
     method: 'POST',
     body: formData,
+    cache: 'no-store',
   });
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));

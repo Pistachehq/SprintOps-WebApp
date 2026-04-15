@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Shield, Check, Plus, Zap, PlusCircle, Pencil, Users, BarChart3, Eye, Lock, Settings, CalendarCog } from 'lucide-react';
+import { X, Shield, Check, Plus, Zap, PlusCircle, Pencil, Users, BarChart3, Eye, Lock, Settings, CalendarCog, Camera } from 'lucide-react';
 import { rolesRepository } from '../../data/repositories/rolesRepository';
 
 const PERMISSION_ICONS = {
@@ -11,6 +11,7 @@ const PERMISSION_ICONS = {
   canViewOnlyOwnIssues: Lock,
   canViewAllIssues: Eye,
   canEditProjectDates: CalendarCog,
+  canUploadDailyPhoto: Camera,
 };
 
 const PERMISSION_LABELS = {
@@ -22,6 +23,7 @@ const PERMISSION_LABELS = {
   canViewOnlyOwnIssues: { label: 'Ver solo sus propios issues' },
   canViewAllIssues: { label: 'Ver issues de todo el equipo' },
   canEditProjectDates: { label: 'Modificar fechas del proyecto' },
+  canUploadDailyPhoto: { label: 'Subir fotos del daily meeting (cronograma)' },
 };
 
 const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, projectId = null }) => {

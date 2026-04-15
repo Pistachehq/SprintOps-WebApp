@@ -8,6 +8,7 @@ import { issuesRepository } from '../../data/repositories/issuesRepository';
 import { timelineRepository } from '../../data/repositories/timelineRepository';
 import { useAuth } from '../auth/hooks/useAuth';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { toast } from 'sonner';
 import { ISSUE_TAG_COLORS, isAllowedIssueTagColor, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
 const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -37,66 +38,139 @@ function diffDays(a, b) {
   return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000) + 1;
 }
 
-function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, onClose }) {
+function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, onClose, canUpload }) {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [imageBroken, setImageBroken] = useState(false);
   const fileInputRef = useRef(null);
   const dateStr = fecha.toISOString().split('T')[0];
   const hasPhoto = photoDatesSet.has(dateStr);
 
   useEffect(() => {
-    setPhotoUrl(hasPhoto ? timelineRepository.getPhotoUrl(projectId, dateStr) + '?t=' + Date.now() : null);
+    setImageBroken(false);
+    setPhotoUrl(hasPhoto ? `${timelineRepository.getPhotoUrl(projectId, dateStr)}?t=${Date.now()}` : null);
   }, [projectId, dateStr, hasPhoto]);
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (userId == null) {
+      toast.error('Inicia sesión de nuevo para subir la foto.');
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('fecha', dateStr);
-      fd.append('userId', userId);
+      fd.append('userId', String(userId));
       await timelineRepository.uploadPhoto(projectId, fd);
-      setPhotoUrl(timelineRepository.getPhotoUrl(projectId, dateStr) + '?t=' + Date.now());
+      setPhotoUrl(`${timelineRepository.getPhotoUrl(projectId, dateStr)}?t=${Date.now()}`);
+      setImageBroken(false);
       onPhotoChange();
-    } catch (err) { console.error(err); }
-    finally { setUploading(false); }
+      toast.success('Foto del daily guardada');
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || 'No se pudo subir la foto (revisa permisos o formato).');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleDelete = async () => {
-    try { await timelineRepository.deletePhoto(projectId, dateStr); setPhotoUrl(null); onPhotoChange(); }
-    catch (err) { console.error(err); }
+    if (userId == null) return;
+    try {
+      await timelineRepository.deletePhoto(projectId, dateStr, userId);
+      setPhotoUrl(null);
+      onPhotoChange();
+      toast.success('Foto eliminada');
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || 'No se pudo eliminar la foto');
+    }
   };
+
+  const showImage = Boolean(photoUrl) && !imageBroken;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl shadow-2xl p-5 w-[300px] z-10" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-3">
+      <div className="relative z-10 w-[min(100vw-2rem,320px)] rounded-2xl bg-white p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="text-base font-bold text-gray-800">{DAYS_FULL[fecha.getDay()]}, {fecha.getDate()} {MONTHS_ES[fecha.getMonth()]}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Foto del Daily Meeting</p>
+            <p className="text-base font-bold text-gray-800">
+              {DAYS_FULL[fecha.getDay()]}, {fecha.getDate()} {MONTHS_ES[fecha.getMonth()]}
+            </p>
+            <p className="mt-0.5 text-[11px] text-gray-400">Foto del Daily Meeting</p>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100"><X size={16} className="text-gray-400" /></button>
+          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100" aria-label="Cerrar">
+            <X size={16} className="text-gray-400" />
+          </button>
         </div>
-        {photoUrl ? (
-          <div className="relative group rounded-xl overflow-hidden">
-            <img src={photoUrl} alt="Daily" className="w-full h-44 object-cover" onError={() => setPhotoUrl(null)} />
-            <button onClick={handleDelete} className="absolute bottom-2 right-2 p-1.5 bg-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow">
+
+        {!canUpload ? (
+          showImage ? (
+            <div className="relative overflow-hidden rounded-xl">
+              <img
+                src={photoUrl}
+                alt="Daily meeting"
+                className="h-44 w-full object-cover"
+                onError={() => setImageBroken(true)}
+              />
+            </div>
+          ) : hasPhoto && imageBroken ? (
+            <div className="flex min-h-[7rem] flex-col items-center justify-center rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-6 text-center">
+              <p className="text-[12px] font-semibold leading-snug text-amber-900">
+                Había una foto registrada, pero no se pudo cargar. Intenta de nuevo más tarde.
+              </p>
+            </div>
+          ) : (
+            <div className="flex min-h-[7rem] flex-col items-center justify-center rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-6 text-center">
+              <p className="text-[12px] font-semibold leading-snug text-gray-600">
+                No se registró una fotografía para este daily meeting.
+              </p>
+            </div>
+          )
+        ) : showImage ? (
+          <div className="group relative overflow-hidden rounded-xl">
+            <img
+              src={photoUrl}
+              alt="Daily meeting"
+              className="h-44 w-full object-cover"
+              onError={() => {
+                setImageBroken(true);
+                setPhotoUrl(null);
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="absolute bottom-2 right-2 rounded-lg bg-red-500 p-1.5 opacity-0 shadow transition-opacity group-hover:opacity-100"
+              aria-label="Eliminar foto"
+            >
               <Trash2 size={14} className="text-white" />
             </button>
           </div>
         ) : (
-          <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-            className="w-full h-44 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-oracle-main hover:bg-green-50/30 transition-all cursor-pointer">
-            {uploading
-              ? <div className="animate-spin rounded-full h-8 w-8 border-2 border-oracle-main border-t-transparent" />
-              : <><Upload size={20} className="text-gray-300" /><span className="text-[11px] text-gray-400 font-medium">Subir foto</span></>
-            }
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 transition-all hover:border-oracle-main hover:bg-green-50/30 disabled:opacity-60"
+          >
+            {uploading ? (
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-oracle-main border-t-transparent" />
+            ) : (
+              <>
+                <Upload size={20} className="text-gray-300" />
+                <span className="text-[11px] font-medium text-gray-400">Subir foto</span>
+              </>
+            )}
           </button>
         )}
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+
+        {canUpload && <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />}
       </div>
     </div>
   );
@@ -105,7 +179,8 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
 const TimelinePage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, checkPermission, refreshPermissionsForProject } = useAuth();
+  const canUploadDailyPhoto = checkPermission('canUploadDailyPhoto');
 
   const [project, setProject] = useState(null);
   const [issues, setIssues] = useState([]);
@@ -145,6 +220,10 @@ const TimelinePage = () => {
   }, [projectId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    if (projectId) refreshPermissionsForProject(projectId);
+  }, [projectId, refreshPermissionsForProject]);
 
   const days = useMemo(() => {
     const candidates = [];
@@ -439,8 +518,15 @@ const TimelinePage = () => {
 
       {/* Photo modal */}
       {selectedDay && (
-        <PhotoModal projectId={projectId} fecha={new Date(selectedDay + 'T00:00:00')} userId={user?.id}
-          photoDatesSet={photoDates} onPhotoChange={refreshPhotoDates} onClose={() => setSelectedDay(null)} />
+        <PhotoModal
+          projectId={projectId}
+          fecha={new Date(selectedDay + 'T00:00:00')}
+          userId={user?.id}
+          photoDatesSet={photoDates}
+          onPhotoChange={refreshPhotoDates}
+          onClose={() => setSelectedDay(null)}
+          canUpload={canUploadDailyPhoto}
+        />
       )}
     </div>
   );
