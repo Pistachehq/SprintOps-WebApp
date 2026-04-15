@@ -189,7 +189,11 @@ const IssuesBoard = () => {
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {checkPermission('canViewMetrics') && (
         <div className="shrink-0">
-          <SprintMetrics issues={visibleIssues} issuesSentToNextSprint={issuesSentToNextSprint} />
+          <SprintMetrics
+            issues={visibleIssues}
+            issuesSentToNextSprint={issuesSentToNextSprint}
+            sprintId={id}
+          />
         </div>
       )}
 
