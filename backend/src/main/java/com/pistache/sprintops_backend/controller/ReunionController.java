@@ -7,8 +7,10 @@ import com.pistache.sprintops_backend.repository.RegistroReunionRepository;
 import com.pistache.sprintops_backend.service.ReunionService;
 import com.pistache.sprintops_backend.service.SprintService;
 import com.pistache.sprintops_backend.service.UsuarioService;
+import com.pistache.sprintops_backend.repository.RolesDeUsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,6 +33,8 @@ public class ReunionController {
     private SprintService sprintService;
     @Autowired
     private UsuarioService usuarioService;
+    @Autowired
+    private RolesDeUsuariosRepository rolesDeUsuariosRepository;
 
     private static Integer projectIdFromReunion(Reunion r) {
         if (r.getProyecto() != null) {
@@ -125,6 +129,96 @@ public class ReunionController {
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Dailies del sprint agrupadas por fecha (solo días dentro de la vigencia inicio–fin del sprint).
+     */
+    @GetMapping("/daily/team/{sprintId}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Map<String, Object>>> getTeamDailyBySprint(@PathVariable Integer sprintId) {
+        var optSprint = sprintService.findById(sprintId);
+        if (optSprint.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var sp = optSprint.get();
+        Integer equipoId = null;
+        if (sp.getProyecto() != null && sp.getProyecto().getEquipo() != null) {
+            equipoId = sp.getProyecto().getEquipo().getIdEquipo();
+        }
+
+        List<Reunion> dailies =
+                reunionRepository.findBySprintIdSprintAndTipoReunionOrderByFechaDeReunionDesc(sprintId, "Daily");
+
+        LocalDate sprintStart = sp.getFechaInicioSprint();
+        LocalDate sprintEnd = sp.getFechaFinSprint();
+        if (sprintStart != null && sprintEnd != null) {
+            LocalDate from = sprintStart;
+            LocalDate to = sprintEnd;
+            if (to.isBefore(from)) {
+                from = sprintEnd;
+                to = sprintStart;
+            }
+            LocalDate a = from;
+            LocalDate b = to;
+            dailies = dailies.stream()
+                    .filter(r -> r.getFechaDeReunion() != null
+                            && !r.getFechaDeReunion().isBefore(a)
+                            && !r.getFechaDeReunion().isAfter(b))
+                    .collect(Collectors.toList());
+        } else if (sprintStart != null) {
+            LocalDate a = sprintStart;
+            dailies = dailies.stream()
+                    .filter(r -> r.getFechaDeReunion() != null && !r.getFechaDeReunion().isBefore(a))
+                    .collect(Collectors.toList());
+        } else if (sprintEnd != null) {
+            LocalDate b = sprintEnd;
+            dailies = dailies.stream()
+                    .filter(r -> r.getFechaDeReunion() != null && !r.getFechaDeReunion().isAfter(b))
+                    .collect(Collectors.toList());
+        }
+
+        List<Map<String, Object>> days = new ArrayList<>();
+        for (Reunion r : dailies) {
+            List<RegistroReunion> regs = registroReunionRepository.findByReunion(r);
+            if (regs.isEmpty()) {
+                continue;
+            }
+            List<Map<String, Object>> entries = new ArrayList<>();
+            for (RegistroReunion reg : regs) {
+                var u = reg.getUsuario();
+                if (u == null) {
+                    continue;
+                }
+                String roleLabel = "Miembro";
+                if (equipoId != null) {
+                    var roleRow = rolesDeUsuariosRepository.findByEquipo_IdEquipoAndUsuario_IdUsuario(
+                            equipoId, u.getIdUsuario());
+                    if (roleRow.isPresent() && roleRow.get().getRol() != null) {
+                        roleLabel = roleRow.get().getRol().getNombreRol();
+                    }
+                }
+                Map<String, Object> e = new LinkedHashMap<>();
+                e.put("userId", u.getIdUsuario());
+                e.put("userName", u.getNombreUsuario() != null ? u.getNombreUsuario() : "");
+                e.put("roleLabel", roleLabel);
+                e.put("savedAt", reg.getFechaHoraRegistro() != null ? reg.getFechaHoraRegistro().toString() : null);
+                e.put("done", reg.getQueHice() != null ? reg.getQueHice() : "");
+                e.put("doing", reg.getQueHare() != null ? reg.getQueHare() : "");
+                e.put("blockers", reg.getImpedimentos() != null ? reg.getImpedimentos() : "");
+                entries.add(e);
+            }
+            if (entries.isEmpty()) {
+                continue;
+            }
+            entries.sort(Comparator.comparing(m -> String.valueOf(m.get("userName")).toLowerCase(Locale.ROOT)));
+            Map<String, Object> day = new LinkedHashMap<>();
+            day.put("date", r.getFechaDeReunion().toString());
+            day.put("reunionId", r.getIdReunion());
+            day.put("entries", entries);
+            days.add(day);
+        }
+        return ResponseEntity.ok(days);
     }
 
     @PostMapping("/daily/save")

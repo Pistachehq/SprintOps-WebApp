@@ -79,11 +79,12 @@ const SprintManagerPage = () => {
         </span>
       </button>
 
-      <StandupSidebar 
-        isOpen={isStandupOpen} 
+      <StandupSidebar
+        isOpen={isStandupOpen}
         onClose={() => setIsStandupOpen(false)}
         sprintId={id}
         userId={user?.id}
+        projectId={sprint?.projectId}
       />
 
       <TrashModal
