@@ -141,8 +141,7 @@ public class ProyectoController {
         equipo.setFechaCreacionEquipo(LocalDate.now());
         final Equipo savedEquipo = equipoService.save(equipo);
 
-        // Generate 5-digit code
-        String codigo = String.valueOf(new Random().nextInt(90000) + 10000);
+        String codigo = proyectoService.nextUniqueCodigoProyecto();
 
         Proyecto proyecto = new Proyecto();
         proyecto.setNombreProyecto(request.getName());

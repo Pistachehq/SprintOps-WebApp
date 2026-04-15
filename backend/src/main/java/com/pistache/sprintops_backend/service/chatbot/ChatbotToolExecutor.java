@@ -1031,7 +1031,7 @@ public class ChatbotToolExecutor {
         nuevoEquipo.setFechaCreacionEquipo(LocalDate.now());
         Equipo equipoGuardado = equipoService.save(nuevoEquipo);
 
-        String codigo = String.valueOf(new Random().nextInt(90000) + 10000);
+        String codigo = proyectoService.nextUniqueCodigoProyecto();
         Proyecto proyecto = new Proyecto();
         proyecto.setNombreProyecto(name);
         proyecto.setDescripcionProyecto(Optional.ofNullable(strArg(a, "description")).orElse(""));

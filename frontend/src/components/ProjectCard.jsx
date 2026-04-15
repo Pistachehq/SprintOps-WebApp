@@ -146,17 +146,17 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
 
           {menuOpen && (
             <div
-              className="absolute top-full right-0 mt-1 w-56 rounded-xl bg-white shadow-xl border border-slate-100 py-1 text-left z-30"
+              className="absolute top-full right-0 mt-1 w-56 rounded-xl bg-white shadow-xl border border-slate-100 py-1 text-left z-30 [&_button]:justify-start"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
                 disabled={coverBusy}
-                className="w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold disabled:opacity-50"
+                className="w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold text-left disabled:opacity-50"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <ImagePlus size={16} className="text-[#446E51]" />
-                Subir imagen (equipo)
+                <ImagePlus size={16} className="text-[#446E51] shrink-0" />
+                Subir imagen
               </button>
               <input
                 ref={fileInputRef}
@@ -168,15 +168,12 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
               <button
                 type="button"
                 disabled={coverBusy}
-                className="w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold border-t border-slate-100 disabled:opacity-50"
+                className="w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold text-left border-t border-slate-100 disabled:opacity-50"
                 onClick={handleRestoreDefault}
               >
-                <RotateCcw size={16} className="text-[#446E51]" />
-                Imagen genérica por defecto
+                <RotateCcw size={16} className="text-[#446E51] shrink-0" />
+                Imagen Predeterminada
               </button>
-              <p className="text-[10px] text-slate-400 px-3 pb-2 pt-1 leading-snug">
-                La imagen se guarda en el servidor y la ven todos los miembros del proyecto.
-              </p>
             </div>
           )}
         </div>

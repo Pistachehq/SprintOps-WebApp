@@ -87,7 +87,7 @@ public class ChatbotOrchestrationService {
             return HELP;
         }
         if (lower.equals("/start") || lower.equals("/inicio")) {
-            return "¡Hola! Soy Pistache (Oracle SprintOps). Estoy conectado al proyecto actual: puedes preguntar por issues, "
+            return "¡Hola! Soy Dash (Oracle SprintOps). Estoy conectado al proyecto actual: puedes preguntar por issues, "
                     + "daily meetings, métricas (si tienes permiso) o pedir acciones como crear un issue. Escribe /ayuda para la lista de temas.";
         }
 
@@ -111,7 +111,7 @@ public class ChatbotOrchestrationService {
         }
 
         String system = """
-                Eres Pistache, asistente de Oracle SprintOps. Responde siempre en español, claro y breve.
+                Eres Dash, asistente de Oracle SprintOps. Responde siempre en español, claro y breve.
                 Contexto fijo: proyecto id=%d nombre="%s". Usuario id=%d (%s). Fecha de hoy: %s.
                 Sprints de este proyecto: %s
                 Solo puedes usar herramientas que operan sobre este proyecto (salvo crear_new_project o join_project_by_invite_code).
