@@ -20,7 +20,7 @@ const SprintsPage = () => {
   const [focusSprintsInConfig, setFocusSprintsInConfig] = useState(false);
   const [addedUsers, setAddedUsers] = useState([]);
 
-  const { checkPermission } = useAuth();
+  const { checkPermission, user } = useAuth();
   const { sprints, isLoading: isLoadingSprints, addSprint, updateSprint, refetch: refetchSprints } = useSprints(projectId);
   const { projects, isLoading: isLoadingProjects, refetch: refetchProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
@@ -126,7 +126,9 @@ const SprintsPage = () => {
       </main>
 
       {/* Pistache: solo en la vista principal del proyecto, no encima de Configuración */}
-      {!showConfig && <PistacheChatbot />}
+      {!showConfig && (
+        <PistacheChatbot projectId={projectId} userId={user?.id} />
+      )}
 
       {showConfig && (
         <ProjectConfigView

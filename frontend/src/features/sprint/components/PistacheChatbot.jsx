@@ -1,31 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Sparkles } from 'lucide-react';
+import apiClient from '../../../data/api/apiClient';
 
-// ─── Oracle brand ─────────────────────────────────────────────────────────────
-const ORACLE_RED    = '#EE0004';
+const ORACLE_RED = '#EE0004';
 const ORACLE_HEADER = '#312D2A';
 
-// ─── Bot responses ────────────────────────────────────────────────────────────
-const BOT_RESPONSES = [
-  '¡Claro! Puedo ayudarte a revisar el estado de tu sprint actual.',
-  'Detecté que hay issues sin asignar. Te recomiendo revisarlas antes del Daily.',
-  'El velocity del equipo está en tendencia positiva esta semana.',
-  'Recuerda crear la Retro al finalizar el sprint para documentar aprendizajes.',
-  'Puedes agregar nuevos sprints desde "Configurar Proyecto" en la barra superior.',
-  'El flujo de issues se ve bien. ¿Quieres que analice el burndown del sprint?',
-  '¡Entendido! Estoy procesando tu consulta... Dame un momento.',
-];
-
-// ─── Variantes del contenedor único ──────────────────────────────────────────
 const CONTAINER_VARIANTS = {
   closed: {
     width: 100, height: 63, borderRadius: 32,
     backgroundColor: 'rgba(243,243,243,0)',
     transition: {
-      width:           { type: 'spring', stiffness: 260, damping: 26 },
-      height:          { type: 'spring', stiffness: 260, damping: 26 },
-      borderRadius:    { type: 'spring', stiffness: 260, damping: 26 },
+      width: { type: 'spring', stiffness: 260, damping: 26 },
+      height: { type: 'spring', stiffness: 260, damping: 26 },
+      borderRadius: { type: 'spring', stiffness: 260, damping: 26 },
       backgroundColor: { duration: 0.3, ease: 'easeIn' },
     },
   },
@@ -33,15 +21,14 @@ const CONTAINER_VARIANTS = {
     width: 360, height: 520, borderRadius: 37,
     backgroundColor: 'rgba(243,243,243,1)',
     transition: {
-      width:           { type: 'spring', stiffness: 260, damping: 26 },
-      height:          { type: 'spring', stiffness: 260, damping: 26 },
-      borderRadius:    { type: 'spring', stiffness: 260, damping: 26 },
+      width: { type: 'spring', stiffness: 260, damping: 26 },
+      height: { type: 'spring', stiffness: 260, damping: 26 },
+      borderRadius: { type: 'spring', stiffness: 260, damping: 26 },
       backgroundColor: { duration: 0.3, ease: 'easeOut' },
     },
   },
 };
 
-// ─── Small Oracle ring avatar (for chat messages) ─────────────────────────────
 const OracleAvatar = ({ size = 28 }) => (
   <div style={{
     width: size, height: size,
@@ -58,7 +45,6 @@ const OracleAvatar = ({ size = 28 }) => (
   </div>
 );
 
-// ─── Typing indicator ─────────────────────────────────────────────────────────
 const TypingIndicator = () => (
   <div className="flex items-end gap-1 px-4 py-3 bg-white rounded-2xl rounded-bl-sm shadow-sm w-fit">
     {[0, 1, 2].map(i => (
@@ -73,7 +59,6 @@ const TypingIndicator = () => (
   </div>
 );
 
-// ─── Message bubble ───────────────────────────────────────────────────────────
 const MessageBubble = ({ message }) => {
   const isBot = message.from === 'bot';
   return (
@@ -85,7 +70,7 @@ const MessageBubble = ({ message }) => {
     >
       {isBot && <div className="mr-2 mt-auto mb-0.5"><OracleAvatar size={28} /></div>}
       <div
-        className={`max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+        className={`max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
           isBot ? 'bg-white text-slate-800 rounded-bl-sm' : 'text-white rounded-br-sm'
         }`}
         style={!isBot ? { background: ORACLE_RED } : {}}
@@ -96,16 +81,20 @@ const MessageBubble = ({ message }) => {
   );
 };
 
-// ─── Chat window content ──────────────────────────────────────────────────────
-const ChatWindow = ({ onClose }) => {
-  const [messages, setMessages] = useState([
-    { id: 1, from: 'bot', text: '¡Hola! Soy el asistente de Oracle SprintOps.' },
-    { id: 2, from: 'bot', text: '¿En qué puedo ayudarte con tu sprint hoy?' },
+const MAX_HISTORY_TURNS = 20;
+
+const ChatWindow = ({ onClose, projectId, userId }) => {
+  const [messages, setMessages] = useState(() => [
+    {
+      id: 1,
+      from: 'bot',
+      text: '¡Hola! Soy Pistache, conectado a Groq con contexto de este proyecto. Escribe /ayuda para comandos o pregúntame en natural (por ejemplo el daily de un compañero por fecha).',
+    },
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping]     = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const inputRef       = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -113,24 +102,63 @@ const ChatWindow = ({ onClose }) => {
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 420); }, []);
 
-  const handleSend = () => {
+  const buildHistoryPayload = useCallback(() => {
+    const turns = [];
+    for (const m of messages) {
+      if (m.from === 'user') {
+        turns.push({ role: 'user', content: m.text });
+      } else if (m.from === 'bot') {
+        turns.push({ role: 'assistant', content: m.text });
+      }
+    }
+    if (turns.length <= MAX_HISTORY_TURNS) {
+      return turns;
+    }
+    return turns.slice(-MAX_HISTORY_TURNS);
+  }, [messages]);
+
+  const handleSend = async () => {
     const text = inputValue.trim();
     if (!text) return;
+    if (!userId || !projectId) {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        from: 'bot',
+        text: 'Necesitas iniciar sesión y estar en un proyecto para usar el asistente.',
+      }]);
+      setInputValue('');
+      return;
+    }
+
     setMessages(prev => [...prev, { id: Date.now(), from: 'user', text }]);
     setInputValue('');
     setIsTyping(true);
-    setTimeout(() => {
-      const botText = BOT_RESPONSES[Math.floor(Math.random() * BOT_RESPONSES.length)];
+
+    try {
+      const history = buildHistoryPayload();
+      const body = {
+        projectId: Number(projectId),
+        userId: Number(userId),
+        message: text,
+        history,
+      };
+      const { reply } = await apiClient.post('/chatbot/message', body);
+      setMessages(prev => [...prev, { id: Date.now() + 1, from: 'bot', text: reply || '(sin respuesta)' }]);
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        from: 'bot',
+        text: err?.message || 'No pude contactar al asistente. ¿Está el backend en marcha y GROQ_API_KEY configurada?',
+      }]);
+    } finally {
       setIsTyping(false);
-      setMessages(prev => [...prev, { id: Date.now() + 1, from: 'bot', text: botText }]);
-    }, 1200 + Math.random() * 800);
+    }
   };
 
   const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // Fade in after modal expands; fade out immediately on close
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -139,11 +167,9 @@ const ChatWindow = ({ onClose }) => {
       transition={{ delay: 0.3, duration: 0.2 }}
       style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}
     >
-      {/* Header */}
       <div className="px-5 py-4 flex items-center justify-between shrink-0"
         style={{ background: ORACLE_HEADER }}>
         <div className="flex items-center gap-3">
-          {/* Mini Oracle oval in header */}
           <svg width="40" height="25" viewBox="0 0 181 114" fill="none">
             <rect x="10" y="10" width="161" height="94" rx="37"
               stroke={ORACLE_RED} strokeWidth="22" />
@@ -153,7 +179,7 @@ const ChatWindow = ({ onClose }) => {
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse"
                 style={{ background: ORACLE_RED }} />
-              <p className="text-slate-400 text-xs">Asistente de SprintOps</p>
+              <p className="text-slate-400 text-xs">Pistache · contexto del proyecto</p>
             </div>
           </div>
         </div>
@@ -165,8 +191,8 @@ const ChatWindow = ({ onClose }) => {
           onClick={onClose}
           className="w-8 h-8 rounded-full flex items-center justify-center"
           style={{ background: 'rgba(255,255,255,0.1)' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M1 1L13 13M13 1L1 13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
@@ -174,7 +200,6 @@ const ChatWindow = ({ onClose }) => {
         </motion.button>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
         {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
         {isTyping && (
@@ -187,7 +212,6 @@ const ChatWindow = ({ onClose }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       <div className="px-4 pb-4 pt-2 shrink-0">
         <div className="flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 shadow-sm border border-slate-100">
           <input
@@ -196,16 +220,16 @@ const ChatWindow = ({ onClose }) => {
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe tu mensaje..."
+            placeholder="Mensaje o /ayuda..."
             className="flex-1 text-sm text-slate-700 placeholder-slate-400 outline-none bg-transparent"
           />
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.88 }}
             onClick={handleSend}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isTyping}
             className="w-8 h-8 rounded-xl flex items-center justify-center"
-            style={inputValue.trim()
+            style={inputValue.trim() && !isTyping
               ? { background: ORACLE_RED, color: 'white' }
               : { background: '#f1f5f9', color: '#cbd5e1', cursor: 'not-allowed' }}
           >
@@ -213,17 +237,14 @@ const ChatWindow = ({ onClose }) => {
           </motion.button>
         </div>
         <p className="text-center text-[10px] text-slate-400 mt-2 flex items-center justify-center gap-1">
-          <Sparkles size={9} /> Oracle AI · Solo para demostración
+          <Sparkles size={9} /> Groq (LLM) · datos del proyecto en servidor
         </p>
       </div>
     </motion.div>
   );
 };
 
-// ─── Main Exported Component ──────────────────────────────────────────────────
-// Un único motion.div que morfea entre el óvalo Oracle y el modal de chat.
-// No hay dos elementos: el mismo div rota 90° y se expande.
-const PistacheChatbot = () => {
+const PistacheChatbot = ({ projectId, userId }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -233,7 +254,7 @@ const PistacheChatbot = () => {
       variants={CONTAINER_VARIANTS}
       onClick={!isOpen ? () => setIsOpen(true) : undefined}
       whileHover={!isOpen ? { scale: 1.07 } : undefined}
-      whileTap={!isOpen   ? { scale: 0.93 } : undefined}
+      whileTap={!isOpen ? { scale: 0.93 } : undefined}
       style={{
         position: 'fixed',
         bottom: 24, right: 24,
@@ -245,7 +266,13 @@ const PistacheChatbot = () => {
       }}
     >
       <AnimatePresence>
-        {isOpen && <ChatWindow onClose={() => setIsOpen(false)} />}
+        {isOpen && (
+          <ChatWindow
+            onClose={() => setIsOpen(false)}
+            projectId={projectId}
+            userId={userId}
+          />
+        )}
       </AnimatePresence>
     </motion.div>
   );
