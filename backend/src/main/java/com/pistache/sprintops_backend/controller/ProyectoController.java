@@ -6,14 +6,18 @@ import com.pistache.sprintops_backend.dto.MiembroEquipoDTO;
 import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
+import com.pistache.sprintops_backend.service.ProyectoCardCoverService;
 import com.pistache.sprintops_backend.service.EquipoService;
 import com.pistache.sprintops_backend.service.UsuarioService;
 import com.pistache.sprintops_backend.repository.*;
+import com.pistache.sprintops_backend.model.InfoUsuarioEquipo.InfoUsuarioEquipoId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -39,6 +43,8 @@ public class ProyectoController {
     private RolRepository rolRepository;
     @Autowired
     private ProyectoIssuesDocxExportService proyectoIssuesDocxExportService;
+    @Autowired
+    private ProyectoCardCoverService proyectoCardCoverService;
 
     @GetMapping
     public List<ProyectoDTO> getAll() {
@@ -269,6 +275,100 @@ public class ProyectoController {
         if (updates.containsKey("start")) proyecto.setFechaInicioProyecto(LocalDate.parse((String) updates.get("start")));
 
         return ResponseEntity.ok(ProyectoDTO.fromEntity(proyectoService.save(proyecto)));
+    }
+
+    @GetMapping("/{id}/card-cover")
+    public ResponseEntity<byte[]> getCardCover(@PathVariable Integer id) {
+        var opt = proyectoService.findById(id);
+        if (opt.isEmpty() || !Boolean.TRUE.equals(opt.get().getCardCoverCustom())) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            Optional<byte[]> bytes = proyectoCardCoverService.load(id);
+            if (bytes.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            String ct = opt.get().getCardCoverContentType() != null
+                    ? opt.get().getCardCoverContentType()
+                    : "image/jpeg";
+            MediaType mediaType = MediaType.parseMediaType(ct);
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(bytes.get());
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Transactional
+    @PostMapping(value = "/{id}/card-cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadCardCover(
+            @PathVariable Integer id,
+            @RequestParam("userId") Integer userId,
+            @RequestParam("file") MultipartFile file) {
+        if (!isUserMemberOfProject(userId, id)) {
+            return ResponseEntity.status(403).body(Map.of("error", "No eres miembro de este proyecto"));
+        }
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Archivo vacío"));
+        }
+        var opt = proyectoService.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Proyecto proyecto = opt.get();
+        try {
+            String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+            proyectoCardCoverService.save(id, file.getInputStream(), 6_000_000L, contentType);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "No se pudo guardar la imagen"));
+        }
+        String ct = file.getContentType() != null ? file.getContentType().split(";")[0].trim() : "image/jpeg";
+        proyecto.setCardCoverContentType(ct);
+        proyecto.setCardCoverCustom(true);
+        long v = proyecto.getCardCoverVersion() != null ? proyecto.getCardCoverVersion() : 0L;
+        proyecto.setCardCoverVersion(v + 1);
+        proyecto = proyectoService.save(proyecto);
+        return ResponseEntity.ok(ProyectoDTO.fromEntity(proyecto));
+    }
+
+    @Transactional
+    @DeleteMapping("/{id}/card-cover")
+    public ResponseEntity<?> deleteCardCover(
+            @PathVariable Integer id,
+            @RequestParam("userId") Integer userId) {
+        if (!isUserMemberOfProject(userId, id)) {
+            return ResponseEntity.status(403).body(Map.of("error", "No eres miembro de este proyecto"));
+        }
+        var opt = proyectoService.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            proyectoCardCoverService.delete(id);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "No se pudo eliminar el archivo"));
+        }
+        Proyecto proyecto = opt.get();
+        proyecto.setCardCoverCustom(false);
+        proyecto.setCardCoverContentType(null);
+        proyecto = proyectoService.save(proyecto);
+        return ResponseEntity.ok(ProyectoDTO.fromEntity(proyecto));
+    }
+
+    private boolean isUserMemberOfProject(Integer userId, Integer projectId) {
+        if (userId == null || projectId == null) {
+            return false;
+        }
+        var opt = proyectoService.findById(projectId);
+        if (opt.isEmpty() || opt.get().getEquipo() == null) {
+            return false;
+        }
+        int equipoId = opt.get().getEquipo().getIdEquipo();
+        return infoUsuarioEquipoRepository.findById(new InfoUsuarioEquipoId(equipoId, userId)).isPresent();
     }
 
     @DeleteMapping("/{id}")

@@ -11,4 +11,11 @@ export const projectsRepository = {
   updateMemberRole: (projectId, userId, role) => apiClient.put(`/proyectos/${projectId}/miembros/${userId}/rol`, { role }),
   joinProject: (projectId, userId) => apiClient.post(`/proyectos/${projectId}/unirse`, { userId }),
   downloadIssuesDocx: (projectId) => apiClient.getBlob(`/proyectos/${projectId}/export/issues-docx`),
+  uploadProjectCardCover: (projectId, userId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.upload(`/proyectos/${projectId}/card-cover?userId=${encodeURIComponent(userId)}`, formData);
+  },
+  deleteProjectCardCover: (projectId, userId) =>
+    apiClient.delete(`/proyectos/${projectId}/card-cover?userId=${encodeURIComponent(userId)}`),
 };

@@ -16,6 +16,9 @@ public class ProyectoDTO {
     private Integer equipoId;
     private Integer creadorId;
     private String creadorName;
+    /** true si hay imagen de card subida al servidor (todos los miembros la ven). */
+    private Boolean cardCoverCustom;
+    private Long cardCoverVersion;
 
     public static ProyectoDTO fromEntity(Proyecto p) {
         ProyectoDTO dto = new ProyectoDTO();
@@ -33,6 +36,8 @@ public class ProyectoDTO {
             dto.setCreadorId(p.getCreador().getIdUsuario());
             dto.setCreadorName(p.getCreador().getNombreUsuario());
         }
+        dto.setCardCoverCustom(Boolean.TRUE.equals(p.getCardCoverCustom()));
+        dto.setCardCoverVersion(p.getCardCoverVersion() != null ? p.getCardCoverVersion() : 0L);
         return dto;
     }
 }

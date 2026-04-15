@@ -106,7 +106,12 @@ const HomePage = () => {
               }
             />
           ) : (
-            <ProjectGrid projects={filteredProjects} onSelect={handleSelectProject} />
+            <ProjectGrid
+              projects={filteredProjects}
+              onSelect={handleSelectProject}
+              userId={user?.id}
+              onCoverUpdated={refetch}
+            />
           )}
         </div>
       </div>
