@@ -1,5 +1,8 @@
 const API_BASE = 'http://localhost:8080/api';
 
+/** Origen del backend (sin /api), para OAuth y redirecciones */
+const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
   const config = {
@@ -65,4 +68,4 @@ const apiClient = {
 };
 
 export default apiClient;
-export { API_BASE };
+export { API_BASE, API_ORIGIN };
