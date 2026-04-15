@@ -124,8 +124,8 @@ const SprintsPage = () => {
         </div>
       </main>
 
-      {/* Pistache AI Chatbot — solo visible en la página de Sprints */}
-      <PistacheChatbot />
+      {/* Pistache: solo en la vista principal del proyecto, no encima de Configuración */}
+      {!showConfig && <PistacheChatbot />}
 
       {showConfig && (
         <ProjectConfigView
