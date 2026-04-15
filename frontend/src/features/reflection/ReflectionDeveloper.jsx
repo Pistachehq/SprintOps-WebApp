@@ -94,7 +94,7 @@ const ReflectionDeveloper = () => {
             <div className="card-oracle flex flex-col items-center justify-center text-center">
               <Zap size={32} className="text-yellow-500 mb-2" />
               <p className="text-2xl font-black">Normal</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Indicador de Sprint</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimación de deuda</p>
             </div>
           </div>
 

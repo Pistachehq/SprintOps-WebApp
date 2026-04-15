@@ -41,6 +41,10 @@ public class Sprint {
     @Column(name = "issues_enviados_siguiente")
     private Integer issuesEnviadosSiguiente;
 
+    /** Suma de story points de esos envíos (misma métrica que issuesEnviadosSiguiente). */
+    @Column(name = "story_points_enviados_siguiente")
+    private Integer storyPointsEnviadosSiguiente;
+
     @ManyToOne
     @JoinColumn(name = "Proyecto_id_proyecto")
     private Proyecto proyecto;

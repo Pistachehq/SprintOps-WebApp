@@ -4,6 +4,7 @@ async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
   const config = {
     headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
     ...options,
   };
 

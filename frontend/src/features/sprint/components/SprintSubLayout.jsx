@@ -116,11 +116,12 @@ const SprintSubLayout = () => {
                 <button
                   type="button"
                   onClick={() => setSprintIndicatorModalOpen(true)}
+                  title="Issues y story points enviados al siguiente sprint desde el Kanban"
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2.5 text-[11px] font-black uppercase tracking-wider text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:gap-2 sm:px-3 sm:text-xs"
                 >
                   <Target size={15} className="shrink-0 text-oracle-red sm:h-4 sm:w-4" />
-                  <span className="hidden min-[420px]:inline">Sprint indicator</span>
-                  <span className="min-[420px]:hidden">Indicador</span>
+                  <span className="hidden sm:inline">Estimación de deuda</span>
+                  <span className="sm:hidden">Deuda</span>
                 </button>
               </div>
             )}
@@ -168,11 +169,16 @@ const SprintSubLayout = () => {
           <Modal
             isOpen={sprintIndicatorModalOpen}
             onClose={() => setSprintIndicatorModalOpen(false)}
-            title="Sprint indicator"
+            title="Estimación de deuda"
             maxWidthClass="max-w-lg"
             bodyClassName="p-4 sm:p-6"
           >
-            <SprintIndicatorCard embedded />
+            <SprintIndicatorCard
+              embedded
+              projectId={projectId}
+              currentSprintId={id}
+              refreshWhenOpen={sprintIndicatorModalOpen}
+            />
           </Modal>
         </>
       )}

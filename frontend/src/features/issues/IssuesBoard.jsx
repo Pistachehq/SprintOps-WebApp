@@ -99,7 +99,9 @@ const IssuesBoard = () => {
   ];
 
   const handleDragStart = (event) => {
-    const draggedIssue = visibleIssues.find(i => i.id === event.active.id);
+    const draggedIssue =
+      event.active.data?.current?.issue ||
+      visibleIssues.find(i => String(i.id) === String(event.active.id));
     setActiveDragIssue(draggedIssue || null);
   };
 
@@ -119,7 +121,9 @@ const IssuesBoard = () => {
     if (!over) return;
 
     const issueId = active.id;
-    const activeIssue = visibleIssues.find(i => i.id === issueId);
+    const fromDrag = active.data?.current?.issue;
+    const activeIssue =
+      fromDrag || visibleIssues.find(i => String(i.id) === String(issueId));
     if (!activeIssue) return;
 
     if (!canMoveIssue(activeIssue)) {
@@ -136,6 +140,10 @@ const IssuesBoard = () => {
             toSprintId: nextSprint.id,
             userId: user?.id,
             username: user?.username ?? user?.email ?? '',
+            storyPoints: Math.max(
+              0,
+              Math.trunc(Number(activeIssue.storyPoints ?? activeIssue.points ?? 0)) || 0
+            ),
           });
           toast.success(`Issue enviado a ${nextSprint.name || 'siguiente sprint'}`);
           await refetch();

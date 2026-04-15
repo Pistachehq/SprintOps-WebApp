@@ -2,6 +2,7 @@ package com.pistache.sprintops_backend.controller;
 
 import com.pistache.sprintops_backend.dto.CreateIssueRequest;
 import com.pistache.sprintops_backend.dto.IssueDTO;
+import com.pistache.sprintops_backend.dto.MoveToNextSprintRequest;
 import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.IssuesService;
 import com.pistache.sprintops_backend.service.ProyectoService;
@@ -16,6 +17,7 @@ import com.pistache.sprintops_backend.service.LogsIssuesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -215,18 +217,20 @@ public class IssuesController {
     /**
      * Mueve un issue del sprint origen al sprint destino (mismo proyecto), actualiza estado a todo,
      * incrementa métrica en el sprint origen y registra en logs_issues.
+     * Opcional en el body: {@code storyPoints} (número) para acumular deuda con los SP que ve el Kanban.
      */
     @PostMapping("/{issueId}/move-to-next-sprint")
+    @Transactional
     public ResponseEntity<IssueDTO> moveToNextSprint(
             @PathVariable Integer issueId,
-            @RequestBody Map<String, Object> body) {
-        if (body == null || !body.containsKey("fromSprintId") || !body.containsKey("toSprintId")) {
+            @RequestBody MoveToNextSprintRequest req) {
+        if (req == null || req.getFromSprintId() == null || req.getToSprintId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        int fromSprintId = ((Number) body.get("fromSprintId")).intValue();
-        int toSprintId = ((Number) body.get("toSprintId")).intValue();
-        String username = body.get("username") != null ? String.valueOf(body.get("username")) : "";
-        Integer userId = body.get("userId") instanceof Number ? ((Number) body.get("userId")).intValue() : null;
+        int fromSprintId = req.getFromSprintId();
+        int toSprintId = req.getToSprintId();
+        String username = req.getUsername() != null ? req.getUsername() : "";
+        Integer userId = req.getUserId();
 
         if (fromSprintId == toSprintId) {
             return ResponseEntity.badRequest().build();
@@ -256,6 +260,11 @@ public class IssuesController {
             return ResponseEntity.badRequest().build();
         }
 
+        int movedPts = storyPointsForMoveToNextSprint(req, issue);
+        if ((issue.getStoryPointsIssue() == null || issue.getStoryPointsIssue() == 0) && movedPts > 0) {
+            issue.setStoryPointsIssue(movedPts);
+        }
+
         descIssueRepository.delete(linkOpt.get());
         descIssueRepository.findByIdSprintIdAndIdIssueId(toSprintId, issueId).ifPresent(descIssueRepository::delete);
 
@@ -272,6 +281,9 @@ public class IssuesController {
 
         int prev = fromSprint.getIssuesEnviadosSiguiente() != null ? fromSprint.getIssuesEnviadosSiguiente() : 0;
         fromSprint.setIssuesEnviadosSiguiente(prev + 1);
+        int prevPts =
+                fromSprint.getStoryPointsEnviadosSiguiente() != null ? fromSprint.getStoryPointsEnviadosSiguiente() : 0;
+        fromSprint.setStoryPointsEnviadosSiguiente(prevPts + movedPts);
         sprintService.save(fromSprint);
 
         LogsIssues log = new LogsIssues();
@@ -366,5 +378,17 @@ public class IssuesController {
         String color = normalizeTagColor(colorRaw);
         issue.setTagLabel(label);
         issue.setTagColor(color != null ? color : DEFAULT_TAG_COLOR);
+    }
+
+    /**
+     * SP para la métrica de deuda: el Kanban envía {@code storyPoints} para no depender de que la fila
+     * en BD esté poblada (evita sumar 0 cuando la tarjeta sí muestra puntos).
+     */
+    private static int storyPointsForMoveToNextSprint(MoveToNextSprintRequest req, Issues issue) {
+        if (req != null && req.getStoryPoints() != null) {
+            return Math.max(0, req.getStoryPoints());
+        }
+        Integer sp = issue.getStoryPointsIssue();
+        return sp != null ? sp : 0;
     }
 }
