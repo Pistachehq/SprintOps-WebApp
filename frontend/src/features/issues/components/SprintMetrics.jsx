@@ -1,7 +1,6 @@
 import React from 'react';
 
-const SprintMetrics = ({ issues }) => {
-  const blockedIssues = issues.filter(i => i.status === 'blocked');
+const SprintMetrics = ({ issues, issuesSentToNextSprint = 0 }) => {
   const doneIssues = issues.filter(i => i.status === 'done');
   const totalPoints = issues.reduce((sum, i) => sum + (i.storyPoints || i.points || 0), 0);
   const donePoints = doneIssues.reduce((sum, i) => sum + (i.storyPoints || i.points || 0), 0);
@@ -14,20 +13,15 @@ const SprintMetrics = ({ issues }) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-2 h-2 rounded-full bg-red-500" />
-          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Control de Bloqueos</h4>
+          <div className="w-2 h-2 rounded-full bg-[#446E51]" />
+          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            Enviados al siguiente sprint
+          </h4>
         </div>
-        {blockedIssues.length > 0 ? (
-          <div className="space-y-2">
-            {blockedIssues.map(bi => (
-              <div key={bi.id} className="bg-red-50 text-red-700 text-xs font-bold px-3 py-2 rounded-lg border border-red-100">
-                #{bi.displayIndex || bi.id} {bi.title}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-green-600 text-sm font-bold">Sin bloqueos activos ✓</p>
-        )}
+        <p className="text-3xl font-black text-slate-800 tabular-nums">{issuesSentToNextSprint}</p>
+        <p className="mt-1 text-xs text-slate-500 font-medium">
+          Tareas movidas desde este sprint al siguiente
+        </p>
       </div>
 
       <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">

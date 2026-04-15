@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -209,6 +210,82 @@ public class IssuesController {
         }
 
         return ResponseEntity.ok(toDTO(issue));
+    }
+
+    /**
+     * Mueve un issue del sprint origen al sprint destino (mismo proyecto), actualiza estado a todo,
+     * incrementa métrica en el sprint origen y registra en logs_issues.
+     */
+    @PostMapping("/{issueId}/move-to-next-sprint")
+    public ResponseEntity<IssueDTO> moveToNextSprint(
+            @PathVariable Integer issueId,
+            @RequestBody Map<String, Object> body) {
+        if (body == null || !body.containsKey("fromSprintId") || !body.containsKey("toSprintId")) {
+            return ResponseEntity.badRequest().build();
+        }
+        int fromSprintId = ((Number) body.get("fromSprintId")).intValue();
+        int toSprintId = ((Number) body.get("toSprintId")).intValue();
+        String username = body.get("username") != null ? String.valueOf(body.get("username")) : "";
+        Integer userId = body.get("userId") instanceof Number ? ((Number) body.get("userId")).intValue() : null;
+
+        if (fromSprintId == toSprintId) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        var optIssue = issuesService.findById(issueId);
+        if (optIssue.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Issues issue = optIssue.get();
+
+        var optFrom = sprintService.findById(fromSprintId);
+        var optTo = sprintService.findById(toSprintId);
+        if (optFrom.isEmpty() || optTo.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Sprint fromSprint = optFrom.get();
+        Sprint toSprint = optTo.get();
+
+        if (fromSprint.getProyecto() == null || toSprint.getProyecto() == null
+                || !Objects.equals(fromSprint.getProyecto().getIdProyecto(), toSprint.getProyecto().getIdProyecto())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<DescIssue> linkOpt = descIssueRepository.findByIdSprintIdAndIdIssueId(fromSprintId, issueId);
+        if (linkOpt.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        descIssueRepository.delete(linkOpt.get());
+        descIssueRepository.findByIdSprintIdAndIdIssueId(toSprintId, issueId).ifPresent(descIssueRepository::delete);
+
+        DescIssue newLink = new DescIssue();
+        newLink.setId(new DescIssue.DescIssueId(toSprintId, issueId));
+        newLink.setSprint(toSprint);
+        newLink.setIssue(issue);
+        newLink.setFechaEntrada(LocalDate.now());
+        descIssueRepository.save(newLink);
+
+        issue.setEstadoIssue("todo");
+        issue.setFechaFinIssue(null);
+        issue = issuesService.save(issue);
+
+        int prev = fromSprint.getIssuesEnviadosSiguiente() != null ? fromSprint.getIssuesEnviadosSiguiente() : 0;
+        fromSprint.setIssuesEnviadosSiguiente(prev + 1);
+        sprintService.save(fromSprint);
+
+        LogsIssues log = new LogsIssues();
+        log.setIssue(issue);
+        log.setTipoAccion("Traslado a siguiente sprint");
+        String destName = toSprint.getNombreSprint() != null ? toSprint.getNombreSprint() : ("#" + toSprintId);
+        String actor = userId != null ? String.valueOf(userId) : (username.isEmpty() ? "sistema" : username);
+        log.setActorLogIssue(actor);
+        String who = !username.isEmpty() ? username : actor;
+        log.setDescripcionLogIssue("Enviado al sprint \"" + destName + "\" por " + who);
+        log.setFechaCreacionLogIssue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+        logsIssuesService.save(log);
+
+        return ResponseEntity.ok(toDTO(issue, String.valueOf(toSprintId)));
     }
 
     @DeleteMapping("/{id}")

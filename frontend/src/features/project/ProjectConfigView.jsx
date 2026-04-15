@@ -46,6 +46,7 @@ const ProjectConfigView = ({
   sprints = [],
   sprintActions,
   onProjectUpdated,
+  focusSprintsSection = false,
 }) => {
   const { addSprint, updateSprint, refetchSprints } = sprintActions || {};
   const { user, checkPermission, refreshPermissions, refreshPermissionsForProject } = useAuth();
@@ -145,6 +146,15 @@ const ProjectConfigView = ({
   const canCreateSprint = checkPermission('canCreateSprint');
   const canManageMembers = checkPermission('canManageMembers');
   const canEditProjectDates = checkPermission('canEditProjectDates');
+
+  useEffect(() => {
+    if (!focusSprintsSection) return;
+    const t = window.setTimeout(() => {
+      document.getElementById('config-sprints-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (canCreateSprint) setShowSprintCreate(true);
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [focusSprintsSection, canCreateSprint]);
 
   const filteredSprints = useMemo(() => {
     const q = sprintSearch.toLowerCase().trim();
@@ -363,7 +373,10 @@ const ProjectConfigView = ({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Sprints Section - always visible, actions gated */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col h-[560px] max-h-[600px] overflow-hidden">
+            <div
+              id="config-sprints-section"
+              className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col h-[560px] max-h-[600px] overflow-hidden"
+            >
               <h3 className="text-xl font-bold flex items-center gap-2 mb-4 shrink-0">
                 <LayoutList className="text-[#446E51]" /> Gestionar Sprints
               </h3>

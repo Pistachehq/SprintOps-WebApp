@@ -37,6 +37,10 @@ public class Sprint {
     @Column(name = "capacidad_story_points")
     private Integer capacidadStoryPoints;
 
+    /** Issues enviados desde este sprint al siguiente (métrica Kanban). */
+    @Column(name = "issues_enviados_siguiente")
+    private Integer issuesEnviadosSiguiente;
+
     @ManyToOne
     @JoinColumn(name = "Proyecto_id_proyecto")
     private Proyecto proyecto;

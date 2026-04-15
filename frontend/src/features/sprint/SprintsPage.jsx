@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Settings, GitFork, CalendarDays } from 'lucide-react';
 import SprintFlow from './SprintFlow';
 import BackButton from '../../components/ui/BackButton';
@@ -14,8 +14,10 @@ import PistacheChatbot from './components/PistacheChatbot';
 const SprintsPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  
+  const location = useLocation();
+
   const [showConfig, setShowConfig] = useState(false);
+  const [focusSprintsInConfig, setFocusSprintsInConfig] = useState(false);
   const [addedUsers, setAddedUsers] = useState([]);
 
   const { checkPermission } = useAuth();
@@ -23,6 +25,14 @@ const SprintsPage = () => {
   const { projects, isLoading: isLoadingProjects, refetch: refetchProjects } = useProjects();
   const isLoading = isLoadingSprints || isLoadingProjects;
   const canManageProject = checkPermission('canManageSprints');
+
+  useEffect(() => {
+    const st = location.state;
+    if (!st?.openProjectConfig) return;
+    setShowConfig(true);
+    setFocusSprintsInConfig(Boolean(st.focusSprints));
+    navigate(`${location.pathname}${location.search || ''}`, { replace: true, state: {} });
+  }, [location.state, location.pathname, location.search, navigate]);
 
   // Find current project info
   const project = projects.find(p => String(p.id) === String(projectId)) || { name: 'Cargando Proyecto...' };
@@ -54,7 +64,10 @@ const SprintsPage = () => {
               <GitFork size={18} className="rotate-180" /> Universo de Issues
             </button>
             <button
-              onClick={() => setShowConfig(true)}
+              onClick={() => {
+                setFocusSprintsInConfig(false);
+                setShowConfig(true);
+              }}
               className="px-6 py-3 bg-white text-oracle-main border border-oracle-main rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center gap-2"
               title="Configurar Proyecto"
             >
@@ -118,7 +131,11 @@ const SprintsPage = () => {
         <ProjectConfigView
           projectId={projectId}
           project={project}
-          onClose={() => setShowConfig(false)}
+          onClose={() => {
+            setShowConfig(false);
+            setFocusSprintsInConfig(false);
+          }}
+          focusSprintsSection={focusSprintsInConfig}
           sprints={sprints}
           sprintActions={{ addSprint, updateSprint, refetchSprints }}
           onProjectUpdated={refetchProjects}
