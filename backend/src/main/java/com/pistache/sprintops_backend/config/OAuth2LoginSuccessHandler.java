@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -22,7 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Component
-@Conditional(GoogleOAuthCredentialsPresentCondition.class)
+@Conditional(OAuth2AnyProviderConfiguredCondition.class)
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final UsuarioService usuarioService;
@@ -41,10 +42,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication) throws IOException {
+        String registrationId = authentication instanceof OAuth2AuthenticationToken oat
+                ? oat.getAuthorizedClientRegistrationId()
+                : "";
+
         String email = null;
         String name = null;
         String picture = null;
-        boolean emailVerifiedByGoogle = false;
+        boolean emailVerifiedByProvider = false;
 
         Object principal = authentication.getPrincipal();
         if (principal instanceof OidcUser oidc) {
@@ -55,17 +60,27 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             }
             picture = oidc.getPicture();
             Boolean ev = oidc.getEmailVerified();
-            emailVerifiedByGoogle = ev != null && ev;
+            emailVerifiedByProvider = ev != null && ev;
         } else if (principal instanceof OAuth2User ou) {
             Map<String, Object> a = ou.getAttributes();
-            email = (String) a.get("email");
-            name = (String) a.get("name");
-            picture = (String) a.get("picture");
-            Object ev = a.get("email_verified");
-            if (ev instanceof Boolean b) {
-                emailVerifiedByGoogle = b;
-            } else if (ev != null) {
-                emailVerifiedByGoogle = Boolean.parseBoolean(ev.toString());
+            if ("github".equals(registrationId)) {
+                email = githubEmail(a);
+                name = (String) a.get("name");
+                if (!StringUtils.hasText(name)) {
+                    name = (String) a.get("login");
+                }
+                picture = (String) a.get("avatar_url");
+                emailVerifiedByProvider = StringUtils.hasText(email);
+            } else {
+                email = (String) a.get("email");
+                name = (String) a.get("name");
+                picture = (String) a.get("picture");
+                Object ev = a.get("email_verified");
+                if (ev instanceof Boolean b) {
+                    emailVerifiedByProvider = b;
+                } else if (ev != null) {
+                    emailVerifiedByProvider = Boolean.parseBoolean(ev.toString());
+                }
             }
         }
 
@@ -79,20 +94,33 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         Usuario user;
         var existing = usuarioService.findByEmailUsuario(email);
         if (existing.isPresent()) {
-            user = updateExistingGoogleUser(existing.get(), picture, emailVerifiedByGoogle);
+            user = updateExistingOAuthUser(existing.get(), picture, emailVerifiedByProvider);
         } else {
-            user = buildNewGoogleUser(email, name, picture);
+            user = buildNewOAuthUser(email, name, picture);
         }
         user = usuarioService.save(user);
         String code = pendingStore.register(user.getIdUsuario());
         response.sendRedirect(base + "/login?oauthCode=" + URLEncoder.encode(code, StandardCharsets.UTF_8));
     }
 
-    private Usuario updateExistingGoogleUser(Usuario u, String picture, boolean emailVerifiedByGoogle) {
+    private static String githubEmail(Map<String, Object> a) {
+        String email = (String) a.get("email");
+        if (StringUtils.hasText(email)) {
+            return email;
+        }
+        String login = (String) a.get("login");
+        Object id = a.get("id");
+        if (id != null && StringUtils.hasText(login)) {
+            return id + "+" + login + "@users.noreply.github.com";
+        }
+        return null;
+    }
+
+    private Usuario updateExistingOAuthUser(Usuario u, String picture, boolean emailVerifiedByProvider) {
         if (StringUtils.hasText(picture)) {
             u.setAvatarUrl(picture.length() > 500 ? picture.substring(0, 500) : picture);
         }
-        if (emailVerifiedByGoogle && "0".equals(u.getEmailVerificado())) {
+        if (emailVerifiedByProvider && "0".equals(u.getEmailVerificado())) {
             u.setEmailVerificado("1");
             u.setVerificacionToken(null);
             u.setVerificacionExpira(null);
@@ -100,7 +128,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         return u;
     }
 
-    private Usuario buildNewGoogleUser(String email, String name, String picture) {
+    private Usuario buildNewOAuthUser(String email, String name, String picture) {
         String nombreUsuario = uniqueNombreFromEmail(email);
         if (StringUtils.hasText(name)) {
             nombreUsuario = name.length() <= 100 ? name : name.substring(0, 100);

@@ -15,9 +15,9 @@ const LoginPage = () => {
     const err = searchParams.get('oauth_error');
     if (err) {
       if (err === 'not_configured') {
-        toast.error('Google OAuth no está activo en el backend.', {
+        toast.error('OAuth no está activo en el backend.', {
           description:
-            'Define GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (variables de entorno o application-local.properties), reinicia Spring Boot y vuelve a intentar.',
+            'Define GOOGLE_CLIENT_* y/o GITHUB_CLIENT_* en variables de entorno o application-local.properties, reinicia Spring Boot y vuelve a intentar.',
           duration: 8000,
         });
       } else if (err === 'no_email') {

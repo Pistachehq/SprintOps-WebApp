@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
 /**
- * Si no hay cliente OAuth registrado (faltan GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET), evita un 404
- * críptico y devuelve al front con un código de error legible.
+ * Si no hay ningún cliente OAuth (faltan credenciales de Google y GitHub), evita un 404 y redirige al login.
  */
 @Controller
 @ConditionalOnMissingBean(ClientRegistrationRepository.class)
@@ -20,6 +19,15 @@ public class OAuth2NotConfiguredController {
 
     @GetMapping("/oauth2/authorization/google")
     public RedirectView googleOAuthNotConfigured() {
+        return redirectNotConfigured();
+    }
+
+    @GetMapping("/oauth2/authorization/github")
+    public RedirectView githubOAuthNotConfigured() {
+        return redirectNotConfigured();
+    }
+
+    private RedirectView redirectNotConfigured() {
         String base = frontendBaseUrl.replaceAll("/$", "");
         return new RedirectView(base + "/login?oauth_error=not_configured");
     }

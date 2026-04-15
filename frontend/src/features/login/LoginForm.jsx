@@ -88,10 +88,8 @@ const LoginForm = () => {
     window.location.href = `${API_ORIGIN}/oauth2/authorization/google`;
   };
 
-  const socialComingSoon = (provider) => {
-    toast.info(`${provider} — próximamente`, {
-      description: 'Conecta OAuth2 en el servidor para habilitar el acceso con GitHub.',
-    });
+  const startGitHubLogin = () => {
+    window.location.href = `${API_ORIGIN}/oauth2/authorization/github`;
   };
 
   return (
@@ -146,7 +144,7 @@ const LoginForm = () => {
               <span className="text-gray-400 text-sm font-medium px-1 shrink-0">|</span>
               <button
                 type="button"
-                onClick={() => socialComingSoon('GitHub')}
+                onClick={startGitHubLogin}
                 className="flex-1 h-[44px] rounded-[10px] border border-[#dcdcdc] bg-[#24292f] text-white font-semibold text-sm hover:opacity-90 transition-opacity inline-flex items-center justify-center gap-2"
               >
                 <GitHubLogo />
