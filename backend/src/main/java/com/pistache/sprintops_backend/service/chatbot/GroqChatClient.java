@@ -13,6 +13,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class GroqChatClient {
@@ -20,6 +22,10 @@ public class GroqChatClient {
     private static final Logger log = LoggerFactory.getLogger(GroqChatClient.class);
 
     private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+    private static final int GROQ_MAX_RETRIES = 3;
+
+    private static final Pattern GROQ_RETRY_AFTER_SEC = Pattern.compile("try again in ([0-9.]+)s", Pattern.CASE_INSENSITIVE);
 
     /** Mensaje corto para el usuario (Telegram / API); nunca incluir el JSON completo de Groq. */
     static final String RATE_LIMIT_USER_MESSAGE = """
@@ -62,13 +68,45 @@ public class GroqChatClient {
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
 
-        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+        Exception lastFailure = null;
+        for (int attempt = 1; attempt <= GROQ_MAX_RETRIES; attempt++) {
+            HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            int code = resp.statusCode();
+            if (code >= 200 && code < 300) {
+                return objectMapper.readTree(resp.body());
+            }
             String errBody = resp.body();
-            log.warn("Groq HTTP {}: {}", resp.statusCode(), errBody != null && errBody.length() > 2000 ? errBody.substring(0, 2000) + "…" : errBody);
-            throw new IllegalStateException(userFacingErrorMessage(resp.statusCode(), errBody));
+            log.warn("Groq HTTP {} (intento {}/{}): {}", code, attempt, GROQ_MAX_RETRIES,
+                    errBody != null && errBody.length() > 2000 ? errBody.substring(0, 2000) + "…" : errBody);
+            boolean rateLimited = code == 429 || code == 503;
+            if (rateLimited && attempt < GROQ_MAX_RETRIES) {
+                long waitMs = parseRetryAfterMs(errBody, 16_000);
+                log.info("Reintentando Groq en {} ms (TPM/cuota)", waitMs);
+                Thread.sleep(waitMs);
+                continue;
+            }
+            lastFailure = new IllegalStateException(userFacingErrorMessage(code, errBody));
+            break;
         }
-        return objectMapper.readTree(resp.body());
+        throw lastFailure != null ? lastFailure : new IllegalStateException("Groq: sin respuesta");
+    }
+
+    /** Groq suele incluir "try again in 19.5s" en el JSON de error 429. */
+    static long parseRetryAfterMs(String errorBody, long defaultMs) {
+        if (errorBody == null) {
+            return defaultMs;
+        }
+        Matcher m = GROQ_RETRY_AFTER_SEC.matcher(errorBody);
+        if (!m.find()) {
+            return defaultMs;
+        }
+        try {
+            double sec = Double.parseDouble(m.group(1));
+            long ms = (long) (sec * 1000.0) + 400L;
+            return Math.min(22_000L, Math.max(800L, ms));
+        } catch (NumberFormatException e) {
+            return defaultMs;
+        }
     }
 
     private String userFacingErrorMessage(int httpStatus, String responseBody) {

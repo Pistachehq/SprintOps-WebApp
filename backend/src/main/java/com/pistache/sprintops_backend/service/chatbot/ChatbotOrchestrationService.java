@@ -18,8 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class ChatbotOrchestrationService {
@@ -31,6 +34,21 @@ public class ChatbotOrchestrationService {
 
     /** Solo los últimos turnos entran al modelo (cada turno suma tokens en cada ronda de herramientas). */
     private static final int MAX_HISTORY_TURNS = 20;
+
+    /**
+     * Si el modelo ya pidió solo mutaciones concretas y la respuesta de herramienta es clara,
+     * devolvemos eso al usuario sin una segunda llamada a Groq (ahorra TPM y evita 429 tras éxito en BD).
+     */
+    private static final Set<String> MUTATION_TOOLS_OK_WITHOUT_LLM_FOLLOW_UP = Set.of(
+            "set_issue_status",
+            "set_issue_status_by_title",
+            "set_issue_assignees",
+            "assign_issue_by_title",
+            "move_issue_to_next_sprint",
+            "create_issue",
+            "update_issue_fields",
+            "save_my_daily_standup"
+    );
 
     private static final String HELP = """
             Comandos rápidos (también puedes escribir en lenguaje natural):
@@ -203,6 +221,8 @@ public class ChatbotOrchestrationService {
                         : assistantContent;
             }
 
+            List<String> batchToolNames = new ArrayList<>();
+            List<String> batchToolResults = new ArrayList<>();
             for (JsonNode tc : toolCalls) {
                 String id = tc.path("id").asText("");
                 String fnName = tc.path("function").path("name").asText("");
@@ -214,11 +234,17 @@ public class ChatbotOrchestrationService {
                     args = objectMapper.createObjectNode();
                 }
                 String result = clampToolContent(toolExecutor.execute(fnName, args, projectId, userId));
+                batchToolNames.add(fnName);
+                batchToolResults.add(result);
                 ObjectNode toolMessage = objectMapper.createObjectNode();
                 toolMessage.put("role", "tool");
                 toolMessage.put("tool_call_id", id);
                 toolMessage.put("content", result);
                 messages.add(toolMessage);
+            }
+            String shortcut = maybeUserVisibleReplyWithoutGroq(batchToolNames, batchToolResults);
+            if (shortcut != null) {
+                return shortcut;
             }
         }
 
@@ -234,5 +260,62 @@ public class ChatbotOrchestrationService {
         }
         return raw.substring(0, MAX_TOOL_MESSAGE_CHARS)
                 + "\n… (respuesta truncada para no sobrecargar la IA; acota la consulta o usa la app).";
+    }
+
+    private static String maybeUserVisibleReplyWithoutGroq(List<String> toolNames, List<String> toolResults) {
+        if (toolNames.size() != toolResults.size() || toolNames.isEmpty()) {
+            return null;
+        }
+        for (String name : toolNames) {
+            if (!MUTATION_TOOLS_OK_WITHOUT_LLM_FOLLOW_UP.contains(name)) {
+                return null;
+            }
+        }
+        List<String> lines = new ArrayList<>();
+        for (String r : toolResults) {
+            if (!looksLikeSuccessfulMutationToolText(r)) {
+                return null;
+            }
+            lines.add(r.trim());
+        }
+        return String.join("\n\n", lines);
+    }
+
+    private static boolean looksLikeSuccessfulMutationToolText(String r) {
+        if (r == null || r.isBlank()) {
+            return false;
+        }
+        if (r.length() > 900) {
+            return false;
+        }
+        String low = r.trim().toLowerCase(Locale.ROOT);
+        if (low.startsWith("no ")) {
+            return false;
+        }
+        if (low.startsWith("varios issues")) {
+            return false;
+        }
+        if (low.startsWith("indica ")) {
+            return false;
+        }
+        if (low.contains("inválido") || low.contains("invalido")) {
+            return false;
+        }
+        if (low.contains("error:")) {
+            return false;
+        }
+        if (low.contains("necesitas ")) {
+            return false;
+        }
+        if (low.contains("no es miembro")) {
+            return false;
+        }
+        if (low.contains("no hay ningún")) {
+            return false;
+        }
+        if (low.contains("sin permiso")) {
+            return false;
+        }
+        return true;
     }
 }
