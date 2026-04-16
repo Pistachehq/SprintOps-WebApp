@@ -88,6 +88,8 @@ public class ChatbotToolExecutor {
             return switch (toolName) {
                 case "list_my_assigned_issues" -> listMyAssignedIssues(projectId, userId);
                 case "list_sprint_issues" -> listSprintIssues(projectId, userId, a);
+                case "list_project_sprints" -> listProjectSprints(projectId, userId);
+                case "find_issues" -> findIssues(projectId, userId, a);
                 case "get_issue_detail" -> getIssueDetail(projectId, userId, a);
                 case "get_issue_change_history" -> getIssueHistory(projectId, userId, a);
                 case "summarize_my_issue_progress" -> summarizeMyProgress(projectId, userId);
@@ -97,7 +99,10 @@ public class ChatbotToolExecutor {
                 case "list_retro_reflections" -> listRetro(projectId, userId, a);
                 case "create_issue" -> self.createIssue(projectId, userId, a);
                 case "update_issue_fields" -> self.updateIssueFields(projectId, userId, a);
+                case "set_issue_assignees" -> self.setIssueAssignees(projectId, userId, a);
+                case "assign_issue_by_title" -> self.assignIssueByTitle(projectId, userId, a);
                 case "set_issue_status" -> self.setIssueStatus(projectId, userId, a);
+                case "set_issue_status_by_title" -> self.setIssueStatusByTitle(projectId, userId, a);
                 case "save_my_daily_standup" -> self.saveMyDaily(projectId, userId, a);
                 case "move_issue_to_next_sprint" -> self.moveIssueNextSprint(projectId, userId, a);
                 case "join_project_by_invite_code" -> self.joinByCode(userId, a);
@@ -181,6 +186,43 @@ public class ChatbotToolExecutor {
         return t == null ? null : t.trim();
     }
 
+    private static List<Integer> intArrayArg(JsonNode n, String field) {
+        if (n == null || !n.has(field) || !n.get(field).isArray()) {
+            return List.of();
+        }
+        List<Integer> out = new ArrayList<>();
+        for (JsonNode el : n.get(field)) {
+            if (el.isInt() || el.isLong()) {
+                out.add(el.asInt());
+            } else if (el.isTextual()) {
+                try {
+                    out.add(Integer.parseInt(el.asText().trim()));
+                } catch (NumberFormatException ignored) {
+                    // omitir elemento inválido
+                }
+            }
+        }
+        return out;
+    }
+
+    private static List<String> stringArrayArg(JsonNode n, String field) {
+        if (n == null || !n.has(field) || !n.get(field).isArray()) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        for (JsonNode el : n.get(field)) {
+            if (el.isTextual()) {
+                String s = el.asText().trim();
+                if (!s.isEmpty()) {
+                    out.add(s);
+                }
+            } else if (el.isNumber()) {
+                out.add(String.valueOf(el.asInt()));
+            }
+        }
+        return out;
+    }
+
     private static LocalDate dateArg(JsonNode n, String field, LocalDate defaultDate) {
         String s = strArg(n, field);
         if (s == null || s.isEmpty()) {
@@ -203,12 +245,18 @@ public class ChatbotToolExecutor {
         if (list.isEmpty()) {
             return "No tienes issues asignados en este proyecto.";
         }
+        final int cap = 50;
         StringBuilder sb = new StringBuilder("Tus issues en el proyecto:\n");
-        for (Issues i : list) {
+        int n = Math.min(cap, list.size());
+        for (int idx = 0; idx < n; idx++) {
+            Issues i = list.get(idx);
             sb.append("- #").append(i.getIdIssue()).append(" ").append(safe(i.getTituloIssue()))
                     .append(" | estado=").append(safe(i.getEstadoIssue()))
                     .append(" | SP=").append(i.getStoryPointsIssue() != null ? i.getStoryPointsIssue() : 0)
                     .append("\n");
+        }
+        if (list.size() > cap) {
+            sb.append("(mostrando ").append(cap).append(" de ").append(list.size()).append(")\n");
         }
         return sb.toString();
     }
@@ -230,8 +278,7 @@ public class ChatbotToolExecutor {
                 .map(x -> x.getIssue().getIdIssue())
                 .collect(Collectors.toSet());
         List<DescIssue> descs = descIssueRepository.findBySprintIdSprint(sprintId);
-        StringBuilder sb = new StringBuilder("Issues del sprint ").append(sprintId).append(":\n");
-        int n = 0;
+        List<Issues> visible = new ArrayList<>();
         for (DescIssue d : descs) {
             Issues i = d.getIssue();
             if (!issueInProject(i.getIdIssue(), projectId)) {
@@ -240,14 +287,112 @@ public class ChatbotToolExecutor {
             if (!all && !mine.contains(i.getIdIssue())) {
                 continue;
             }
-            n++;
+            visible.add(i);
+        }
+        visible.sort(Comparator.comparing(Issues::getIdIssue));
+        if (visible.isEmpty()) {
+            return "No hay issues visibles para ti en ese sprint (o el sprint está vacío).";
+        }
+        final int cap = 50;
+        StringBuilder sb = new StringBuilder("Issues del sprint ").append(sprintId).append(":\n");
+        int n = Math.min(cap, visible.size());
+        for (int idx = 0; idx < n; idx++) {
+            Issues i = visible.get(idx);
             sb.append("- #").append(i.getIdIssue()).append(" ").append(safe(i.getTituloIssue()))
                     .append(" | ").append(safe(i.getEstadoIssue()))
                     .append(" | SP=").append(i.getStoryPointsIssue() != null ? i.getStoryPointsIssue() : 0)
                     .append("\n");
         }
-        if (n == 0) {
-            return "No hay issues visibles para ti en ese sprint (o el sprint está vacío).";
+        if (visible.size() > cap) {
+            sb.append("(mostrando ").append(cap).append(" de ").append(visible.size()).append(")\n");
+        }
+        return sb.toString();
+    }
+
+    private String listProjectSprints(Integer projectId, Integer userId) {
+        if (!perm(userId, projectId, "canViewAllIssues") && !perm(userId, projectId, "canViewOnlyOwnIssues")
+                && !perm(userId, projectId, "canCreateIssue") && !perm(userId, projectId, "canEditIssue")
+                && !perm(userId, projectId, "canCreateSprint") && !perm(userId, projectId, "canManageMembers")) {
+            return "No tienes permiso para listar sprints en este proyecto.";
+        }
+        List<Sprint> sprints = sprintRepository.findByProyectoIdProyecto(projectId);
+        sprints.sort(Comparator.comparing(Sprint::getFechaInicioSprint, Comparator.nullsLast(Comparator.naturalOrder())));
+        StringBuilder sb = new StringBuilder("Sprints del proyecto:\n");
+        for (Sprint s : sprints) {
+            sb.append("- id=").append(s.getIdSprint())
+                    .append(" nombre=\"").append(safe(s.getNombreSprint()))
+                    .append("\" ").append(s.getFechaInicioSprint() != null ? s.getFechaInicioSprint() : "?")
+                    .append(" → ").append(s.getFechaFinSprint() != null ? s.getFechaFinSprint() : "?")
+                    .append("\n");
+        }
+        if (sprints.isEmpty()) {
+            return "No hay sprints registrados en este proyecto.";
+        }
+        return sb.toString();
+    }
+
+    private List<Issues> collectMatchingIssues(Integer projectId, Integer userId, String titleQ, Integer sprintF, String statusNorm) {
+        List<Issues> all = issuesRepository.findAllBelongingToProject(projectId);
+        List<Issues> matches = new ArrayList<>();
+        for (Issues i : all) {
+            if (!canSeeIssue(userId, projectId, i.getIdIssue())) {
+                continue;
+            }
+            if (titleQ != null && !titleQ.isEmpty()) {
+                String t = safe(i.getTituloIssue()).toLowerCase(Locale.ROOT);
+                if (!t.contains(titleQ.toLowerCase(Locale.ROOT))) {
+                    continue;
+                }
+            }
+            if (statusNorm != null && !statusNorm.isEmpty()) {
+                String st = safe(i.getEstadoIssue()).toLowerCase(Locale.ROOT);
+                if (!st.equals(statusNorm)) {
+                    continue;
+                }
+            }
+            if (sprintF != null) {
+                if (!sprintInProject(sprintF, projectId)
+                        || descIssueRepository.findByIdSprintIdAndIdIssueId(sprintF, i.getIdIssue()).isEmpty()) {
+                    continue;
+                }
+            }
+            matches.add(i);
+        }
+        return matches;
+    }
+
+    private String findIssues(Integer projectId, Integer userId, JsonNode a) {
+        if (!perm(userId, projectId, "canViewAllIssues") && !perm(userId, projectId, "canViewOnlyOwnIssues")) {
+            return "No tienes permiso para buscar issues.";
+        }
+        String titleQ = strArg(a, "title_contains");
+        Integer sprintF = intArg(a, "sprint_id");
+        String statusF = strArg(a, "status");
+        String statusNorm = statusF != null ? statusF.trim().toLowerCase(Locale.ROOT) : null;
+        List<Issues> allMatches = collectMatchingIssues(projectId, userId, titleQ, sprintF, statusNorm);
+        allMatches.sort(Comparator.comparing(Issues::getIdIssue));
+        int fullCount = allMatches.size();
+        int limit = 30;
+        List<Issues> matches = allMatches;
+        if (matches.size() > limit) {
+            matches = allMatches.subList(0, limit);
+        }
+        if (allMatches.isEmpty()) {
+            return "No hay issues que coincidan con los filtros (revisa título, sprint_id o status: todo, in_progress, done, blocked).";
+        }
+        StringBuilder sb = new StringBuilder("Issues encontrados:\n");
+        for (Issues i : matches) {
+            String sprintIds = descIssueRepository.findByIssueIdIssue(i.getIdIssue()).stream()
+                    .map(d -> String.valueOf(d.getSprint().getIdSprint()))
+                    .collect(Collectors.joining(","));
+            sb.append("- issue_id=").append(i.getIdIssue())
+                    .append(" título=\"").append(safe(i.getTituloIssue())).append("\"")
+                    .append(" estado=").append(safe(i.getEstadoIssue()))
+                    .append(" sprint(s)=").append(sprintIds.isEmpty() ? "-" : sprintIds)
+                    .append("\n");
+        }
+        if (fullCount > limit) {
+            sb.append("(mostrando los primeros ").append(limit).append(")\n");
         }
         return sb.toString();
     }
@@ -305,8 +450,14 @@ public class ChatbotToolExecutor {
             return "No hay historial registrado para este issue.";
         }
         logs.sort(Comparator.comparing(l -> l.getFechaCreacionLogIssue() != null ? l.getFechaCreacionLogIssue() : ""));
+        final int cap = 60;
+        int start = Math.max(0, logs.size() - cap);
         StringBuilder sb = new StringBuilder("Historial del issue #").append(id).append(":\n");
-        for (LogsIssues l : logs) {
+        if (start > 0) {
+            sb.append("(últimas ").append(cap).append(" entradas de ").append(logs.size()).append(")\n");
+        }
+        for (int i = start; i < logs.size(); i++) {
+            LogsIssues l = logs.get(i);
             sb.append("- ").append(safe(l.getFechaCreacionLogIssue()))
                     .append(" | ").append(safe(l.getTipoAccion()))
                     .append(" | ").append(safe(l.getActorLogIssue()))
@@ -554,21 +705,134 @@ public class ChatbotToolExecutor {
     }
 
     @Transactional
-    public String setIssueStatus(Integer projectId, Integer userId, JsonNode a) {
+    public String setIssueAssignees(Integer projectId, Integer userId, JsonNode a) {
         if (!canMutateIssue(userId, projectId)) {
-            return "No tienes permiso para editar issues.";
+            return "No tienes permiso para editar issues (canEditIssue).";
         }
-        Integer id = intArg(a, "issue_id");
-        String status = strArg(a, "status");
-        if (id == null || status == null) {
-            return "Indica issue_id y status (todo, in_progress, done o blocked).";
+        Integer issueId = intArg(a, "issue_id");
+        if (issueId == null || !issueInProject(issueId, projectId)) {
+            return "Issue inválido para este proyecto.";
         }
+        if (!canSeeIssue(userId, projectId, issueId)) {
+            return "No tienes permiso para ver este issue.";
+        }
+        List<Integer> fromIds = intArrayArg(a, "assignee_user_ids");
+        List<String> fromNames = stringArrayArg(a, "assignee_usernames");
+        if (fromIds.isEmpty() && fromNames.isEmpty()) {
+            return "Indica assignee_user_ids y/o assignee_usernames (al menos un asignado).";
+        }
+        return doReplaceIssueAssignees(projectId, userId, issueId, fromIds, fromNames);
+    }
+
+    private String doReplaceIssueAssignees(Integer projectId, Integer userId, int issueId, List<Integer> fromIds, List<String> fromNames) {
+        Proyecto pro = proyectoService.findById(projectId).orElse(null);
+        if (pro == null || pro.getEquipo() == null) {
+            return "Proyecto sin equipo.";
+        }
+        int equipoId = pro.getEquipo().getIdEquipo();
+        Set<Integer> teamIds = infoUsuarioEquipoRepository.findByEquipoIdEquipo(equipoId).stream()
+                .map(x -> x.getUsuario().getIdUsuario())
+                .collect(Collectors.toSet());
+        LinkedHashSet<Integer> target = new LinkedHashSet<>();
+        for (Integer aid : fromIds) {
+            if (!teamIds.contains(aid)) {
+                return "El usuario id " + aid + " no es miembro del equipo del proyecto.";
+            }
+            target.add(aid);
+        }
+        for (String name : fromNames) {
+            Optional<Integer> uid = resolveUsernameInTeam(name, teamIds);
+            if (uid.isEmpty()) {
+                return "No hay miembro del equipo con nombre de usuario «" + name
+                        + "». Usa el mismo nombre que en SprintOps (list_sprint_issues / miembros del proyecto).";
+            }
+            target.add(uid.get());
+        }
+        Issues issue = issuesService.findById(issueId).orElseThrow();
+        asignacionIssuesRepository.findByIssueIdIssue(issueId).forEach(asignacionIssuesRepository::delete);
+        for (Integer aid : target) {
+            Usuario u = usuarioService.findById(aid).orElseThrow();
+            AsignacionIssues row = new AsignacionIssues();
+            row.setId(new AsignacionIssuesId(aid, issueId));
+            row.setUsuario(u);
+            row.setIssue(issue);
+            asignacionIssuesRepository.save(row);
+        }
+        return "Issue #" + issueId + " asignado a usuario(s): " + target.stream().map(String::valueOf).collect(Collectors.joining(", "));
+    }
+
+    @Transactional
+    public String assignIssueByTitle(Integer projectId, Integer userId, JsonNode a) {
+        if (!canMutateIssue(userId, projectId)) {
+            return "No tienes permiso para editar issues (canEditIssue).";
+        }
+        if (!perm(userId, projectId, "canViewAllIssues") && !perm(userId, projectId, "canViewOnlyOwnIssues")) {
+            return "No tienes permiso para buscar issues.";
+        }
+        String titleQ = strArg(a, "title_contains");
+        if (titleQ == null || titleQ.isEmpty()) {
+            return "Indica title_contains (fragmento del título del issue).";
+        }
+        Integer sprintF = intArg(a, "sprint_id");
+        String statusF = strArg(a, "status");
+        String statusNorm = statusF != null ? statusF.trim().toLowerCase(Locale.ROOT) : null;
+        List<Issues> matches = collectMatchingIssues(projectId, userId, titleQ, sprintF, statusNorm);
+        matches.sort(Comparator.comparing(Issues::getIdIssue));
+        if (matches.isEmpty()) {
+            return "No hay ningún issue visible que coincida con ese título"
+                    + (sprintF != null ? " en el sprint " + sprintF : "")
+                    + ". Revisa el nombre o usa list_project_sprints para ver sprint_id.";
+        }
+        if (matches.size() > 1) {
+            StringBuilder sb = new StringBuilder("Varios issues coinciden (").append(matches.size())
+                    .append("). Acota title_contains o pasa sprint_id. Ejemplos:\n");
+            int show = Math.min(8, matches.size());
+            for (int i = 0; i < show; i++) {
+                Issues iss = matches.get(i);
+                String sprintIds = descIssueRepository.findByIssueIdIssue(iss.getIdIssue()).stream()
+                        .map(d -> String.valueOf(d.getSprint().getIdSprint()))
+                        .collect(Collectors.joining(","));
+                sb.append("- issue_id=").append(iss.getIdIssue()).append(" \"").append(safe(iss.getTituloIssue()))
+                        .append("\" sprint(s)=").append(sprintIds.isEmpty() ? "-" : sprintIds).append("\n");
+            }
+            if (matches.size() > show) {
+                sb.append("…\n");
+            }
+            return sb.toString();
+        }
+        int issueId = matches.get(0).getIdIssue();
+        if (!issueInProject(issueId, projectId) || !canSeeIssue(userId, projectId, issueId)) {
+            return "Issue inválido o sin permiso.";
+        }
+        List<Integer> fromIds = intArrayArg(a, "assignee_user_ids");
+        List<String> fromNames = stringArrayArg(a, "assignee_usernames");
+        if (fromIds.isEmpty() && fromNames.isEmpty()) {
+            return "Indica assignee_user_ids y/o assignee_usernames (al menos un asignado).";
+        }
+        return doReplaceIssueAssignees(projectId, userId, issueId, fromIds, fromNames);
+    }
+
+    private Optional<Integer> resolveUsernameInTeam(String rawName, Set<Integer> teamIds) {
+        String n = rawName.trim();
+        if (n.isEmpty()) {
+            return Optional.empty();
+        }
+        for (Integer tid : teamIds) {
+            Optional<Usuario> u = usuarioService.findById(tid);
+            if (u.isEmpty()) {
+                continue;
+            }
+            String nu = u.get().getNombreUsuario();
+            if (nu != null && nu.equalsIgnoreCase(n)) {
+                return Optional.of(tid);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String doSetIssueStatus(Integer projectId, int id, String s) {
         if (!issueInProject(id, projectId)) {
             return "Issue no pertenece al proyecto.";
-        }
-        String s = status.trim().toLowerCase(Locale.ROOT);
-        if (!Set.of("todo", "in_progress", "done", "blocked").contains(s)) {
-            return "Estado no válido. Usa todo, in_progress, done o blocked.";
         }
         var opt = issuesService.findById(id);
         if (opt.isEmpty()) {
@@ -581,6 +845,75 @@ public class ChatbotToolExecutor {
         }
         issuesService.save(issue);
         return "Estado del issue #" + id + " → " + s;
+    }
+
+    @Transactional
+    public String setIssueStatus(Integer projectId, Integer userId, JsonNode a) {
+        if (!canMutateIssue(userId, projectId)) {
+            return "No tienes permiso para editar issues.";
+        }
+        Integer id = intArg(a, "issue_id");
+        String status = strArg(a, "status");
+        if (id == null || status == null) {
+            return "Indica issue_id y status (todo, in_progress, done o blocked).";
+        }
+        String s = status.trim().toLowerCase(Locale.ROOT);
+        if (!Set.of("todo", "in_progress", "done", "blocked").contains(s)) {
+            return "Estado no válido. Usa todo, in_progress, done o blocked.";
+        }
+        return doSetIssueStatus(projectId, id, s);
+    }
+
+    @Transactional
+    public String setIssueStatusByTitle(Integer projectId, Integer userId, JsonNode a) {
+        if (!canMutateIssue(userId, projectId)) {
+            return "No tienes permiso para editar issues.";
+        }
+        if (!perm(userId, projectId, "canViewAllIssues") && !perm(userId, projectId, "canViewOnlyOwnIssues")) {
+            return "No tienes permiso para buscar issues.";
+        }
+        String titleQ = strArg(a, "title_contains");
+        if (titleQ == null || titleQ.isEmpty()) {
+            return "Indica title_contains (fragmento del título del issue).";
+        }
+        String status = strArg(a, "status");
+        if (status == null || status.isEmpty()) {
+            return "Indica status: todo, in_progress, done o blocked.";
+        }
+        String s = status.trim().toLowerCase(Locale.ROOT);
+        if (!Set.of("todo", "in_progress", "done", "blocked").contains(s)) {
+            return "Estado no válido. Usa todo, in_progress, done o blocked.";
+        }
+        Integer sprintF = intArg(a, "sprint_id");
+        List<Issues> matches = collectMatchingIssues(projectId, userId, titleQ, sprintF, null);
+        matches.sort(Comparator.comparing(Issues::getIdIssue));
+        if (matches.isEmpty()) {
+            return "No hay ningún issue visible que coincida con ese título"
+                    + (sprintF != null ? " en el sprint " + sprintF : "")
+                    + ". Revisa el nombre o usa list_project_sprints para ver sprint_id.";
+        }
+        if (matches.size() > 1) {
+            StringBuilder sb = new StringBuilder("Varios issues coinciden (").append(matches.size())
+                    .append("). Acota title_contains o pasa sprint_id. Ejemplos:\n");
+            int show = Math.min(8, matches.size());
+            for (int i = 0; i < show; i++) {
+                Issues iss = matches.get(i);
+                String sprintIds = descIssueRepository.findByIssueIdIssue(iss.getIdIssue()).stream()
+                        .map(d -> String.valueOf(d.getSprint().getIdSprint()))
+                        .collect(Collectors.joining(","));
+                sb.append("- issue_id=").append(iss.getIdIssue()).append(" \"").append(safe(iss.getTituloIssue()))
+                        .append("\" sprint(s)=").append(sprintIds.isEmpty() ? "-" : sprintIds).append("\n");
+            }
+            if (matches.size() > show) {
+                sb.append("…\n");
+            }
+            return sb.toString();
+        }
+        int issueId = matches.get(0).getIdIssue();
+        if (!issueInProject(issueId, projectId) || !canSeeIssue(userId, projectId, issueId)) {
+            return "Issue inválido o sin permiso.";
+        }
+        return doSetIssueStatus(projectId, issueId, s);
     }
 
     @Transactional

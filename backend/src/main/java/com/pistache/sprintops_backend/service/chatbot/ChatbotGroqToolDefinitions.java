@@ -21,6 +21,16 @@ public final class ChatbotGroqToolDefinitions {
         tools.add(f(om, "list_sprint_issues",
                 "Lista issues de un sprint del proyecto. Requiere sprint_id.",
                 req(om, List.of("sprint_id"), o -> { o.put("sprint_id", "integer"); })));
+        tools.add(f(om, "list_project_sprints",
+                "Lista todos los sprints del proyecto (id, nombre, fechas) para elegir sprint_id al mover issues o filtrar búsquedas.",
+                empty(om)));
+        tools.add(f(om, "find_issues",
+                "Busca issues por título parcial, sprint_id y/o estado. Para asignar o cambiar estado por título puedes usar assign_issue_by_title o set_issue_status_by_title; si hace falta id, esta herramienta devuelve issue_id (entero) por línea.",
+                opt(om, o -> {
+                    o.put("title_contains", "string");
+                    o.put("sprint_id", "integer");
+                    o.put("status", "string");
+                })));
         tools.add(f(om, "get_issue_detail",
                 "Detalle de un issue por id (solo si el usuario puede verlo).",
                 req(om, List.of("issue_id"), o -> { o.put("issue_id", "integer"); })));
@@ -65,10 +75,35 @@ public final class ChatbotGroqToolDefinitions {
                     o.put("story_points", "integer");
                 })));
         tools.add(f(om, "set_issue_status",
-                "Mueve estado: todo, in_progress, done, blocked.",
+                "Cambia estado del issue por id. Valores en inglés: todo, in_progress (En progreso), done (Finalizado/hecho), blocked.",
                 req(om, List.of("issue_id", "status"), o -> {
                     o.put("issue_id", "integer");
                     o.put("status", "string");
+                })));
+        tools.add(f(om, "set_issue_status_by_title",
+                "Cambia estado cuando el usuario nombra el título sin issue_id: title_contains, status (todo/in_progress/done/blocked) y opcional sprint_id si hay ambigüedad. Una sola coincidencia; si hay varias, acotar o usar find_issues.",
+                req(om, List.of("title_contains", "status"), o -> {
+                    o.put("title_contains", "string");
+                    o.put("status", "string");
+                    o.put("sprint_id", "integer");
+                })));
+        tools.add(f(om, "set_issue_assignees",
+                "Reemplaza los asignados de un issue. issue_id debe ser un entero tomado de find_issues o list_sprint_issues (nunca texto tipo <issue_id> ni placeholders). "
+                        + "assignee_user_ids y/o assignee_usernames: miembros del equipo del proyecto (ej. [\"axel\"]).",
+                req(om, List.of("issue_id"), o -> {
+                    o.put("issue_id", "integer");
+                    o.put("assignee_user_ids", "array");
+                    o.put("assignee_usernames", "array");
+                })));
+        tools.add(f(om, "assign_issue_by_title",
+                "Asigna por título cuando el usuario no da issue_id: title_contains (fragmento del título) y opcionalmente sprint_id para acotar. "
+                        + "Incluye assignee_usernames (ej. [\"axel\"]) y/o assignee_user_ids. Solo si hay una coincidencia; si hay varias, el usuario debe acotar o usa find_issues.",
+                req(om, List.of("title_contains"), o -> {
+                    o.put("title_contains", "string");
+                    o.put("sprint_id", "integer");
+                    o.put("status", "string");
+                    o.put("assignee_user_ids", "array");
+                    o.put("assignee_usernames", "array");
                 })));
         tools.add(f(om, "save_my_daily_standup",
                 "Guarda el daily del usuario para HOY en un sprint (qué hice, haré, bloqueos).",
@@ -79,7 +114,7 @@ public final class ChatbotGroqToolDefinitions {
                     o.put("blockers", "string");
                 })));
         tools.add(f(om, "move_issue_to_next_sprint",
-                "Mueve un issue de un sprint a otro del mismo proyecto (métricas de envío).",
+                "Mueve un issue de un sprint a otro del mismo proyecto (requiere issue_id y los ids de sprint origen y destino; usa list_project_sprints o list_sprint_issues para conocerlos).",
                 req(om, List.of("issue_id", "from_sprint_id", "to_sprint_id"), o -> {
                     o.put("issue_id", "integer");
                     o.put("from_sprint_id", "integer");

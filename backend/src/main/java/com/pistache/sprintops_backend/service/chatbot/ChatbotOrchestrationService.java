@@ -26,6 +26,12 @@ public class ChatbotOrchestrationService {
 
     private static final int MAX_TOOL_ROUNDS = 8;
 
+    /** Evita que una herramienta devuelva texto enorme y dispare el TPM de Groq en la siguiente ronda. */
+    private static final int MAX_TOOL_MESSAGE_CHARS = 12_000;
+
+    /** Solo los últimos turnos entran al modelo (cada turno suma tokens en cada ronda de herramientas). */
+    private static final int MAX_HISTORY_TURNS = 20;
+
     private static final String HELP = """
             Comandos rápidos (también puedes escribir en lenguaje natural):
             /start /inicio — mensaje de bienvenida
@@ -36,7 +42,7 @@ public class ChatbotOrchestrationService {
             • Métricas por sprint (si tienes canViewMetrics)
             • Daily: el tuyo o del equipo por fecha; retrospectivas guardadas en servidor
             
-            Acciones: crear/editar/mover issues, daily de hoy, siguiente sprint, papelera, sprints, proyecto, roles, unirse por código, crear proyecto.
+            Acciones: crear/editar issues, asignar por título o por id de issue, cambiar estado (in_progress/done), mover entre sprints, daily de hoy, papelera, sprints, proyecto, roles, unirse por código, crear proyecto.
             La reflexión + health check del sprint siguen en la pantalla Reflexión de la app (almacenamiento local).
             
             Todas las operaciones respetan el proyecto abierto y tus permisos en ese proyecto.
@@ -116,7 +122,11 @@ public class ChatbotOrchestrationService {
                 Sprints de este proyecto: %s
                 Solo puedes usar herramientas que operan sobre este proyecto (salvo crear_new_project o join_project_by_invite_code).
                 Si el usuario no tiene permiso, explica qué permiso hace falta (nombres exactos: canViewMetrics, canCreateIssue, canEditIssue, canCreateSprint, canManageMembers, canEditProjectDates, canViewAllIssues, canViewOnlyOwnIssues).
-                Para fechas en daily usa yyyy-MM-dd. Estados de issue: todo, in_progress, done, blocked.
+                Para fechas en daily usa yyyy-MM-dd. Estados de issue (inglés en herramientas): todo, in_progress, done, blocked.
+                Nunca inventes issue_id ni uses marcadores como <issue_id>: el id es un número devuelto por find_issues o list_sprint_issues.
+                Asignar por título (ej. «Prueba de issue-sprint» en sprint 1 a axel): prefer assign_issue_by_title con title_contains, sprint_id si lo sabes y assignee_usernames ["axel"]. Alternativa: find_issues y luego set_issue_assignees con ese issue_id entero.
+                Cambiar estado por título (una frase): set_issue_status_by_title con title_contains, status (todo/in_progress/done/blocked) y sprint_id opcional. Con issue_id numérico: set_issue_status. Alternativa: find_issues y set_issue_status.
+                Mover issue a otro sprint: move_issue_to_next_sprint (issue_id, from_sprint_id, to_sprint_id); usa list_project_sprints para ids de sprint.
                 Si preguntan por "qué dijo X en el daily", usa team_daily_standup con date_iso y username_contains.
                 """.formatted(
                 projectId,
@@ -132,8 +142,11 @@ public class ChatbotOrchestrationService {
                 .put("role", "system")
                 .put("content", system));
 
-        if (req.getHistory() != null) {
-            for (ChatbotHistoryTurn t : req.getHistory()) {
+        if (req.getHistory() != null && !req.getHistory().isEmpty()) {
+            List<ChatbotHistoryTurn> hist = req.getHistory();
+            int from = Math.max(0, hist.size() - MAX_HISTORY_TURNS);
+            for (int idx = from; idx < hist.size(); idx++) {
+                ChatbotHistoryTurn t = hist.get(idx);
                 if (t == null || t.getRole() == null || t.getContent() == null) {
                     continue;
                 }
@@ -200,7 +213,7 @@ public class ChatbotOrchestrationService {
                 } catch (Exception e) {
                     args = objectMapper.createObjectNode();
                 }
-                String result = toolExecutor.execute(fnName, args, projectId, userId);
+                String result = clampToolContent(toolExecutor.execute(fnName, args, projectId, userId));
                 ObjectNode toolMessage = objectMapper.createObjectNode();
                 toolMessage.put("role", "tool");
                 toolMessage.put("tool_call_id", id);
@@ -210,5 +223,16 @@ public class ChatbotOrchestrationService {
         }
 
         return "La conversación requirió demasiadas herramientas seguidas; simplifica la petición o hazla por pasos.";
+    }
+
+    private static String clampToolContent(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        if (raw.length() <= MAX_TOOL_MESSAGE_CHARS) {
+            return raw;
+        }
+        return raw.substring(0, MAX_TOOL_MESSAGE_CHARS)
+                + "\n… (respuesta truncada para no sobrecargar la IA; acota la consulta o usa la app).";
     }
 }
