@@ -1,0 +1,8 @@
+# Políticas IAM (Identity → Policies → Show manual editor)
+# Sustituye el nombre del grupo si no usas exactamente "sprintops-group".
+
+Allow group sprintops-group to use cloud-shell in tenancy
+Allow group sprintops-group to manage users in tenancy
+Allow group sprintops-group to manage all-resources in tenancy
+Allow group sprintops-group to manage buckets in tenancy
+Allow group sprintops-group to manage objects in tenancy

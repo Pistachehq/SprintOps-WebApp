@@ -1,0 +1,7 @@
+# Mantener el JAR en el contexto de build (se genera con mvn package antes de docker build).
+.git
+.idea
+*.iml
+src
+pom.xml
+oci

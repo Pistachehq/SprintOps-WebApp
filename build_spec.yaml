@@ -1,0 +1,34 @@
+# OCI DevOps Build Service — plantilla basada en la práctica (ZIP MtdrSpring), sin credenciales de terceros.
+# Ajusta en el pipeline: DOCKER_REGISTRY (ej. phx.ocir.io/namespace/repo-ocir).
+# Pasos extra del taller (descarga wallet, docker login OCIR) suelen ir aquí o en un artifact "deployment_config.tgz".
+version: 0.1
+component: build
+timeoutInSeconds: 1200
+shell: bash
+
+env:
+  variables:
+    JAVA_TOOL_OPTIONS: ""
+
+steps:
+  - type: Command
+    name: "Maven package (backend SprintOps)"
+    command: |
+      set -euo pipefail
+      if [ -d backend ]; then cd backend
+      elif [ -n "${OCI_PRIMARY_SOURCE_DIR:-}" ] && [ -d "${OCI_PRIMARY_SOURCE_DIR}/backend" ]; then cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
+      else echo "No existe la carpeta backend en el repositorio"; exit 1; fi
+      mvn -B package -DskipTests
+
+  - type: Command
+    name: "Docker build y push (requiere DOCKER_REGISTRY + docker login previo si aplica)"
+    command: |
+      set -euo pipefail
+      if [ -z "${DOCKER_REGISTRY:-}" ]; then
+        echo "Define la variable de pipeline DOCKER_REGISTRY, ej. phx.ocir.io/axxxxxxxxx/nombre-repo"
+        exit 1
+      fi
+      if [ -d backend ]; then cd backend
+      elif [ -n "${OCI_PRIMARY_SOURCE_DIR:-}" ] && [ -d "${OCI_PRIMARY_SOURCE_DIR}/backend" ]; then cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
+      else exit 1; fi
+      bash oci/build.sh

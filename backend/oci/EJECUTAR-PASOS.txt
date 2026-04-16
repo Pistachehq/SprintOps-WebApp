@@ -1,0 +1,66 @@
+================================================================================
+SprintOps en OCI (práctica) — grupo sprintops-group, namespace sprintops
+Sin Secrets de Kubernetes: variables en el Deployment vía envsubst (solo lab).
+================================================================================
+
+0) IAM (una vez por tenancy)
+   - Identity → Groups → crear "sprintops-group", añade tu usuario.
+   - Identity → Policies → crear política, "Show manual editor", pega el contenido de:
+     backend/oci/policies-iam.txt
+
+1) Cloud Shell
+   - Actions → Architecture → X86_64 (como en la presentación).
+
+2) Clonar TU repo
+   git clone https://github.com/<tu-usuario>/SprintOps-WebApp.git
+   cd SprintOps-WebApp
+
+3) Docker login a OCIR (si build.sh falla por "not authorized", como slide 48)
+   - User → Auth Tokens → crear token → guardarlo.
+   echo 'TU_AUTH_TOKEN' > at.cfg
+   docker login -u '<namespace>/<usuario-oracle>' <region>.ocir.io --password-stdin < at.cfg
+   export DOCKER_REGISTRY='<region>.ocir.io/<namespace>/<repo-ocir>'   # sin https
+
+4) Variables para el manifiesto (sustituye valores reales; pegar en Cloud Shell antes de deploy)
+   export DOCKER_REGISTRY='...'
+   export SPRING_DATASOURCE_URL='jdbc:oracle:thin:@...'   # cadena JDBC de tu ATP (consola OCI)
+   export SPRING_DATASOURCE_USERNAME='ADMIN'             # o usuario de app
+   export SPRING_DATASOURCE_PASSWORD='...'
+   export OCI_REGION='iad'                                # o tu región (opcional)
+   export GROQ_API_KEY='gsk_...'
+   export APP_TELEGRAM_BOT_TOKEN='123456:ABC...'
+   export APP_TELEGRAM_BOT_USERNAME='tu_bot'              # sin @
+   export APP_FRONTEND_BASE_URL='https://tu-frontend'     # ver nota abajo
+
+   Dónde sale cada dato:
+   - SPRING_DATASOURCE_* : consola OCI → tu Autonomous Database → DB Connection
+     (copia "Connection string" / TNS o JDBC; suele incluir usuario distinto de ADMIN si creaste uno).
+   - APP_FRONTEND_BASE_URL : URL pública donde sirvas el React (Object Storage estático,
+     otro LB, o temporalmente http://IP:5173 si solo es demo). Sirve para enlaces en emails;
+     si no usas correo, puedes poner la misma base que uses en el navegador.
+
+5) Construir imagen y subir a OCIR
+   cd backend
+   bash oci/build.sh
+
+6) Desplegar en Kubernetes (crea namespace sprintops y LB)
+   bash oci/deploy.sh
+
+7) Verificar
+   kubectl get pods -n sprintops
+   kubectl get svc -n sprintops
+   # Anota EXTERNAL-IP del servicio sprintops-backend-service
+
+8) Telegram webhook (HTTPS), sin secret_token
+   curl -s -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
+     -d "url=https://<EXTERNAL-IP>/api/telegram/webhook"
+   curl -s "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"
+
+9) Entregables típicos del curso
+   - Captura: kubectl get pods / get svc (namespace sprintops)
+   - Captura: frontend + Telegram probando comandos y/o mensaje al asistente (Groq)
+
+Notas
+- El archivo generado sprintops-backend-*.yaml en backend/ contiene credenciales; está en .gitignore — no lo subas a Git.
+- Perfil Spring "oci": application-oci.properties (Oracle + data.sql desactivado).
+- Si el LB no tiene HTTPS, Telegram puede rechazar el webhook; en práctica a veces usan LB con certificado o túnel.

@@ -1,0 +1,67 @@
+# Sustitución con: envsubst < oci/k8s/sprintops-backend.yaml > /tmp/out.yaml && kubectl apply -f /tmp/out.yaml
+# Exporta antes las variables listadas en oci/EJECUTAR-PASOS.txt (práctica: valores en claro, solo laboratorio).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sprintops
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sprintops-backend-service
+  namespace: sprintops
+  annotations:
+    oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: sprintops-backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sprintops-backend-deployment
+  namespace: sprintops
+spec:
+  selector:
+    matchLabels:
+      app: sprintops-backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sprintops-backend
+        version: v1
+    spec:
+      containers:
+        - name: sprintops-backend
+          image: ${DOCKER_REGISTRY}/sprintops-backend:0.1
+          imagePullPolicy: Always
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: oci
+            - name: SPRING_DATASOURCE_URL
+              value: "${SPRING_DATASOURCE_URL}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "${SPRING_DATASOURCE_USERNAME}"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "${SPRING_DATASOURCE_PASSWORD}"
+            - name: OCI_REGION
+              value: "${OCI_REGION}"
+            - name: GROQ_API_KEY
+              value: "${GROQ_API_KEY}"
+            - name: APP_TELEGRAM_BOT_TOKEN
+              value: "${APP_TELEGRAM_BOT_TOKEN}"
+            - name: APP_TELEGRAM_BOT_USERNAME
+              value: "${APP_TELEGRAM_BOT_USERNAME}"
+            - name: APP_FRONTEND_BASE_URL
+              value: "${APP_FRONTEND_BASE_URL}"
+          ports:
+            - name: http
+              containerPort: 8080
+      restartPolicy: Always
