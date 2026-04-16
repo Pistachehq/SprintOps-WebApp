@@ -1,9 +1,0 @@
-# Copiar a: src/main/resources/application-local.properties (gitignore). Se carga con spring.config.import.
-
-# Google (opcional)
-GOOGLE_CLIENT_ID=tu-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=tu-secreto-google
-
-# GitHub (opcional) — crea una "OAuth App" en GitHub → Settings → Developer settings
-GITHUB_CLIENT_ID=Iv1.xxx
-GITHUB_CLIENT_SECRET=tu-secreto-github

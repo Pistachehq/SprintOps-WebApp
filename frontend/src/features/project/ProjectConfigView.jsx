@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal } from 'lucide-react';
+import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal, MessageCircle } from 'lucide-react';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { rolesRepository } from '../../data/repositories/rolesRepository';
 import CreateRoleModal from './CreateRoleModal';
+import TelegramLinkCard from './TelegramLinkCard';
 
 // Función para convertir status a display format
 const getStatusDisplay = (status) => {
@@ -297,6 +298,13 @@ const ProjectConfigView = ({
                 </>}
               </button>
             </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-10">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+              <MessageCircle className="text-[#446E51]" /> Telegram (un bot para todos)
+            </h3>
+            <TelegramLinkCard userId={user?.id} suggestedProjectId={projectId} />
           </div>
 
           {/* Project Info Section */}

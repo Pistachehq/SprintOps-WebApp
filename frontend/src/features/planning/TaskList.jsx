@@ -3,6 +3,7 @@ import { Plus, Pencil } from 'lucide-react';
 import TaskCard from './TaskCard';
 import CreateIssueModal from '../issues/CreateIssueModal';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
+import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { useAuth } from '../auth/hooks/useAuth';
 
 const TaskList = ({ role, sprintId, issuesData }) => {
@@ -15,11 +16,26 @@ const TaskList = ({ role, sprintId, issuesData }) => {
   const { issues, addIssue, deleteIssue, assignIssue } = issuesData;
   const [members, setMembers] = useState([]);
 
+  // Cargar miembros por proyecto del sprint (no depender de issues[0]: sprint vacío = lista vacía antes).
   useEffect(() => {
-    if (issues.length > 0 && issues[0].projectId) {
-      projectsRepository.getMembers(issues[0].projectId).then(m => setMembers(m || [])).catch(() => {});
-    }
-  }, [issues]);
+    if (!sprintId) return;
+    let cancelled = false;
+    sprintsRepository
+      .getById(sprintId)
+      .then((sprint) => {
+        if (!sprint?.projectId || cancelled) return null;
+        return projectsRepository.getMembers(sprint.projectId);
+      })
+      .then((m) => {
+        if (!cancelled) setMembers(m || []);
+      })
+      .catch(() => {
+        if (!cancelled) setMembers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sprintId]);
 
   const handleCreateIssue = (issueData) => {
     addIssue({ ...issueData, sprintId });

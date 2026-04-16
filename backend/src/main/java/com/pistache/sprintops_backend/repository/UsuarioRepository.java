@@ -11,5 +11,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmailUsuario(String emailUsuario);
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
     Optional<Usuario> findByVerificacionToken(String verificacionToken);
+    Optional<Usuario> findByTelegramUserId(Long telegramUserId);
     List<Usuario> findByActivoUsuario(String activo);
+
+    List<Usuario> findByTelegramUserIdIsNullAndTelefonoVinculoNormIsNotNull();
+
+    Optional<Usuario> findByTelefonoVinculoNorm(String telefonoVinculoNorm);
 }

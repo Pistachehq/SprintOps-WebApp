@@ -15,7 +15,14 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody.error || `HTTP ${response.status}`);
+    const base =
+      errorBody.error ||
+      errorBody.message ||
+      (errorBody.path && response.status === 404
+        ? `Ruta no encontrada en el servidor: ${errorBody.path}`
+        : null) ||
+      `HTTP ${response.status}`;
+    throw new Error(base);
   }
 
   if (response.status === 204) return null;
