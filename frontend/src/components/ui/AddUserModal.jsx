@@ -70,7 +70,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
             <div className="relative">
               <input 
                 required
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50"
                 value={name}
                 onChange={e => {
                   setName(e.target.value);
@@ -103,7 +103,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
             <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">
               Cancelar
             </button>
-            <button type="submit" className="flex-1 h-12 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors shadow-lg shadow-green-900/20">
+            <button type="submit" className="flex-1 h-12 bg-[#67BFA1] text-white font-bold rounded-xl hover:bg-[#52A98A] transition-colors shadow-lg shadow-[#67BFA1]/25">
               Añadir al equipo
             </button>
           </div>

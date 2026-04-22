@@ -157,7 +157,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 transition-all hover:border-oracle-main hover:bg-green-50/30 disabled:opacity-60"
+            className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 transition-all hover:border-oracle-main hover:bg-[#67BFA1]/10 disabled:opacity-60"
           >
             {uploading ? (
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-oracle-main border-t-transparent" />
@@ -468,7 +468,7 @@ const TimelinePage = () => {
 
               {/* Today line */}
               {todayIdx >= 0 && (
-                <div className="absolute top-0 pointer-events-none z-20" style={{ left: todayIdx * COL_W + COL_W / 2 - 1, width: 2, height: gridH, background: '#446E51' }}>
+                <div className="absolute top-0 pointer-events-none z-20" style={{ left: todayIdx * COL_W + COL_W / 2 - 1, width: 2, height: gridH, background: '#67BFA1' }}>
                   <div className="absolute -top-1 -left-[3px] w-2 h-2 rounded-full bg-oracle-main" />
                 </div>
               )}

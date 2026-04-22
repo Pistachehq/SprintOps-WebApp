@@ -73,7 +73,7 @@ const SprintMetrics = ({ issues, issuesSentToNextSprint = 0, sprintId }) => {
       <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
         <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
           <div className="mb-2 flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-[#446E51]" />
+            <div className="h-2 w-2 rounded-full bg-[#67BFA1]" />
             <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">
               Enviados al siguiente sprint
             </h4>
@@ -126,7 +126,7 @@ const SprintMetrics = ({ issues, issuesSentToNextSprint = 0, sprintId }) => {
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-[#446E51] transition-all"
+                className="h-full rounded-full bg-[#67BFA1] transition-all"
                 style={{ width: `${totalPoints > 0 ? (donePoints / totalPoints) * 100 : 0}%` }}
               />
             </div>

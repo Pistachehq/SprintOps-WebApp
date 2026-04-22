@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-oracle-header: #312D2A;
+  --color-oracle-header: #2B2B2B;
   --color-oracle-bg: #F0EFED;
-  --color-oracle-main: #446E51;
-  --color-oracle-main-hover: #3a5d45;
+  --color-oracle-main: #67BFA1;
+  --color-oracle-main-hover: #52A98A;
   --color-oracle-text-dark: #333333;
   --color-oracle-red: #C74634;
   --color-oracle-red-hover: #b53d2e;
@@ -12,9 +12,9 @@
 
 @layer base {
   :root {
-    --oracle-header: #312D2A;
+    --oracle-header: #2B2B2B;
     --oracle-bg: #F0EFED;
-    --oracle-main: #446E51;
+    --oracle-main: #67BFA1;
     --oracle-red: #C74634;
   }
 
@@ -57,11 +57,11 @@
   /* ── Standard Button System ── */
 
   .btn-primary {
-    @apply bg-oracle-main text-white py-2.5 px-5 rounded-xl hover:bg-oracle-main-hover transition-colors font-bold text-sm shadow-lg shadow-green-900/10;
+    @apply bg-oracle-main text-white py-2.5 px-5 rounded-xl hover:bg-oracle-main-hover transition-colors font-bold text-sm shadow-lg shadow-[#67BFA1]/20;
   }
 
   .btn-secondary {
-    @apply bg-white text-oracle-main border border-oracle-main py-2.5 px-5 rounded-xl hover:bg-green-50 transition-colors font-bold text-sm;
+    @apply bg-white text-oracle-main border border-oracle-main py-2.5 px-5 rounded-xl hover:bg-[#67BFA1]/10 transition-colors font-bold text-sm;
   }
 
   .btn-ghost {

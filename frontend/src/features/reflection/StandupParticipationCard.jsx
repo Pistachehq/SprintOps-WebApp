@@ -31,7 +31,7 @@ const StandupParticipationCard = () => {
             className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#446E51] flex items-center justify-center text-white text-sm font-black">
+              <div className="w-10 h-10 rounded-full bg-[#67BFA1] flex items-center justify-center text-white text-sm font-black">
                 {name.charAt(0)}
               </div>
               <span className="text-sm font-bold text-slate-900">{name}</span>

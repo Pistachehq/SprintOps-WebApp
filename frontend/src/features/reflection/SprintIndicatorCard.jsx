@@ -82,7 +82,7 @@ const SprintIndicatorCard = ({
       return {
         kind: 'ok',
         Icon: CheckCircle2,
-        iconClass: 'text-[#446E51]',
+        iconClass: 'text-[#67BFA1]',
         border: 'border-emerald-200',
         bg: 'bg-emerald-50',
         title: 'Sin deuda por envíos',
@@ -164,7 +164,7 @@ const SprintIndicatorCard = ({
     return {
       kind: 'okish',
       Icon: Info,
-      iconClass: 'text-[#446E51]',
+      iconClass: 'text-[#67BFA1]',
       border: 'border-emerald-200',
       bg: 'bg-emerald-50/80',
       title: `Carga ~${debtLoadPct}% sobre capacidad del próximo sprint`,
@@ -212,7 +212,7 @@ const SprintIndicatorCard = ({
                   Suma de story points de esos mismos issues (lo que valían al moverlos)
                 </p>
               </div>
-              <span className="shrink-0 text-xl font-black tabular-nums text-[#446E51]">
+              <span className="shrink-0 text-xl font-black tabular-nums text-[#67BFA1]">
                 {sentPoints} pts
               </span>
             </div>

@@ -33,7 +33,7 @@ const NextSprintPanel = ({ disabled, nextSprintName }) => {
       ref={setNodeRef}
       role="region"
       aria-label="Zona para enviar el issue al siguiente sprint"
-      className="relative flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-[#52855f] via-[#446E51] to-[#2f4d3a] px-5 py-8 text-center transition-colors duration-200"
+      className="relative flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-[#8ed9c4] via-[#67BFA1] to-[#3a6656] px-5 py-8 text-center transition-colors duration-200"
     >
       {isOver ? (
         <div

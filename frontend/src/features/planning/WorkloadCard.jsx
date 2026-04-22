@@ -160,7 +160,7 @@ const WorkloadCard = ({ issues = [] }) => {
             <div key={user.id} className="flex items-center gap-3">
               <div
                 className={`w-8 h-8 rounded-full shrink-0 overflow-hidden ring-2 ring-offset-1 ring-offset-white ${
-                  highLoad ? 'ring-yellow-400' : lowLoad ? 'ring-blue-300' : 'ring-[#446E51]/35'
+                  highLoad ? 'ring-yellow-400' : lowLoad ? 'ring-blue-300' : 'ring-[#67BFA1]/35'
                 }`}
               >
                 {user.avatarUrl ? (
@@ -168,7 +168,7 @@ const WorkloadCard = ({ issues = [] }) => {
                 ) : (
                   <div
                     className={`w-full h-full flex items-center justify-center text-xs font-bold text-white ${
-                      highLoad ? 'bg-yellow-500' : lowLoad ? 'bg-blue-400' : 'bg-[#446E51]'
+                      highLoad ? 'bg-yellow-500' : lowLoad ? 'bg-blue-400' : 'bg-[#67BFA1]'
                     }`}
                   >
                     {getInitial(user.name)}
@@ -187,7 +187,7 @@ const WorkloadCard = ({ issues = [] }) => {
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
-                      highLoad ? 'bg-yellow-400' : lowLoad ? 'bg-blue-300' : 'bg-[#446E51]'
+                      highLoad ? 'bg-yellow-400' : lowLoad ? 'bg-blue-300' : 'bg-[#67BFA1]'
                     }`}
                     style={{ width: `${barPercent}%` }}
                   />

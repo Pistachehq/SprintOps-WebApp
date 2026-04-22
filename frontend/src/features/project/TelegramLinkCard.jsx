@@ -74,7 +74,7 @@ const TelegramLinkCard = ({ userId, suggestedProjectId }) => {
 
   return (
     <div className="flex items-start gap-3">
-      <div className="rounded-xl bg-[#446E51]/10 p-2 text-[#446E51] shrink-0">
+      <div className="rounded-xl bg-[#67BFA1]/10 p-2 text-[#67BFA1] shrink-0">
         <MessageCircle size={22} />
       </div>
       <div className="min-w-0 flex-1 space-y-2">
@@ -92,13 +92,13 @@ const TelegramLinkCard = ({ userId, suggestedProjectId }) => {
           placeholder="+52 55 1234 5678"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="w-full max-w-md rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-[#446E51] focus:border-transparent outline-none"
+          className="w-full max-w-md rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-[#67BFA1] focus:border-transparent outline-none"
         />
         <button
           type="button"
           onClick={savePhone}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#446E51] text-white text-xs font-bold hover:opacity-90 disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#67BFA1] text-white text-xs font-bold hover:opacity-90 disabled:opacity-60"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : null}
           Guardar y continuar en Telegram
@@ -110,7 +110,7 @@ const TelegramLinkCard = ({ userId, suggestedProjectId }) => {
             href={telegramUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-block text-xs text-[#446E51] font-bold underline"
+            className="inline-block text-xs text-[#67BFA1] font-bold underline"
           >
             Abrir bot en Telegram
           </a>
@@ -133,13 +133,13 @@ const TelegramLinkCard = ({ userId, suggestedProjectId }) => {
               type="button"
               onClick={generateCodeFallback}
               disabled={codeLoading}
-              className="text-[#446E51] font-bold underline underline-offset-2"
+              className="text-[#67BFA1] font-bold underline underline-offset-2"
             >
               {codeLoading ? 'Generando…' : 'Generar código'}
             </button>
             {codeInfo?.code && <p className="font-mono font-bold text-slate-900">{codeInfo.code}</p>}
             {codeInfo?.deepLink && (
-              <a href={codeInfo.deepLink} target="_blank" rel="noreferrer" className="block text-[#446E51] font-bold">
+              <a href={codeInfo.deepLink} target="_blank" rel="noreferrer" className="block text-[#67BFA1] font-bold">
                 Abrir en Telegram
               </a>
             )}

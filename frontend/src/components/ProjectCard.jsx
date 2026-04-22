@@ -104,7 +104,7 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
       aria-label={`Abrir proyecto ${name}`}
       onClick={openPanel}
       onKeyDown={handleCardKeyDown}
-      className="bg-white rounded-[20px] overflow-hidden shadow-sm hover:shadow-md transition-shadow group/card cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#446E51] focus-visible:ring-offset-2 select-none"
+      className="bg-white rounded-[20px] overflow-hidden shadow-sm hover:shadow-md transition-shadow group/card cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#67BFA1] focus-visible:ring-offset-2 select-none"
     >
       <div className="relative h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
         {showImage ? (
@@ -115,7 +115,7 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
             onError={() => setImgBroken(true)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#446E51] to-[#2d4a36] flex flex-col items-center justify-center pointer-events-none">
+          <div className="w-full h-full bg-gradient-to-br from-[#67BFA1] to-[#3d7563] flex flex-col items-center justify-center pointer-events-none">
             <span className="text-white/30 text-5xl font-black tracking-tighter">{name?.charAt(0) || '?'}</span>
           </div>
         )}
@@ -155,7 +155,7 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
                 className="w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold text-left disabled:opacity-50"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <ImagePlus size={16} className="text-[#446E51] shrink-0" />
+                <ImagePlus size={16} className="text-[#67BFA1] shrink-0" />
                 Subir imagen
               </button>
               <input
@@ -171,7 +171,7 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
                 className="w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold text-left border-t border-slate-100 disabled:opacity-50"
                 onClick={handleRestoreDefault}
               >
-                <RotateCcw size={16} className="text-[#446E51] shrink-0" />
+                <RotateCcw size={16} className="text-[#67BFA1] shrink-0" />
                 Imagen Predeterminada
               </button>
             </div>

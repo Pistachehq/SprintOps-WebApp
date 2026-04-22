@@ -15,7 +15,7 @@ import { issuesRepository } from '../../data/repositories/issuesRepository';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const PLANNED_BAR = '#64748B';
-const COMPLETED_BAR = '#446E51';
+const COMPLETED_BAR = '#67BFA1';
 
 function sortSprints(list) {
   return [...(list || [])].sort((a, b) => {
@@ -71,7 +71,7 @@ function computeTrend(rows) {
     return { label: 'Estable →', className: 'text-slate-700', hint: null };
   }
   if (diff > 0) {
-    return { label: 'Alza ↗', className: 'text-[#446E51]', hint: null };
+    return { label: 'Alza ↗', className: 'text-[#67BFA1]', hint: null };
   }
   return { label: 'Baja ↘', className: 'text-red-600', hint: null };
 }

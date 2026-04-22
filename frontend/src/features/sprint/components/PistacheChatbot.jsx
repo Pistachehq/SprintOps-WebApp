@@ -4,7 +4,7 @@ import { Send, Sparkles } from 'lucide-react';
 import apiClient from '../../../data/api/apiClient';
 
 const ORACLE_RED = '#EE0004';
-const ORACLE_HEADER = '#312D2A';
+const ORACLE_HEADER = '#2B2B2B';
 
 const CONTAINER_VARIANTS = {
   closed: {

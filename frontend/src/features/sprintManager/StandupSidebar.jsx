@@ -214,7 +214,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
 
               {teamLoading ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-12">
-                  <Loader2 size={28} className="mb-3 animate-spin text-[#446E51]" />
+                  <Loader2 size={28} className="mb-3 animate-spin text-[#67BFA1]" />
                   <p className="text-sm font-medium text-gray-400">Cargando registros…</p>
                 </div>
               ) : teamDays.length === 0 ? (
@@ -236,7 +236,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
                           onClick={() => toggleDate(day.date)}
                           className="flex w-full items-center justify-between gap-2 bg-white px-3 py-3 text-left transition-colors hover:bg-gray-50"
                         >
-                          <span className="text-[13px] font-black text-[#446E51]">
+                          <span className="text-[13px] font-black text-[#67BFA1]">
                             {formatSectionTitle(day.date)}
                           </span>
                           {open ? (
@@ -309,7 +309,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
               {isLoading ? (
                 <div className="flex flex-1 items-center justify-center">
                   <div className="text-center">
-                    <Loader2 size={32} className="mx-auto mb-3 animate-spin text-[#446E51]" />
+                    <Loader2 size={32} className="mx-auto mb-3 animate-spin text-[#67BFA1]" />
                     <p className="text-sm font-medium text-gray-400">Cargando...</p>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
                   <div className="space-y-2">
                     <label className="text-sm font-bold uppercase tracking-widest text-gray-500">¿Qué hice?</label>
                     <textarea
-                      className="h-32 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 p-4 text-gray-700 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#446E51]"
+                      className="h-32 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 p-4 text-gray-700 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#67BFA1]"
                       placeholder="Describe tus logros de ayer..."
                       value={formData.done}
                       onChange={(e) => setFormData({ ...formData, done: e.target.value })}
@@ -328,7 +328,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
                   <div className="space-y-2">
                     <label className="text-sm font-bold uppercase tracking-widest text-gray-500">¿Qué haré?</label>
                     <textarea
-                      className="h-32 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 p-4 text-gray-700 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#446E51]"
+                      className="h-32 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 p-4 text-gray-700 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#67BFA1]"
                       placeholder="¿Cuáles son tus objetivos para hoy?"
                       value={formData.doing}
                       onChange={(e) => setFormData({ ...formData, doing: e.target.value })}
@@ -349,7 +349,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
 
                   <button
                     type="submit"
-                    className="mt-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-[#446E51] py-4 text-lg font-black text-white shadow-lg shadow-green-100 transition-opacity hover:opacity-90 disabled:opacity-60"
+                    className="mt-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-[#67BFA1] py-4 text-lg font-black text-white shadow-lg shadow-[#67BFA1]/30 transition-opacity hover:opacity-90 disabled:opacity-60"
                     disabled={showToast || isSaving}
                   >
                     {showToast ? (
@@ -383,7 +383,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
             >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-[#446E51]">{detailDayLabel}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#67BFA1]">{detailDayLabel}</p>
                   <h3 className="mt-1 text-lg font-black text-gray-900">{detailEntry.userName}</h3>
                   <p className="mt-0.5 text-xs font-medium text-gray-500">
                     Rol: {detailEntry.roleLabel}

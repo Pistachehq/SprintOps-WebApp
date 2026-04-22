@@ -46,7 +46,7 @@ const TaskDetailPage = () => {
     if (lower.includes('estado') || lower.includes('movido'))
       return { icon: ArrowRightLeft, bg: 'bg-amber-500' };
     if (lower.includes('papelera') && lower.includes('restaurado'))
-      return { icon: ArchiveRestore, bg: 'bg-[#446E51]' };
+      return { icon: ArchiveRestore, bg: 'bg-[#67BFA1]' };
     if (lower.includes('papelera') || lower.includes('eliminado'))
       return { icon: Trash2, bg: 'bg-red-500' };
     return { icon: Clock, bg: 'bg-gray-500' };
@@ -58,7 +58,7 @@ const TaskDetailPage = () => {
         <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarea no encontrada</h2>
         <button 
           onClick={() => navigate(-1)}
-          className="bg-[#446E51] text-white px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors"
+          className="bg-[#67BFA1] text-white px-6 py-2 rounded-xl font-bold hover:opacity-90 transition-colors"
         >
           Volver a Planeación
         </button>
@@ -106,7 +106,7 @@ const TaskDetailPage = () => {
           <div className="flex min-w-0 flex-1 items-start gap-6">
             <BackButton />
             <div className="min-w-0">
-              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[#446E51]">
+              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[#67BFA1]">
                 Sprint {sprintId} · Tarea #{task.displayIndex || task.id}
               </p>
               <div className="flex flex-wrap items-center gap-3">
@@ -148,7 +148,7 @@ const TaskDetailPage = () => {
         {/* History Section - Always visible below */}
         <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8 flex flex-col min-h-0">
           <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2 shrink-0">
-            <RotateCcw size={18} className="text-[#446E51]" /> Historial de Modificaciones
+            <RotateCcw size={18} className="text-[#67BFA1]" /> Historial de Modificaciones
           </h3>
           {history.length > 0 ? (
             <div

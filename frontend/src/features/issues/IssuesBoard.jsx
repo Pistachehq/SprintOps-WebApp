@@ -273,7 +273,7 @@ const IssuesBoard = () => {
                   'flex min-h-0 flex-col overflow-hidden rounded-2xl md:h-full md:max-h-full',
                   nextSprintPanelDisabled
                     ? 'border-2 border-dashed border-slate-300 bg-slate-50'
-                    : 'border border-[#446E51]/40 shadow-sm',
+                    : 'border border-[#67BFA1]/40 shadow-sm',
                 ].join(' ')}
               >
                 <NextSprintPanel
@@ -320,7 +320,7 @@ const IssuesBoard = () => {
               <button
                 type="button"
                 onClick={handleModalGoCreateSprint}
-                className="rounded-xl bg-[#446E51] px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+                className="rounded-xl bg-[#67BFA1] px-4 py-2 text-sm font-bold text-white hover:opacity-90"
               >
                 Sí, ir a crear sprint
               </button>

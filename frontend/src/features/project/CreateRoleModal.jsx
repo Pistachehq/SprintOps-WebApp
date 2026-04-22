@@ -115,7 +115,7 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <Shield className="text-[#446E51]" size={22} />
+            <Shield className="text-[#67BFA1]" size={22} />
             {editRole ? 'Editar Rol' : 'Crear Nuevo Rol'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -135,7 +135,7 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
               placeholder="ej. Arquitecto de Software, QA Lead..."
-              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] focus:border-transparent outline-none text-sm"
+              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] focus:border-transparent outline-none text-sm"
               autoFocus
             />
           </div>
@@ -160,18 +160,18 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
                       onClick={() => togglePermiso(permiso.idPermiso)}
                       className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                         isSelected
-                          ? 'bg-[#446E51]/10 border-[#446E51] text-slate-800'
+                          ? 'bg-[#67BFA1]/10 border-[#67BFA1] text-slate-800'
                           : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-slate-200'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                        isSelected ? 'bg-[#446E51] border-[#446E51]' : 'border-slate-300'
+                        isSelected ? 'bg-[#67BFA1] border-[#67BFA1]' : 'border-slate-300'
                       }`}>
                         {isSelected && <Check size={12} className="text-white" />}
                       </div>
                       {(() => {
                         const IconComp = PERMISSION_ICONS[permiso.nombrePermiso] || Settings;
-                        return <IconComp size={16} className={isSelected ? 'text-[#446E51]' : 'text-slate-400'} />;
+                        return <IconComp size={16} className={isSelected ? 'text-[#67BFA1]' : 'text-slate-400'} />;
                       })()}
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${isSelected ? 'text-slate-800' : 'text-slate-600'}`}>
@@ -205,7 +205,7 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
             <button
               type="submit"
               disabled={saving || !roleName.trim()}
-              className="flex-1 h-12 bg-[#446E51] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="flex-1 h-12 bg-[#67BFA1] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {saving ? (
                 'Guardando...'

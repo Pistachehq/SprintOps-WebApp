@@ -61,11 +61,11 @@ const SprintCard = ({ sprint, projectId, onClick }) => {
       onClick={() => onClick(sprint.id)}
       className="group flex cursor-pointer flex-col items-center transition-all"
     >
-      <h3 className="mb-6 text-2xl font-bold text-slate-800 transition-colors group-hover:text-[#446E51]">
+      <h3 className="mb-6 text-2xl font-bold text-slate-800 transition-colors group-hover:text-[#67BFA1]">
         {sprint.name}
       </h3>
 
-      <div className="relative flex h-[320px] w-[450px] flex-col gap-4 overflow-hidden rounded-[32px] border-[6px] border-[#446E51] bg-white p-8 shadow-xl transition-all group-hover:-translate-y-2 group-hover:shadow-2xl">
+      <div className="relative flex h-[320px] w-[450px] flex-col gap-4 overflow-hidden rounded-[32px] border-[6px] border-[#67BFA1] bg-white p-8 shadow-xl transition-all group-hover:-translate-y-2 group-hover:shadow-2xl">
         <div className="flex h-full gap-4">
           {/* Columna izquierda (mini barra tipo sidebar) */}
           <div className="flex w-1/4 flex-col gap-2 overflow-hidden rounded-xl bg-gray-100 p-3">
