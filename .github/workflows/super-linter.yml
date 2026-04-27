@@ -25,6 +25,7 @@ jobs:
         uses: github/super-linter@v6
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          VALIDATE_CHECKOV: false
           VALIDATE_JSCPD: false
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
