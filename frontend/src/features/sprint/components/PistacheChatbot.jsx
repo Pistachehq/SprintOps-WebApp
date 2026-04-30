@@ -5,6 +5,8 @@ import apiClient from '../../../data/api/apiClient';
 
 const ORACLE_RED = '#EE0004';
 const ORACLE_HEADER = '#2B2B2B';
+/** Mismo asset que el favicon (pistachito). */
+const PISTACHE_MARK_SRC = '/pistache-mark.png';
 
 const CONTAINER_VARIANTS = {
   closed: {
@@ -29,19 +31,19 @@ const CONTAINER_VARIANTS = {
   },
 };
 
-const OracleAvatar = ({ size = 28 }) => (
-  <div style={{
-    width: size, height: size,
-    borderRadius: '50%',
-    background: ORACLE_HEADER,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-  }}>
-    <svg width={Math.round(size * 0.64)} height={Math.round(size * 0.4)}
-      viewBox="0 0 181 114" fill="none">
-      <rect x="10" y="10" width="161" height="94" rx="37"
-        stroke={ORACLE_RED} strokeWidth="22" />
-    </svg>
+const PistacheAvatar = ({ size = 28 }) => (
+  <div
+    className="shrink-0 overflow-hidden rounded-full ring-1 ring-white/20"
+    style={{ width: size, height: size }}
+  >
+    <img
+      src={PISTACHE_MARK_SRC}
+      alt=""
+      width={size}
+      height={size}
+      draggable={false}
+      className="h-full w-full object-cover"
+    />
   </div>
 );
 
@@ -68,7 +70,7 @@ const MessageBubble = ({ message }) => {
       transition={{ duration: 0.28, ease: 'easeOut' }}
       className={`flex ${isBot ? 'justify-start' : 'justify-end'}`}
     >
-      {isBot && <div className="mr-2 mt-auto mb-0.5"><OracleAvatar size={28} /></div>}
+      {isBot && <div className="mr-2 mt-auto mb-0.5"><PistacheAvatar size={28} /></div>}
       <div
         className={`max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
           isBot ? 'bg-white text-slate-800 rounded-bl-sm' : 'text-white rounded-br-sm'
@@ -170,10 +172,7 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
       <div className="px-5 py-4 flex items-center justify-between shrink-0"
         style={{ background: ORACLE_HEADER }}>
         <div className="flex items-center gap-3">
-          <svg width="40" height="25" viewBox="0 0 181 114" fill="none">
-            <rect x="10" y="10" width="161" height="94" rx="37"
-              stroke={ORACLE_RED} strokeWidth="22" />
-          </svg>
+          <PistacheAvatar size={40} />
           <div>
             <p className="text-white font-bold text-sm leading-tight">Oracle AI</p>
             <div className="flex items-center gap-1.5">
@@ -205,7 +204,7 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
         {isTyping && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             className="flex items-end gap-2">
-            <OracleAvatar size={28} />
+            <PistacheAvatar size={28} />
             <TypingIndicator />
           </motion.div>
         )}
