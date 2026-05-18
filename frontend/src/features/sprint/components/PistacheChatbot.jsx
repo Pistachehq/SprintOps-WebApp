@@ -1,35 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { Send, Sparkles } from 'lucide-react';
 import apiClient from '../../../data/api/apiClient';
+import PistacheIcon from './PistacheIcon';
 
-const ORACLE_RED = '#EE0004';
+/* Paleta Oracle (de globals.css) */
+const ORACLE_MAIN = '#67BFA1';        // verde pistache (acento principal)
+const ORACLE_MAIN_HOVER = '#52A98A';
+const ORACLE_RED = '#C74634';         // rojo Oracle
 const ORACLE_HEADER = '#2B2B2B';
+const ORACLE_BG = '#F0EFED';
 /** Mismo asset que el favicon (pistachito). */
 const PISTACHE_MARK_SRC = '/pistache-mark.png';
-
-const CONTAINER_VARIANTS = {
-  closed: {
-    width: 100, height: 63, borderRadius: 32,
-    backgroundColor: 'rgba(243,243,243,0)',
-    transition: {
-      width: { type: 'spring', stiffness: 260, damping: 26 },
-      height: { type: 'spring', stiffness: 260, damping: 26 },
-      borderRadius: { type: 'spring', stiffness: 260, damping: 26 },
-      backgroundColor: { duration: 0.3, ease: 'easeIn' },
-    },
-  },
-  open: {
-    width: 360, height: 520, borderRadius: 37,
-    backgroundColor: 'rgba(243,243,243,1)',
-    transition: {
-      width: { type: 'spring', stiffness: 260, damping: 26 },
-      height: { type: 'spring', stiffness: 260, damping: 26 },
-      borderRadius: { type: 'spring', stiffness: 260, damping: 26 },
-      backgroundColor: { duration: 0.3, ease: 'easeOut' },
-    },
-  },
-};
 
 const PistacheAvatar = ({ size = 28 }) => (
   <div
@@ -53,7 +35,7 @@ const TypingIndicator = () => (
       <motion.div
         key={i}
         className="w-2 h-2 rounded-full"
-        style={{ background: ORACLE_RED }}
+        style={{ background: ORACLE_MAIN }}
         animate={{ y: [0, -6, 0] }}
         transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
       />
@@ -75,7 +57,7 @@ const MessageBubble = ({ message }) => {
         className={`max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
           isBot ? 'bg-white text-slate-800 rounded-bl-sm' : 'text-white rounded-br-sm'
         }`}
-        style={!isBot ? { background: ORACLE_RED } : {}}
+        style={!isBot ? { background: ORACLE_MAIN } : {}}
       >
         {message.text}
       </div>
@@ -163,11 +145,23 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.08 } }}
-      transition={{ delay: 0.3, duration: 0.2 }}
-      style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}
+      initial={{ opacity: 0, scale: 0.05 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.05, transition: { duration: 0.25, ease: 'easeIn' } }}
+      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        width: 360,
+        height: 520,
+        background: ORACLE_BG,
+        borderRadius: 24,
+        border: `3px solid ${ORACLE_MAIN}`,
+        boxShadow: '0 24px 48px -12px rgba(0,0,0,0.35)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        // Origen ≈ posición de la semilla (centro del pistache de 90×130, ~65px debajo del borde inferior de la ventana, 45px desde el borde derecho)
+        transformOrigin: 'calc(100% - 45px) calc(100% + 77px)',
+      }}
     >
       <div className="px-5 py-4 flex items-center justify-between shrink-0"
         style={{ background: ORACLE_HEADER }}>
@@ -177,7 +171,7 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
             <p className="text-white font-bold text-sm leading-tight">Oracle AI</p>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse"
-                style={{ background: ORACLE_RED }} />
+                style={{ background: ORACLE_MAIN }} />
               <p className="text-slate-400 text-xs">Pistache · contexto del proyecto</p>
             </div>
           </div>
@@ -229,7 +223,7 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
             disabled={!inputValue.trim() || isTyping}
             className="w-8 h-8 rounded-xl flex items-center justify-center"
             style={inputValue.trim() && !isTyping
-              ? { background: ORACLE_RED, color: 'white' }
+              ? { background: ORACLE_MAIN, color: 'white' }
               : { background: '#f1f5f9', color: '#cbd5e1', cursor: 'not-allowed' }}
           >
             <Send size={14} />
@@ -245,35 +239,131 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
 
 const PistacheChatbot = ({ projectId, userId }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const shakeControls = useAnimationControls();
+  const leftShellControls = useAnimationControls();
+  const rightShellControls = useAnimationControls();
+  const seedControls = useAnimationControls();
+
+  // Abrir/cerrar las cáscaras al abrir/cerrar el chatbot
+  useEffect(() => {
+    if (isOpen) {
+      leftShellControls.start({
+        rotate: -10,
+        x: -1,
+        transition: { duration: 0.5, ease: 'easeOut' },
+      });
+      rightShellControls.start({
+        rotate: 10,
+        x: 1,
+        transition: { duration: 0.5, ease: 'easeOut' },
+      });
+      seedControls.start({
+        y: -8,
+        transition: { duration: 0.5, ease: 'easeOut' },
+      });
+    } else {
+      leftShellControls.start({
+        rotate: 0,
+        x: 0,
+        transition: { duration: 0.4, ease: 'easeInOut' },
+      });
+      rightShellControls.start({
+        rotate: 0,
+        x: 0,
+        transition: { duration: 0.4, ease: 'easeInOut' },
+      });
+      seedControls.start({
+        y: 0,
+        transition: { duration: 0.4, ease: 'easeInOut' },
+      });
+    }
+  }, [isOpen, leftShellControls, rightShellControls, seedControls]);
+
+  // Vibración periódica cada 7s mientras el chat esté cerrado
+  useEffect(() => {
+    if (isOpen) return undefined;
+    const interval = setInterval(() => {
+      shakeControls.start({
+        rotate: [0, -8, 8, -6, 6, -3, 3, 0],
+        x: [0, -2, 2, -1, 1, 0, 0, 0],
+        transition: { duration: 0.6, ease: 'easeInOut' },
+      });
+      leftShellControls.start({
+        rotate: [0, -4, -5, -3, 0],
+        x: [0, -1, -1, 0, 0],
+        transition: { duration: 1.2, ease: 'easeInOut' },
+      });
+      rightShellControls.start({
+        rotate: [0, 4, 5, 3, 0],
+        x: [0, 1, 1, 0, 0],
+        transition: { duration: 1.2, ease: 'easeInOut' },
+      });
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [isOpen, shakeControls, leftShellControls, rightShellControls]);
+
+  const handleOpen = () => {
+    if (!isOpen) setIsOpen(true);
+  };
 
   return (
-    <motion.div
-      initial="closed"
-      animate={isOpen ? 'open' : 'closed'}
-      variants={CONTAINER_VARIANTS}
-      onClick={!isOpen ? () => setIsOpen(true) : undefined}
-      whileHover={!isOpen ? { scale: 1.07 } : undefined}
-      whileTap={!isOpen ? { scale: 0.93 } : undefined}
+    <div
       style={{
         position: 'fixed',
-        bottom: 24, right: 24,
+        bottom: 8,
+        right: 12,
         zIndex: 50,
-        border: `11px solid ${ORACLE_RED}`,
-        overflow: 'hidden',
-        cursor: !isOpen ? 'pointer' : 'default',
-        transformOrigin: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: 12,
+        pointerEvents: 'none',
       }}
     >
+      {/* Ventana del chat — flota encima del pistache */}
       <AnimatePresence>
         {isOpen && (
-          <ChatWindow
-            onClose={() => setIsOpen(false)}
-            projectId={projectId}
-            userId={userId}
-          />
+          <div style={{ pointerEvents: 'auto' }}>
+            <ChatWindow
+              onClose={() => setIsOpen(false)}
+              projectId={projectId}
+              userId={userId}
+            />
+          </div>
         )}
       </AnimatePresence>
-    </motion.div>
+
+      {/* Botón pistache — siempre visible abajo a la derecha */}
+      <motion.div
+        onClick={handleOpen}
+        whileHover={!isOpen ? { scale: 1.07 } : undefined}
+        whileTap={!isOpen ? { scale: 0.93 } : undefined}
+        style={{
+          width: 90,
+          height: 130,
+          cursor: !isOpen ? 'pointer' : 'default',
+          pointerEvents: 'auto',
+          transformOrigin: 'center',
+        }}
+      >
+        <motion.div
+          animate={shakeControls}
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PistacheIcon
+            leftShellControls={leftShellControls}
+            rightShellControls={rightShellControls}
+            seedControls={seedControls}
+          />
+        </motion.div>
+      </motion.div>
+    </div>
   );
 };
 
