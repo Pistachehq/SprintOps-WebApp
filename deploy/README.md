@@ -57,8 +57,10 @@ Listo. El resto lo hace el script desde Cloud Shell.
 2. Configura `kubectl` para apuntar al cluster.
 3. Crea repos en **OCIR** (registro de imágenes de Oracle) si no existen.
 4. Hace `docker login` con el Auth Token.
-5. **Compila las dos imágenes** (`sprintops-backend` y `sprintops-frontend`) con `docker buildx` apuntando a `linux/arm64` para que corran en los nodos A1.
-6. Las sube a OCIR.
+5. **Compila las dos imágenes** (`sprintops-backend` y `sprintops-frontend`) eligiendo automáticamente la estrategia:
+   - **Kaniko en el cluster** (cuando estás en Cloud Shell x86 y los nodos son ARM): lanza un Job de Kaniko por imagen, que clona tu repo público desde GitHub y compila nativamente en los nodos. Es lo que pasa por default en Cloud Shell con A1.Flex.
+   - **Docker local** (cuando tu máquina ya puede emular o tiene la misma arquitectura que los nodos): usa `docker buildx` con `--platform linux/arm64`.
+6. Las sube a OCIR (Kaniko empuja desde dentro del cluster; docker desde tu máquina).
 7. Aplica los manifests de `deploy/k8s/`:
    - `Namespace` `sprintops`.
    - `Secret mysql-credentials` con contraseña aleatoria de 24 caracteres (no se imprime).
@@ -72,11 +74,21 @@ Listo. El resto lo hace el script desde Cloud Shell.
 ## Volver a desplegar (cambios en el código)
 
 ```bash
+git push          # importante si usas Kaniko: compila desde GitHub, no desde el clon local
+cd ~/SprintOps-WebApp
 git pull
 bash deploy/deploy.sh
 ```
 
 Cada corrida construye una imagen con tag nuevo (`YYYYMMDD-HHMMSS`) y hace `rollout` sin downtime para el frontend, y `Recreate` para el backend.
+
+### Forzar una estrategia de build
+
+```bash
+bash deploy/deploy.sh --kaniko         # compila en el cluster (default en Cloud Shell)
+bash deploy/deploy.sh --local-build    # compila con docker en tu máquina
+bash deploy/deploy.sh --skip-build     # no recompila; reaplica manifests con el tag IMAGE_TAG
+```
 
 ## Llenar credenciales opcionales (Google OAuth, Groq, Telegram, etc.)
 
@@ -118,3 +130,4 @@ Borra el namespace `sprintops`. El cluster, el LB y el volumen quedan; la próxi
 - **TLS / dominio:** este flujo es solo HTTP por IP. Cuando tengas dominio, lo más limpio es agregar `cert-manager` + `ingress-nginx`; avísanos para extender el script.
 - **Imágenes ARM:** si por alguna razón usas nodos AMD, corre con `PLATFORMS=linux/amd64 bash deploy/deploy.sh`.
 - **OAuth Google/GitHub:** los callbacks tienen que apuntar al origen del Load Balancer. Si lo cambias, actualiza el secret y reinicia el backend.
+- **Repo privado en GitHub:** Kaniko espera un repo público. Si el tuyo es privado, hay dos opciones: (1) hacerlo público temporalmente, (2) usar `--local-build` desde una máquina con docker.

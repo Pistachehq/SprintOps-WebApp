@@ -3,15 +3,24 @@
 # Pensado para correr DENTRO de OCI Cloud Shell, donde ya hay oci CLI, kubectl, docker, jq.
 #
 # Uso:
-#   bash deploy/deploy.sh                  # despliega/actualiza todo
-#   bash deploy/deploy.sh --skip-build     # solo reaplicar manifests
+#   bash deploy/deploy.sh                  # despliega/actualiza todo (estrategia automatica)
+#   bash deploy/deploy.sh --kaniko         # fuerza build en cluster (Kaniko)
+#   bash deploy/deploy.sh --local-build    # fuerza build local con docker
+#   bash deploy/deploy.sh --skip-build     # solo reaplicar manifests (asume imagenes ya en OCIR)
 #   bash deploy/deploy.sh --destroy        # borra el namespace sprintops (no toca el cluster)
 #
+# Estrategia de build:
+#   - auto (default): si el host es x86 y los nodos del cluster son ARM (o viceversa)
+#     y estamos en Cloud Shell, usamos Kaniko (los nodos compilan las imagenes nativamente).
+#   - kaniko: corre Jobs de Kaniko en el cluster que leen el codigo desde tu repo
+#     publico de GitHub (rama actual). Tienes que tener tus cambios en GitHub.
+#   - local: docker build + push desde la maquina actual (necesita docker real o QEMU).
+#
 # Antes de la primera corrida:
-#   - Crea el cluster con "Quick Create" en la consola de OKE (lo más rápido).
-#     OCI Console → Developer Services → Kubernetes Clusters → Create cluster → Quick create.
+#   - Crea el cluster con "Quick Create" en la consola de OKE (lo mas rapido).
+#     OCI Console -> Developer Services -> Kubernetes Clusters -> Create cluster -> Quick create.
 #     Sirve cualquier shape, ARM A1.Flex con 2 nodos es lo recomendado en Always Free.
-#   - Listo. Esta es la única acción manual; lo demás lo hace el script.
+#   - Listo. Esta es la unica accion manual; lo demas lo hace el script.
 
 set -euo pipefail
 
@@ -27,10 +36,13 @@ PLATFORMS="${PLATFORMS:-linux/arm64}"   # cambia a linux/amd64 si tu pool es AMD
 
 SKIP_BUILD=false
 DESTROY=false
+BUILD_STRATEGY="${BUILD_STRATEGY:-auto}"   # auto | local | kaniko
 for arg in "$@"; do
   case "$arg" in
     --skip-build) SKIP_BUILD=true ;;
     --destroy)    DESTROY=true ;;
+    --kaniko)     BUILD_STRATEGY="kaniko" ;;
+    --local-build) BUILD_STRATEGY="local" ;;
     -h|--help)
       sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
@@ -50,6 +62,29 @@ require_cmd() {
 }
 
 require_cmd oci kubectl docker jq base64 sed
+
+# Detectar el repo de git para que Kaniko pueda usarlo como contexto de build.
+# Si tus cambios no estan en GitHub, Kaniko construira la version vieja.
+detect_git_context() {
+  GIT_BRANCH="${GIT_BRANCH:-$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)}"
+  local raw="${GIT_REPO_URL:-$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || true)}"
+  if [[ -z "$raw" ]]; then
+    KANIKO_GIT_CONTEXT=""
+    return 1
+  fi
+  case "$raw" in
+    git@*)
+      local hp="${raw#git@}"
+      hp="${hp/://}"
+      raw="$hp"
+      ;;
+    https://*) raw="${raw#https://}" ;;
+    http://*)  raw="${raw#http://}"  ;;
+  esac
+  [[ "$raw" == *.git ]] || raw="${raw}.git"
+  KANIKO_GIT_CONTEXT="git://${raw}#refs/heads/${GIT_BRANCH}"
+}
+detect_git_context || true
 
 # -----------------------------------------------------------------------------
 # 0) Cargar/persistir estado para no preguntar dos veces
@@ -206,76 +241,201 @@ BACKEND_IMAGE="$OCIR_REGISTRY/$OCIR_NAMESPACE/${APP_PREFIX}-backend:$IMAGE_TAG"
 FRONTEND_IMAGE="$OCIR_REGISTRY/$OCIR_NAMESPACE/${APP_PREFIX}-frontend:$IMAGE_TAG"
 
 # -----------------------------------------------------------------------------
-# 3) Construir y subir imágenes (multi-arch usando buildx)
+# 3) Decidir estrategia de build (local docker vs Kaniko en el cluster)
 # -----------------------------------------------------------------------------
-if ! $SKIP_BUILD; then
-  # Detectar si "docker" es Docker real (con buildx) o Podman (Cloud Shell)
-  CONTAINER_TOOL="docker"
-  USE_BUILDX=false
-  IS_PODMAN=false
-  if docker --version 2>/dev/null | grep -qi podman; then
-    IS_PODMAN=true
-    USE_BUILDX=false
-    green "Detectado podman (Cloud Shell). Se usará 'docker build --platform' directo."
-  elif docker buildx version >/dev/null 2>&1; then
-    USE_BUILDX=true
-    green "Detectado docker con buildx. Se usará 'docker buildx build --push'."
+ensure_namespace_and_pull_secret() {
+  kubectl apply -f "$K8S_DIR/00-namespace.yaml" >/dev/null
+  kubectl -n "$NAMESPACE" create secret docker-registry ocir-pull \
+    --docker-server="$OCIR_REGISTRY" \
+    --docker-username="$OCIR_DOCKER_USER" \
+    --docker-password="$OCIR_AUTH_TOKEN" \
+    --docker-email="${RAW_USER_NAME}@oracle.local" \
+    --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+  kubectl -n "$NAMESPACE" patch serviceaccount default \
+    -p '{"imagePullSecrets":[{"name":"ocir-pull"}]}' >/dev/null 2>&1 || true
+}
+
+wait_for_one_node() {
+  step "Esperando a que al menos un worker node este listo"
+  for i in $(seq 1 120); do
+    if kubectl get nodes --no-headers 2>/dev/null | grep -q " Ready "; then
+      green "Nodos listos."
+      return 0
+    fi
+    sleep 5
+    printf "."
+  done
+  echo
+  red "Pasaron 10 min y no hay nodos Ready. Revisa el Node Pool en la consola de OKE."
+  return 1
+}
+
+build_with_kaniko() {
+  local subpath="$1"
+  local image="$2"
+  shift 2
+  local extra_args=("$@")
+
+  local short_tag
+  short_tag="$(echo "${IMAGE_TAG}" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9-' | head -c 20)"
+  local job_name="kaniko-${subpath}-${short_tag}"
+  job_name="${job_name:0:60}"
+  job_name="${job_name%-}"
+
+  kubectl -n "$NAMESPACE" delete job "$job_name" --ignore-not-found >/dev/null 2>&1 || true
+
+  local args_block=""
+  args_block+="        - --dockerfile=Dockerfile"$'\n'
+  args_block+="        - --context=${KANIKO_GIT_CONTEXT}"$'\n'
+  args_block+="        - --context-sub-path=${subpath}"$'\n'
+  args_block+="        - --destination=${image}"$'\n'
+  args_block+="        - --snapshot-mode=redo"$'\n'
+  args_block+="        - --use-new-run"$'\n'
+  for ea in "${extra_args[@]}"; do
+    args_block+="        - ${ea}"$'\n'
+  done
+
+  cat <<EOF | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: $job_name
+  namespace: $NAMESPACE
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:v1.23.2
+        args:
+$args_block
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "3Gi"
+        volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+      volumes:
+      - name: docker-config
+        secret:
+          secretName: ocir-pull
+          items:
+          - key: .dockerconfigjson
+            path: config.json
+EOF
+
+  step "Esperando a que arranque el Job de Kaniko ($subpath)"
+  local pod=""
+  for i in $(seq 1 60); do
+    pod="$(kubectl -n "$NAMESPACE" get pod -l job-name="$job_name" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+    [[ -n "$pod" ]] && break
+    sleep 2
+  done
+  if [[ -z "$pod" ]]; then
+    red "El Job $job_name no creo pod."
+    kubectl -n "$NAMESPACE" describe job "$job_name" || true
+    return 1
   fi
 
-  # Si construimos para arquitectura distinta a la del host, necesitamos QEMU
+  green "Pod: $pod (sigueme los logs)"
+  kubectl -n "$NAMESPACE" logs -f "$pod" --tail=-1 || true
+
+  if kubectl -n "$NAMESPACE" wait --for=condition=complete --timeout=10s "job/$job_name" >/dev/null 2>&1; then
+    green "Build de '${subpath}' OK → $image"
+    kubectl -n "$NAMESPACE" delete job "$job_name" --ignore-not-found >/dev/null 2>&1 || true
+    return 0
+  fi
+  red "Build de '${subpath}' fallo. Detalles:"
+  kubectl -n "$NAMESPACE" describe pod "$pod" || true
+  return 1
+}
+
+if ! $SKIP_BUILD; then
+  IS_PODMAN=false
+  docker --version 2>/dev/null | grep -qi podman && IS_PODMAN=true
+
   HOST_ARCH="$(uname -m)"
   TARGET_ARCH="${PLATFORMS##*/}"
   case "$TARGET_ARCH" in
-    arm64|aarch64) NEED_QEMU_FOR="aarch64" ;;
-    amd64|x86_64)  NEED_QEMU_FOR="x86_64"  ;;
-    *)             NEED_QEMU_FOR="$TARGET_ARCH" ;;
+    arm64|aarch64) HOST_MATCH_FOR_TARGET="aarch64" ;;
+    amd64|x86_64)  HOST_MATCH_FOR_TARGET="x86_64"  ;;
+    *)             HOST_MATCH_FOR_TARGET="$TARGET_ARCH" ;;
   esac
-  if [[ "$HOST_ARCH" != "$NEED_QEMU_FOR" ]]; then
-    step "Verificando QEMU para emular $PLATFORMS (host es $HOST_ARCH)"
-    if ! docker run --rm --platform "$PLATFORMS" docker.io/library/alpine:3.20 uname -m 2>/dev/null | grep -qi "$NEED_QEMU_FOR"; then
-      yellow "QEMU no responde. Intentando instalar qemu-user-static..."
-      if command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y qemu-user-static || true
-      elif command -v apt-get >/dev/null 2>&1; then
-        sudo apt-get update -y && sudo apt-get install -y qemu-user-static || true
-      fi
-      if ! docker run --rm --platform "$PLATFORMS" docker.io/library/alpine:3.20 uname -m 2>/dev/null | grep -qi "$NEED_QEMU_FOR"; then
-        red "No pude configurar QEMU para $PLATFORMS."
-        red "Opciones:"
-        red "  1) sudo dnf install -y qemu-user-static && vuelve a correr deploy.sh"
-        red "  2) Si tus nodos no son ARM, corre: PLATFORMS=linux/amd64 bash deploy/deploy.sh"
-        exit 1
-      fi
-      green "QEMU listo para $PLATFORMS."
+  CROSS_ARCH=false
+  [[ "$HOST_ARCH" != "$HOST_MATCH_FOR_TARGET" ]] && CROSS_ARCH=true
+
+  if [[ "$BUILD_STRATEGY" == "auto" ]]; then
+    if $CROSS_ARCH && $IS_PODMAN; then
+      yellow "Cloud Shell ($HOST_ARCH) + nodos $TARGET_ARCH → estrategia: kaniko (build en el cluster)."
+      BUILD_STRATEGY="kaniko"
     else
-      green "QEMU ya responde."
+      BUILD_STRATEGY="local"
     fi
   fi
+  green "Estrategia de build: $BUILD_STRATEGY"
 
-  if $USE_BUILDX; then
-    step "Preparando buildx (cross-compile para $PLATFORMS)"
-    docker buildx inspect sprintops-builder >/dev/null 2>&1 || \
-      docker buildx create --name sprintops-builder --use --bootstrap >/dev/null
-    docker buildx use sprintops-builder >/dev/null
+  if [[ "$BUILD_STRATEGY" == "kaniko" ]]; then
+    if [[ -z "${KANIKO_GIT_CONTEXT:-}" ]]; then
+      red "No pude detectar la URL del repo de git (origin)."
+      red "Setea GIT_REPO_URL=https://github.com/usuario/repo.git y vuelve a correr."
+      exit 1
+    fi
+    green "Contexto Kaniko: $KANIKO_GIT_CONTEXT"
+    yellow "OJO: Kaniko construye desde GitHub. Asegurate de que '$GIT_BRANCH' este al dia (git push)."
 
-    step "Build & push backend → $BACKEND_IMAGE"
-    docker buildx build --platform "$PLATFORMS" --tag "$BACKEND_IMAGE" --push "$REPO_DIR/backend"
+    ensure_namespace_and_pull_secret
+    wait_for_one_node
 
-    step "Build & push frontend → $FRONTEND_IMAGE"
-    docker buildx build --platform "$PLATFORMS" --tag "$FRONTEND_IMAGE" --push "$REPO_DIR/frontend"
+    step "Build backend con Kaniko → $BACKEND_IMAGE"
+    build_with_kaniko "backend" "$BACKEND_IMAGE"
+
+    step "Build frontend con Kaniko → $FRONTEND_IMAGE"
+    build_with_kaniko "frontend" "$FRONTEND_IMAGE" "--build-arg=VITE_API_BASE=/api"
   else
-    step "Build backend (platform=$PLATFORMS) → $BACKEND_IMAGE"
-    docker build --platform "$PLATFORMS" -t "$BACKEND_IMAGE" "$REPO_DIR/backend"
-    step "Push backend"
-    docker push "$BACKEND_IMAGE"
+    USE_BUILDX=false
+    if ! $IS_PODMAN && docker buildx version >/dev/null 2>&1; then
+      USE_BUILDX=true
+      green "Docker con buildx detectado."
+    fi
 
-    step "Build frontend (platform=$PLATFORMS) → $FRONTEND_IMAGE"
-    docker build --platform "$PLATFORMS" -t "$FRONTEND_IMAGE" "$REPO_DIR/frontend"
-    step "Push frontend"
-    docker push "$FRONTEND_IMAGE"
+    if $CROSS_ARCH; then
+      step "Verificando QEMU para emular $PLATFORMS (host es $HOST_ARCH)"
+      if ! docker run --rm --platform "$PLATFORMS" docker.io/library/alpine:3.20 uname -m 2>/dev/null | grep -qi "$HOST_MATCH_FOR_TARGET"; then
+        red "El host no puede emular $PLATFORMS y --local-build esta activo."
+        red "Instala QEMU o quita --local-build (para que el script use Kaniko)."
+        exit 1
+      fi
+      green "QEMU responde."
+    fi
+
+    if $USE_BUILDX; then
+      step "Preparando buildx"
+      docker buildx inspect sprintops-builder >/dev/null 2>&1 || \
+        docker buildx create --name sprintops-builder --use --bootstrap >/dev/null
+      docker buildx use sprintops-builder >/dev/null
+      step "Build & push backend → $BACKEND_IMAGE"
+      docker buildx build --platform "$PLATFORMS" --tag "$BACKEND_IMAGE" --push "$REPO_DIR/backend"
+      step "Build & push frontend → $FRONTEND_IMAGE"
+      docker buildx build --platform "$PLATFORMS" --tag "$FRONTEND_IMAGE" --push "$REPO_DIR/frontend"
+    else
+      step "Build backend (platform=$PLATFORMS) → $BACKEND_IMAGE"
+      docker build --platform "$PLATFORMS" -t "$BACKEND_IMAGE" "$REPO_DIR/backend"
+      docker push "$BACKEND_IMAGE"
+      step "Build frontend (platform=$PLATFORMS) → $FRONTEND_IMAGE"
+      docker build --platform "$PLATFORMS" -t "$FRONTEND_IMAGE" "$REPO_DIR/frontend"
+      docker push "$FRONTEND_IMAGE"
+    fi
   fi
 else
-  yellow "--skip-build activo: usando tag '$IMAGE_TAG' tal cual."
+  yellow "--skip-build activo: usando tag '$IMAGE_TAG' tal cual (asume imagenes en OCIR)."
 fi
 
 # -----------------------------------------------------------------------------
