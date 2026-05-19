@@ -135,8 +135,27 @@ fi
 step "Preparando registro de contenedores (OCIR)"
 OCIR_NAMESPACE="${OCIR_NAMESPACE:-$(oci os ns get --query 'data' --raw-output)}"
 OCIR_REGISTRY="${REGION_KEY,,}.ocir.io"
-OCIR_USER="${OCIR_USER:-$(oci iam user get --user-id "$USER_OCID" --query 'data.name' --raw-output)}"
+
+# El username para hacer docker login a OCIR depende de si el usuario vive en un
+# Identity Domain (default en cuentas Free Trial nuevas) o en IAM legacy.
+RAW_USER_NAME="$(oci iam user get --user-id "$USER_OCID" --query 'data.name' --raw-output 2>/dev/null || true)"
+IDENTITY_PROVIDER_ID="$(oci iam user get --user-id "$USER_OCID" --query 'data."identity-provider-id"' --raw-output 2>/dev/null || true)"
+
+if [[ -z "${OCIR_DOCKER_USER:-}" ]]; then
+  if [[ -n "$IDENTITY_PROVIDER_ID" && "$IDENTITY_PROVIDER_ID" != "null" ]]; then
+    # Federado (Identity Domain). Formato: <namespace>/oracleidentitycloudservice/<username>
+    OCIR_DOCKER_USER="${OCIR_NAMESPACE}/oracleidentitycloudservice/${RAW_USER_NAME}"
+  elif [[ "$RAW_USER_NAME" == *"@"* ]]; then
+    # Heurística: si el username tiene @, asume Identity Domain (Default)
+    OCIR_DOCKER_USER="${OCIR_NAMESPACE}/oracleidentitycloudservice/${RAW_USER_NAME}"
+  else
+    OCIR_DOCKER_USER="${OCIR_NAMESPACE}/${RAW_USER_NAME}"
+  fi
+fi
+
+OCIR_USER="$RAW_USER_NAME"
 green "OCIR registry: $OCIR_REGISTRY/$OCIR_NAMESPACE/${APP_PREFIX}-*"
+green "OCIR docker user: $OCIR_DOCKER_USER"
 
 if [[ -z "${OCIR_AUTH_TOKEN:-}" && -f "$HOME/.ocir-token" ]]; then
   OCIR_AUTH_TOKEN="$(cat "$HOME/.ocir-token")"
@@ -158,8 +177,15 @@ if [[ -z "${OCIR_AUTH_TOKEN:-}" ]]; then
 fi
 
 step "docker login a OCIR"
-echo "$OCIR_AUTH_TOKEN" | docker login "$OCIR_REGISTRY" \
-  --username "${OCIR_NAMESPACE}/${OCIR_USER}" --password-stdin
+if ! echo "$OCIR_AUTH_TOKEN" | docker login "$OCIR_REGISTRY" \
+      --username "$OCIR_DOCKER_USER" --password-stdin; then
+  red "Falló el docker login con username '$OCIR_DOCKER_USER'."
+  red "Si tu cuenta usa Identity Domain pero el dominio NO es 'Default', necesitas"
+  red "cambiar 'oracleidentitycloudservice' por el nombre real del dominio."
+  red "Puedes probar a mano:"
+  red "  docker login $OCIR_REGISTRY -u '${OCIR_NAMESPACE}/<DOMAIN>/${RAW_USER_NAME}'"
+  exit 1
+fi
 
 # Repos en OCIR (si no existen, se crean al primer push, pero los creamos explícitos para hacerlos públicos del lado de OKE vía imagePullSecret más abajo)
 for repo in "${APP_PREFIX}-backend" "${APP_PREFIX}-frontend"; do
@@ -207,7 +233,7 @@ kubectl apply -f "$K8S_DIR/00-namespace.yaml"
 # Secret para que el cluster pueda jalar las imágenes privadas de OCIR
 kubectl -n "$NAMESPACE" create secret docker-registry ocir-pull \
   --docker-server="$OCIR_REGISTRY" \
-  --docker-username="${OCIR_NAMESPACE}/${OCIR_USER}" \
+  --docker-username="$OCIR_DOCKER_USER" \
   --docker-password="$OCIR_AUTH_TOKEN" \
   --docker-email="${OCIR_USER}@oracle.local" \
   --dry-run=client -o yaml | kubectl apply -f -
