@@ -11,6 +11,8 @@ export const timelineRepository = {
   uploadPhoto: (projectId, formData) =>
     apiClient.upload(`/proyectos/${projectId}/timeline/foto`, formData),
 
-  deletePhoto: (projectId, fecha) =>
-    apiClient.delete(`/proyectos/${projectId}/timeline/foto/${encodeURIComponent(fecha)}`),
+  deletePhoto: (projectId, fecha, userId) => {
+    const q = userId != null ? `?userId=${encodeURIComponent(userId)}` : '';
+    return apiClient.delete(`/proyectos/${projectId}/timeline/foto/${encodeURIComponent(fecha)}${q}`);
+  },
 };

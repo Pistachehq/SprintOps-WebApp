@@ -80,6 +80,14 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
+  const completeOAuthLogin = useCallback(async (userData) => {
+    userData.role = normalizeRole(userData.role);
+    localStorage.setItem("auth_user", JSON.stringify(userData));
+    setUser(userData);
+    await loadPermissions(userData.role);
+    return userData;
+  }, [loadPermissions]);
+
   const logout = () => {
     localStorage.removeItem("auth_user");
     localStorage.removeItem("auth_permissions");
@@ -127,7 +135,16 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  const value = { user, login, logout, isAuthenticated, checkPermission, refreshPermissions, refreshPermissionsForProject };
+  const value = {
+    user,
+    login,
+    completeOAuthLogin,
+    logout,
+    isAuthenticated,
+    checkPermission,
+    refreshPermissions,
+    refreshPermissionsForProject,
+  };
 
   return createElement(AuthContext.Provider, { value }, children);
 };

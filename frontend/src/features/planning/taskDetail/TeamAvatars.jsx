@@ -21,7 +21,7 @@ const TeamAvatars = ({ assignedMembers = [], allMembers = [], assigneeIds = [], 
           {canAdd && (
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#446E51] text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 px-4 py-2 bg-[#67BFA1] text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
             >
               <UserPlus size={16} /> Asignar
             </button>
@@ -38,7 +38,7 @@ const TeamAvatars = ({ assignedMembers = [], allMembers = [], assigneeIds = [], 
                   className="w-10 h-10 rounded-full object-cover shadow-sm"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-[#446E51] shadow-sm flex items-center justify-center text-white font-bold text-sm uppercase">
+                <div className="w-10 h-10 rounded-full bg-[#67BFA1] shadow-sm flex items-center justify-center text-white font-bold text-sm uppercase">
                   {member.name.charAt(0)}
                 </div>
               )}
@@ -49,7 +49,7 @@ const TeamAvatars = ({ assignedMembers = [], allMembers = [], assigneeIds = [], 
           {canAdd && (
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 w-full p-3 text-[#446E51] font-bold text-sm rounded-xl border-2 border-dashed border-gray-200 hover:border-[#446E51] hover:bg-[#446E51]/5 transition-all justify-center"
+              className="flex items-center gap-2 w-full p-3 text-[#67BFA1] font-bold text-sm rounded-xl border-2 border-dashed border-gray-200 hover:border-[#67BFA1] hover:bg-[#67BFA1]/5 transition-all justify-center"
             >
               <Plus size={16} /> Asignar miembro
             </button>

@@ -12,7 +12,8 @@ const permissions = {
     canManageMembers: false,
     canViewMetrics: false,
     canViewOnlyOwnIssues: true,
-    canViewAllIssues: false
+    canViewAllIssues: false,
+    canUploadDailyPhoto: false,
   },
   [ROLES.SCRUM_MASTER]: {
     canCreateSprint: true,
@@ -21,7 +22,8 @@ const permissions = {
     canManageMembers: true,
     canViewMetrics: true,
     canViewOnlyOwnIssues: false,
-    canViewAllIssues: true
+    canViewAllIssues: true,
+    canUploadDailyPhoto: true,
   },
   [ROLES.PRODUCT_OWNER]: {
     canCreateSprint: true,
@@ -30,7 +32,8 @@ const permissions = {
     canManageMembers: true,
     canViewMetrics: true,
     canViewOnlyOwnIssues: false,
-    canViewAllIssues: true
+    canViewAllIssues: true,
+    canUploadDailyPhoto: true,
   }
 };
 

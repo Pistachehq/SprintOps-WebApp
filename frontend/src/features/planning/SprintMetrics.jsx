@@ -2,6 +2,7 @@ import React from 'react';
 import CapacityCard from './CapacityCard';
 import WorkloadCard from './WorkloadCard';
 import AssignedTasksCard from './AssignedTasksCard';
+import DeveloperKpisPanel from './DeveloperKpisPanel';
 import { useAuth } from '../auth/hooks/useAuth';
 
 const SprintMetrics = ({ role, sprintId, issues }) => {
@@ -16,6 +17,7 @@ const SprintMetrics = ({ role, sprintId, issues }) => {
           <WorkloadCard issues={issues} />
         </>
       )}
+      {sprintId && <DeveloperKpisPanel sprintId={sprintId} />}
       <AssignedTasksCard role={role} sprintId={sprintId} issues={issues} />
     </div>
   );

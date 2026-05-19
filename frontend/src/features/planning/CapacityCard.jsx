@@ -58,7 +58,7 @@ const CapacityCard = ({ sprintId, issues = [] }) => {
             <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
-                  percentage > 100 ? 'bg-red-500' : percentage >= 90 ? 'bg-yellow-500' : 'bg-[#446E51]'
+                  percentage > 100 ? 'bg-red-500' : percentage >= 90 ? 'bg-yellow-500' : 'bg-[#67BFA1]'
                 }`}
                 style={{ width: `${Math.min(percentage, 100)}%` }}
               />

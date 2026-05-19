@@ -5,8 +5,10 @@ import com.pistache.sprintops_backend.model.Equipo;
 import com.pistache.sprintops_backend.repository.ProyectoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class ProyectoService {
@@ -48,5 +50,20 @@ public class ProyectoService {
 
     public boolean existsById(Integer id) {
         return proyectoRepository.existsById(id);
+    }
+
+    /**
+     * Código numérico de 5 dígitos (10000–99999) único en {@code proyecto.codigo_proyecto}.
+     * Reintenta si choca con otro proyecto (índice único en BD).
+     */
+    public String nextUniqueCodigoProyecto() {
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+        for (int attempt = 0; attempt < 200; attempt++) {
+            String code = String.valueOf(rnd.nextInt(10_000, 100_000));
+            if (!proyectoRepository.existsByCodigoProyecto(code)) {
+                return code;
+            }
+        }
+        throw new IllegalStateException("No se pudo generar un código de proyecto único; reintenta.");
     }
 }

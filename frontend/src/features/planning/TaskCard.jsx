@@ -82,7 +82,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
                   ) : (
                     <div 
                       key={member.userId} 
-                      className="w-10 h-10 rounded-full bg-[#446E51] border-2 border-white flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm"
+                      className="w-10 h-10 rounded-full bg-[#67BFA1] border-2 border-white flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm"
                       title={member.name}
                     >
                       {member.name.charAt(0)}
@@ -90,7 +90,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
                   )
                 ))}
                 {assignedMembers.length > 2 && (
-                  <div className="w-10 h-10 rounded-full bg-[#446E51] border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-[#67BFA1] border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm">
                     +{assignedMembers.length - 2}
                   </div>
                 )}
@@ -102,7 +102,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
                     e.stopPropagation();
                     setShowAssignModal(true);
                   }}
-                  className="text-[10px] font-black uppercase text-[#446E51] hover:underline"
+                  className="text-[10px] font-black uppercase text-[#67BFA1] hover:underline"
                 >
                   + Asignar
                 </button>

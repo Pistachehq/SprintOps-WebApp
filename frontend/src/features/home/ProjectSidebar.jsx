@@ -120,18 +120,18 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
 
           {/* Quick stats: sprints, issues, team */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-xl bg-[#446E51]/8 border border-[#446E51]/15 p-3 text-center">
-              <Layers size={16} className="text-[#446E51] mx-auto mb-1.5" />
+            <div className="rounded-xl bg-[#67BFA1]/8 border border-[#67BFA1]/15 p-3 text-center">
+              <Layers size={16} className="text-[#67BFA1] mx-auto mb-1.5" />
               <p className="text-lg font-black text-gray-800">{stats.sprintCount}</p>
               <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Sprints</p>
             </div>
-            <div className="rounded-xl bg-[#446E51]/8 border border-[#446E51]/15 p-3 text-center">
-              <ListTodo size={16} className="text-[#446E51] mx-auto mb-1.5" />
+            <div className="rounded-xl bg-[#67BFA1]/8 border border-[#67BFA1]/15 p-3 text-center">
+              <ListTodo size={16} className="text-[#67BFA1] mx-auto mb-1.5" />
               <p className="text-lg font-black text-gray-800">{stats.issuesTotal}</p>
               <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Issues</p>
             </div>
-            <div className="rounded-xl bg-[#446E51]/8 border border-[#446E51]/15 p-3 text-center">
-              <Users size={16} className="text-[#446E51] mx-auto mb-1.5" />
+            <div className="rounded-xl bg-[#67BFA1]/8 border border-[#67BFA1]/15 p-3 text-center">
+              <Users size={16} className="text-[#67BFA1] mx-auto mb-1.5" />
               <p className="text-lg font-black text-gray-800">{members.length}</p>
               <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Equipo</p>
             </div>
@@ -147,7 +147,7 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
                   {creatorMember?.name?.trim() || displayProject?.creadorName?.trim() || '—'}
                 </span>
                 {creatorMember?.role && (
-                  <span className="text-[10px] font-bold text-[#446E51] uppercase shrink-0 bg-[#446E51]/10 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-[#67BFA1] uppercase shrink-0 bg-[#67BFA1]/10 px-2 py-0.5 rounded">
                     {creatorMember.role}
                   </span>
                 )}
@@ -159,11 +159,11 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
           <div>
             <div className="flex justify-between items-end mb-2">
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Progreso</h3>
-              <span className="text-2xl font-black text-[#446E51]">{stats.progress}%</span>
+              <span className="text-2xl font-black text-[#67BFA1]">{stats.progress}%</span>
             </div>
             <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-[#446E51] rounded-full transition-all duration-1000"
+                className="h-full bg-[#67BFA1] rounded-full transition-all duration-1000"
                 style={{ width: `${isOpen ? stats.progress : 0}%` }}
               />
             </div>
@@ -185,7 +185,7 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
         <div className="mt-auto pt-6 flex flex-col gap-3">
           <button 
             onClick={onViewSprints}
-            className="w-full py-4 bg-[#446E51] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            className="w-full py-4 bg-[#67BFA1] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
             Gestionar proyecto <ExternalLink size={18} />
           </button>

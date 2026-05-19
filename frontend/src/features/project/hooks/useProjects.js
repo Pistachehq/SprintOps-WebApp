@@ -1,18 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { projectsRepository } from '../../../data/repositories/projectsRepository';
+import { API_BASE } from '../../../data/api/apiClient';
+import { DEFAULT_PROJECT_CARD_IMAGE } from '../defaultProjectCardImage';
+
+function buildCardImageUrl(project) {
+  if (project.cardCoverCustom) {
+    const v = project.cardCoverVersion ?? 0;
+    return `${API_BASE}/proyectos/${project.id}/card-cover?v=${v}`;
+  }
+  return DEFAULT_PROJECT_CARD_IMAGE;
+}
 
 const enrichProject = (project) => {
   return {
     ...project,
     progress: project.progress ?? 0,
-    status: project.status ?? "Active",
+    status: project.status ?? 'Active',
     start: project.start ?? '2026-04-01',
     end: project.end ?? '2026-04-30',
     tasksTotal: project.tasksTotal ?? 0,
     tasksCompleted: project.tasksCompleted ?? 0,
     tasksLate: project.tasksLate ?? 0,
-    image: project.image ?? "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800",
-    colorOverlay: project.colorOverlay ?? "rgba(68, 110, 81, 0.7)"
+    image: buildCardImageUrl(project),
+    colorOverlay: project.colorOverlay ?? 'rgba(68, 110, 81, 0.7)',
   };
 };
 

@@ -23,7 +23,7 @@ const IssueTagPicker = ({
           id={`${idPrefix}-use`}
           checked={enabled}
           onChange={(e) => onEnabledChange(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-[#446E51] focus:ring-[#446E51]"
+          className="h-4 w-4 rounded border-gray-300 text-[#67BFA1] focus:ring-[#67BFA1]"
         />
         <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Etiqueta personalizada</span>
       </label>
@@ -38,7 +38,7 @@ const IssueTagPicker = ({
               id={`${idPrefix}-name`}
               type="text"
               maxLength={100}
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#446E51]"
+              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#67BFA1]"
               value={tagLabel}
               onChange={(e) => onLabelChange(e.target.value)}
               placeholder="ej. Frontend, Urgente cliente, Spike…"
@@ -54,7 +54,7 @@ const IssueTagPicker = ({
                   title={hex}
                   onClick={() => onColorChange(hex)}
                   className={`h-8 w-8 shrink-0 rounded-lg border-2 transition-transform hover:scale-105 ${
-                    current === hex ? 'border-slate-900 ring-2 ring-[#446E51]/30' : 'border-white shadow-sm'
+                    current === hex ? 'border-slate-900 ring-2 ring-[#67BFA1]/30' : 'border-white shadow-sm'
                   }`}
                   style={{ backgroundColor: hex }}
                 />

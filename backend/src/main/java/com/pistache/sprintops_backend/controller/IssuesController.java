@@ -2,6 +2,7 @@ package com.pistache.sprintops_backend.controller;
 
 import com.pistache.sprintops_backend.dto.CreateIssueRequest;
 import com.pistache.sprintops_backend.dto.IssueDTO;
+import com.pistache.sprintops_backend.dto.MoveToNextSprintRequest;
 import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.IssuesService;
 import com.pistache.sprintops_backend.service.ProyectoService;
@@ -16,9 +17,11 @@ import com.pistache.sprintops_backend.service.LogsIssuesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -211,6 +214,92 @@ public class IssuesController {
         return ResponseEntity.ok(toDTO(issue));
     }
 
+    /**
+     * Mueve un issue del sprint origen al sprint destino (mismo proyecto), actualiza estado a todo,
+     * incrementa métrica en el sprint origen y registra en logs_issues.
+     * Opcional en el body: {@code storyPoints} (número) para acumular deuda con los SP que ve el Kanban.
+     */
+    @PostMapping("/{issueId}/move-to-next-sprint")
+    @Transactional
+    public ResponseEntity<IssueDTO> moveToNextSprint(
+            @PathVariable Integer issueId,
+            @RequestBody MoveToNextSprintRequest req) {
+        if (req == null || req.getFromSprintId() == null || req.getToSprintId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        int fromSprintId = req.getFromSprintId();
+        int toSprintId = req.getToSprintId();
+        String username = req.getUsername() != null ? req.getUsername() : "";
+        Integer userId = req.getUserId();
+
+        if (fromSprintId == toSprintId) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        var optIssue = issuesService.findById(issueId);
+        if (optIssue.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Issues issue = optIssue.get();
+
+        var optFrom = sprintService.findById(fromSprintId);
+        var optTo = sprintService.findById(toSprintId);
+        if (optFrom.isEmpty() || optTo.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Sprint fromSprint = optFrom.get();
+        Sprint toSprint = optTo.get();
+
+        if (fromSprint.getProyecto() == null || toSprint.getProyecto() == null
+                || !Objects.equals(fromSprint.getProyecto().getIdProyecto(), toSprint.getProyecto().getIdProyecto())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<DescIssue> linkOpt = descIssueRepository.findByIdSprintIdAndIdIssueId(fromSprintId, issueId);
+        if (linkOpt.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        int movedPts = storyPointsForMoveToNextSprint(req, issue);
+        if ((issue.getStoryPointsIssue() == null || issue.getStoryPointsIssue() == 0) && movedPts > 0) {
+            issue.setStoryPointsIssue(movedPts);
+        }
+
+        descIssueRepository.delete(linkOpt.get());
+        descIssueRepository.findByIdSprintIdAndIdIssueId(toSprintId, issueId).ifPresent(descIssueRepository::delete);
+
+        DescIssue newLink = new DescIssue();
+        newLink.setId(new DescIssue.DescIssueId(toSprintId, issueId));
+        newLink.setSprint(toSprint);
+        newLink.setIssue(issue);
+        newLink.setFechaEntrada(LocalDate.now());
+        descIssueRepository.save(newLink);
+
+        issue.setEstadoIssue("todo");
+        issue.setFechaFinIssue(null);
+        issue = issuesService.save(issue);
+
+        int prev = fromSprint.getIssuesEnviadosSiguiente() != null ? fromSprint.getIssuesEnviadosSiguiente() : 0;
+        fromSprint.setIssuesEnviadosSiguiente(prev + 1);
+        int prevPts =
+                fromSprint.getStoryPointsEnviadosSiguiente() != null ? fromSprint.getStoryPointsEnviadosSiguiente() : 0;
+        fromSprint.setStoryPointsEnviadosSiguiente(prevPts + movedPts);
+        sprintService.save(fromSprint);
+
+        LogsIssues log = new LogsIssues();
+        log.setIssue(issue);
+        log.setTipoAccion("Traslado a siguiente sprint");
+        String destName = toSprint.getNombreSprint() != null ? toSprint.getNombreSprint() : ("#" + toSprintId);
+        String actor = userId != null ? String.valueOf(userId) : (username.isEmpty() ? "sistema" : username);
+        log.setActorLogIssue(actor);
+        String who = !username.isEmpty() ? username : actor;
+        log.setDescripcionLogIssue("Enviado al sprint \"" + destName + "\" por " + who);
+        log.setFechaCreacionLogIssue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+        logsIssuesService.save(log);
+
+        return ResponseEntity.ok(toDTO(issue, String.valueOf(toSprintId)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         var optIssue = issuesService.findById(id);
@@ -289,5 +378,17 @@ public class IssuesController {
         String color = normalizeTagColor(colorRaw);
         issue.setTagLabel(label);
         issue.setTagColor(color != null ? color : DEFAULT_TAG_COLOR);
+    }
+
+    /**
+     * SP para la métrica de deuda: el Kanban envía {@code storyPoints} para no depender de que la fila
+     * en BD esté poblada (evita sumar 0 cuando la tarjeta sí muestra puntos).
+     */
+    private static int storyPointsForMoveToNextSprint(MoveToNextSprintRequest req, Issues issue) {
+        if (req != null && req.getStoryPoints() != null) {
+            return Math.max(0, req.getStoryPoints());
+        }
+        Integer sp = issue.getStoryPointsIssue();
+        return sp != null ? sp : 0;
     }
 }

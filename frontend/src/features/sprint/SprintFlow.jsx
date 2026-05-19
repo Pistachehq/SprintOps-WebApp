@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import SprintCard from './SprintCard';
 
-const SprintFlow = ({ sprints, onSprintClick }) => {
+const SprintFlow = ({ sprints, onSprintClick, projectId }) => {
   const scrollRef = useRef(null);
   const [isDown, setIsDown] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -42,10 +42,7 @@ const SprintFlow = ({ sprints, onSprintClick }) => {
       <div className="flex items-center gap-12 mx-auto">
         {sprints.map((sprint, index) => (
           <React.Fragment key={sprint.id}>
-            <SprintCard 
-              sprint={sprint} 
-              onClick={onSprintClick} 
-            />
+            <SprintCard sprint={sprint} projectId={projectId} onClick={onSprintClick} />
             {index < sprints.length - 1 && (
               <div className="flex-shrink-0 text-slate-900 mx-4 pointer-events-none">
                 <ArrowRight size={56} strokeWidth={4} />

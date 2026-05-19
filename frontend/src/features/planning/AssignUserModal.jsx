@@ -29,7 +29,7 @@ const AssignUserModal = ({ isOpen, onClose, members = [], assigneeIds = [], onTo
         <div className="p-4">
           <div className="relative mb-4">
             <input
-              className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#446E51] bg-gray-50 text-sm"
+              className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar miembro..."
@@ -48,11 +48,11 @@ const AssignUserModal = ({ isOpen, onClose, members = [], assigneeIds = [], onTo
                     key={member.userId}
                     onClick={() => onToggle(member.userId)}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
-                      isAssigned ? 'bg-[#446E51]/10 border border-[#446E51]/30' : 'hover:bg-gray-50 border border-transparent'
+                      isAssigned ? 'bg-[#67BFA1]/10 border border-[#67BFA1]/30' : 'hover:bg-gray-50 border border-transparent'
                     }`}
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold uppercase shrink-0 ${
-                      isAssigned ? 'bg-[#446E51] text-white' : 'bg-gray-200 text-gray-600'
+                      isAssigned ? 'bg-[#67BFA1] text-white' : 'bg-gray-200 text-gray-600'
                     }`}>
                       {member.name.charAt(0)}
                     </div>
@@ -61,7 +61,7 @@ const AssignUserModal = ({ isOpen, onClose, members = [], assigneeIds = [], onTo
                       <p className="text-[10px] text-gray-400">{member.email} · {roleLabel(member.role)}</p>
                     </div>
                     {isAssigned && (
-                      <div className="w-6 h-6 bg-[#446E51] rounded-full flex items-center justify-center shrink-0">
+                      <div className="w-6 h-6 bg-[#67BFA1] rounded-full flex items-center justify-center shrink-0">
                         <Check size={14} className="text-white" />
                       </div>
                     )}
@@ -75,7 +75,7 @@ const AssignUserModal = ({ isOpen, onClose, members = [], assigneeIds = [], onTo
         <div className="p-4 border-t border-gray-100">
           <button
             onClick={onClose}
-            className="w-full h-11 bg-[#446E51] text-white font-bold rounded-xl hover:bg-[#355640] transition-colors"
+            className="w-full h-11 bg-[#67BFA1] text-white font-bold rounded-xl hover:bg-[#52A98A] transition-colors"
           >
             Listo
           </button>

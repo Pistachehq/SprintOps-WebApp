@@ -25,6 +25,7 @@ INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VA
 INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (6, 'canViewOnlyOwnIssues', 'Ver solo tus propios issues');
 INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (7, 'canViewAllIssues', 'Ver issues de todo el equipo');
 INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (8, 'canEditProjectDates', 'Modificar fechas del proyecto');
+INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (9, 'canUploadDailyPhoto', 'Subir o eliminar fotos del daily meeting en el cronograma');
 
 -- Role-Permission assignments (tabla_permisos)
 -- Developer: canCreateIssue, canEditIssue, canViewOnlyOwnIssues
@@ -47,3 +48,7 @@ INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 4)
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 5);
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 7);
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 8);
+
+-- Scrum Master y Product Owner: subir fotos del daily en cronograma
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 9);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (3, 9);

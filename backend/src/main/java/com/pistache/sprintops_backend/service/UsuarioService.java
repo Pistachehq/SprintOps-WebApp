@@ -29,6 +29,13 @@ public class UsuarioService {
         return usuarioRepository.findByEmailUsuario(email);
     }
 
+    public Optional<Usuario> findByVerificacionToken(String token) {
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
+        }
+        return usuarioRepository.findByVerificacionToken(token.trim());
+    }
+
     public Optional<Usuario> findByNombreUsuario(String nombreUsuario) {
         return usuarioRepository.findByNombreUsuario(nombreUsuario);
     }

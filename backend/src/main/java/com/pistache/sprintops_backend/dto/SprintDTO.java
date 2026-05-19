@@ -14,6 +14,10 @@ public class SprintDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer capacity;
+    /** Contador persistido: tareas pasadas al siguiente sprint desde este sprint. */
+    private Integer issuesSentToNextSprint;
+    /** Suma de SP de esas tareas al momento del envío. */
+    private Integer storyPointsSentToNextSprint;
 
     public static SprintDTO fromEntity(Sprint s) {
         SprintDTO dto = new SprintDTO();
@@ -27,6 +31,9 @@ public class SprintDTO {
         if (s.getProyecto() != null) {
             dto.setProjectId(s.getProyecto().getIdProyecto());
         }
+        dto.setIssuesSentToNextSprint(s.getIssuesEnviadosSiguiente() != null ? s.getIssuesEnviadosSiguiente() : 0);
+        dto.setStoryPointsSentToNextSprint(
+                s.getStoryPointsEnviadosSiguiente() != null ? s.getStoryPointsEnviadosSiguiente() : 0);
         return dto;
     }
 }

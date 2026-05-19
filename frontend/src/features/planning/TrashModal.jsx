@@ -87,7 +87,7 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleRestore(item.id)}
-                      className="px-3 py-2 bg-[#446E51] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+                      className="px-3 py-2 bg-[#67BFA1] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 hover:opacity-90 transition-opacity"
                       title="Restaurar issue"
                     >
                       <RotateCcw size={14} /> Restaurar

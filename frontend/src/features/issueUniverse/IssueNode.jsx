@@ -5,10 +5,10 @@ const IssueNode = ({ data }) => {
   const { label, size, depth, isSelected, hasChildren } = data;
 
   const colors = [
-    { bg: 'radial-gradient(circle at 35% 35%, #7acea0, #446E51 45%, #2d4a36)', glow: 'rgba(68,110,81,0.7)' },
-    { bg: 'radial-gradient(circle at 35% 35%, #8fd4af, #5a9468 45%, #3d6b49)', glow: 'rgba(90,148,104,0.6)' },
-    { bg: 'radial-gradient(circle at 35% 35%, #a8e0c4, #6eaa82 45%, #4e8563)', glow: 'rgba(110,170,130,0.5)' },
-    { bg: 'radial-gradient(circle at 35% 35%, #bde8d2, #82bb96 45%, #5f9a76)', glow: 'rgba(130,187,150,0.4)' },
+    { bg: 'radial-gradient(circle at 35% 35%, #9ee0cf, #67BFA1 45%, #3d7563)', glow: 'rgba(103,191,161,0.7)' },
+    { bg: 'radial-gradient(circle at 35% 35%, #a8e8d8, #52A98A 45%, #3d7563)', glow: 'rgba(82,169,138,0.6)' },
+    { bg: 'radial-gradient(circle at 35% 35%, #bde8d2, #67BFA1 45%, #4a8f7a)', glow: 'rgba(103,191,161,0.5)' },
+    { bg: 'radial-gradient(circle at 35% 35%, #d4f0e8, #7fd4bb 45%, #52A98A)', glow: 'rgba(127,212,187,0.4)' },
   ];
 
   const colorSet = colors[Math.min(depth, colors.length - 1)];

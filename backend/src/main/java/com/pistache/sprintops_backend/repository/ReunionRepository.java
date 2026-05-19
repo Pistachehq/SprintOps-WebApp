@@ -14,5 +14,8 @@ public interface ReunionRepository extends JpaRepository<Reunion, Integer> {
     List<Reunion> findByTipoReunion(String tipoReunion);
     List<Reunion> findByFechaDeReunion(LocalDate fecha);
     List<Reunion> findBySprintIdSprintOrderByFechaDeReunionDesc(Integer sprintId);
+
+    List<Reunion> findBySprintIdSprintAndTipoReunionOrderByFechaDeReunionDesc(Integer sprintId, String tipoReunion);
+
     Optional<Reunion> findBySprintIdSprintAndFechaDeReunionAndTipoReunion(Integer sprintId, LocalDate fecha, String tipo);
 }

@@ -17,7 +17,7 @@ const SprintFlow = ({ sprintId, progress = 0 }) => {
       />
       
       <div className="flex items-center justify-center shrink-0">
-        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#446E51] shadow-lg border border-gray-100 group">
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#67BFA1] shadow-lg border border-gray-100 group">
           <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
@@ -32,7 +32,7 @@ const SprintFlow = ({ sprintId, progress = 0 }) => {
       />
 
       <div className="flex items-center justify-center shrink-0">
-        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#446E51] shadow-lg border border-gray-100 group">
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#67BFA1] shadow-lg border border-gray-100 group">
           <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
         </div>
       </div>

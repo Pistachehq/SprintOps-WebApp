@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import LoginPage from '../features/login/LoginPage';
+import VerifyEmailPage from '../features/login/VerifyEmailPage';
 import HomePage from '../features/home/HomePage';
 import ProjectPage from '../features/project/ProjectPage';
 import SprintsPage from '../features/sprint/SprintsPage';
@@ -25,6 +26,7 @@ const AppRouter = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       <Route
         path="/*"

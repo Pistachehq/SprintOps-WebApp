@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal } from 'lucide-react';
+import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal, MessageCircle } from 'lucide-react';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { rolesRepository } from '../../data/repositories/rolesRepository';
 import CreateRoleModal from './CreateRoleModal';
+import TelegramLinkCard from './TelegramLinkCard';
 
 // Función para convertir status a display format
 const getStatusDisplay = (status) => {
@@ -46,6 +47,7 @@ const ProjectConfigView = ({
   sprints = [],
   sprintActions,
   onProjectUpdated,
+  focusSprintsSection = false,
 }) => {
   const { addSprint, updateSprint, refetchSprints } = sprintActions || {};
   const { user, checkPermission, refreshPermissions, refreshPermissionsForProject } = useAuth();
@@ -145,6 +147,15 @@ const ProjectConfigView = ({
   const canCreateSprint = checkPermission('canCreateSprint');
   const canManageMembers = checkPermission('canManageMembers');
   const canEditProjectDates = checkPermission('canEditProjectDates');
+
+  useEffect(() => {
+    if (!focusSprintsSection) return;
+    const t = window.setTimeout(() => {
+      document.getElementById('config-sprints-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (canCreateSprint) setShowSprintCreate(true);
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [focusSprintsSection, canCreateSprint]);
 
   const filteredSprints = useMemo(() => {
     const q = sprintSearch.toLowerCase().trim();
@@ -255,7 +266,7 @@ const ProjectConfigView = ({
   return (
     <div className="fixed top-[70px] left-0 right-0 bottom-0 bg-[#F0EFED] z-30 flex flex-col overflow-hidden">
       <div className="h-[80px] px-10 flex items-center justify-between shrink-0 bg-[#F0EFED] border-b border-slate-200">
-        <button onClick={onClose} className="text-[#446E51] font-bold hover:underline flex items-center gap-2" title="Volver a Sprints">
+        <button onClick={onClose} className="text-[#67BFA1] font-bold hover:underline flex items-center gap-2" title="Volver a Sprints">
           <ChevronLeft size={20} /> Volver a Sprints
         </button>
         <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
@@ -266,7 +277,7 @@ const ProjectConfigView = ({
       <div className="flex-1 p-10 overflow-y-auto">
         <div className="max-w-6xl mx-auto w-full">
           {/* Project Code Section */}
-          <div className="bg-gradient-to-r from-[#446E51] to-[#2d4f39] rounded-2xl p-8 shadow-sm border border-[#446E51] mb-10">
+          <div className="bg-gradient-to-r from-[#67BFA1] to-[#3d7563] rounded-2xl p-8 shadow-sm border border-[#67BFA1] mb-10">
             <p className="text-xs font-bold text-white/80 uppercase tracking-widest mb-3">Código del Proyecto</p>
             <div className="flex items-center justify-between">
               <div>
@@ -277,7 +288,7 @@ const ProjectConfigView = ({
               </div>
               <button
                 onClick={handleCopyCode}
-                className="px-6 py-4 bg-white text-[#446E51] rounded-xl font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors"
+                className="px-6 py-4 bg-white text-[#67BFA1] rounded-xl font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors"
                 title="Copiar código"
               >
                 {copied ? <>
@@ -289,10 +300,17 @@ const ProjectConfigView = ({
             </div>
           </div>
 
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-10">
+            <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+              <MessageCircle className="text-[#67BFA1]" /> Telegram (un bot para todos)
+            </h3>
+            <TelegramLinkCard userId={user?.id} suggestedProjectId={projectId} />
+          </div>
+
           {/* Project Info Section */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-10">
             <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
-              <Calendar className="text-[#446E51]" /> Acerca del Proyecto
+              <Calendar className="text-[#67BFA1]" /> Acerca del Proyecto
             </h3>
             
             {/* Project Name */}
@@ -306,7 +324,7 @@ const ProjectConfigView = ({
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Fecha de Inicio</p>
                 <div className="flex items-center gap-2">
-                  <Calendar size={18} className="text-[#446E51]" />
+                  <Calendar size={18} className="text-[#67BFA1]" />
                   <p className="text-lg font-black text-slate-800">
                     {formatDateDisplay(project?.start)}
                   </p>
@@ -322,11 +340,11 @@ const ProjectConfigView = ({
                       type="date" 
                       value={newProjectEndDate}
                       onChange={e => setNewProjectEndDate(e.target.value)}
-                      className="flex-1 h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
+                      className="flex-1 h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm"
                     />
                     <button 
                       onClick={handleSaveProjectEndDate}
-                      className="px-3 py-2 bg-[#446E51] text-white rounded-lg font-bold flex items-center justify-center hover:opacity-90 transition-opacity"
+                      className="px-3 py-2 bg-[#67BFA1] text-white rounded-lg font-bold flex items-center justify-center hover:opacity-90 transition-opacity"
                       title="Guardar"
                     >
                       <Check size={16} />
@@ -342,7 +360,7 @@ const ProjectConfigView = ({
                 ) : (
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <Calendar size={18} className="text-[#446E51]" />
+                      <Calendar size={18} className="text-[#67BFA1]" />
                       <p className="text-lg font-black text-slate-800">
                         {formatDateDisplay(project?.end)}
                       </p>
@@ -363,9 +381,12 @@ const ProjectConfigView = ({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Sprints Section - always visible, actions gated */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col h-[560px] max-h-[600px] overflow-hidden">
+            <div
+              id="config-sprints-section"
+              className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col h-[560px] max-h-[600px] overflow-hidden"
+            >
               <h3 className="text-xl font-bold flex items-center gap-2 mb-4 shrink-0">
-                <LayoutList className="text-[#446E51]" /> Gestionar Sprints
+                <LayoutList className="text-[#67BFA1]" /> Gestionar Sprints
               </h3>
 
               {!showSprintCreate ? (
@@ -377,14 +398,14 @@ const ProjectConfigView = ({
                       value={sprintSearch}
                       onChange={e => setSprintSearch(e.target.value)}
                       placeholder="Buscar sprint..."
-                      className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] focus:border-transparent outline-none text-sm"
+                      className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] focus:border-transparent outline-none text-sm"
                     />
                   </div>
                   {canCreateSprint && (
                     <button
                       type="button"
                       onClick={() => { setShowSprintCreate(true); setEditingSprintId(null); }}
-                      className="shrink-0 h-10 w-10 rounded-xl bg-[#446E51] text-white flex items-center justify-center hover:opacity-90 transition-opacity"
+                      className="shrink-0 h-10 w-10 rounded-xl bg-[#67BFA1] text-white flex items-center justify-center hover:opacity-90 transition-opacity"
                       title="Nuevo sprint"
                     >
                       <Plus size={20} />
@@ -397,7 +418,7 @@ const ProjectConfigView = ({
                   <button
                     type="button"
                     onClick={() => setShowSprintCreate(false)}
-                    className="text-xs font-bold text-slate-500 hover:text-[#446E51] px-2 py-1 rounded-lg hover:bg-slate-50"
+                    className="text-xs font-bold text-slate-500 hover:text-[#67BFA1] px-2 py-1 rounded-lg hover:bg-slate-50"
                   >
                     Volver a la lista
                   </button>
@@ -414,19 +435,19 @@ const ProjectConfigView = ({
                               <input
                                 value={editSprintName}
                                 onChange={e => setEditSprintName(e.target.value)}
-                                className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm font-bold"
+                                className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm font-bold"
                               />
                               <select
                                 value={editSprintStatus}
                                 onChange={e => setEditSprintStatus(e.target.value)}
-                                className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
+                                className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm"
                               >
                                 <option value="planned">Planned</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="completed">Finished</option>
                               </select>
                               <div className="flex gap-2">
-                                <button onClick={saveEditSprint} className="flex-1 h-9 bg-[#446E51] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
+                                <button onClick={saveEditSprint} className="flex-1 h-9 bg-[#67BFA1] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
                                   <Check size={14} /> Guardar
                                 </button>
                                 <button onClick={() => setEditingSprintId(null)} className="flex-1 h-9 bg-gray-100 text-slate-600 rounded-lg text-sm font-bold flex items-center justify-center gap-1">
@@ -441,12 +462,12 @@ const ProjectConfigView = ({
                                 <p className="text-xs text-slate-500"><span className="font-semibold">Inicio:</span> {s.startDate} — <span className="font-semibold">Fin:</span> {s.endDate}</p>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="px-2 py-1 text-[10px] font-black uppercase text-white bg-[#446E51] rounded">
+                                <span className="px-2 py-1 text-[10px] font-black uppercase text-white bg-[#67BFA1] rounded">
                                   {getStatusDisplay(s.status)}
                                 </span>
                                 {canCreateSprint && (
                                   <>
-                                    <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
+                                    <button onClick={() => startEditSprint(s)} className="p-1.5 text-slate-400 hover:text-[#67BFA1] hover:bg-[#67BFA1]/10 rounded-lg transition-colors">
                                       <Pencil size={14} />
                                     </button>
                                     <button onClick={() => handleDeleteSprint(s.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
@@ -471,27 +492,27 @@ const ProjectConfigView = ({
                     <form onSubmit={handleAddSprint} className="space-y-4 pb-2">
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 mb-1">Nombre del Sprint</label>
-                        <input required value={sprintName} onChange={e => setSprintName(e.target.value)} placeholder="ej. Sprint 3" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                        <input required value={sprintName} onChange={e => setSprintName(e.target.value)} placeholder="ej. Sprint 3" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1]" />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 mb-1">Meta del Sprint</label>
-                        <input value={sprintGoal} onChange={e => setSprintGoal(e.target.value)} placeholder="ej. Completar módulo de autenticación" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                        <input value={sprintGoal} onChange={e => setSprintGoal(e.target.value)} placeholder="ej. Completar módulo de autenticación" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1]" />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 mb-1">Capacidad de Story Points</label>
-                        <input type="number" min="0" value={sprintCapacity} onChange={e => setSprintCapacity(e.target.value)} placeholder="ej. 40" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51]" />
+                        <input type="number" min="0" value={sprintCapacity} onChange={e => setSprintCapacity(e.target.value)} placeholder="ej. 40" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1]" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha de inicio</label>
-                          <input required type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm text-slate-600" />
+                          <input required type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha final</label>
-                          <input required type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm text-slate-600" />
+                          <input required type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600" />
                         </div>
                       </div>
-                      <button type="submit" className="w-full h-12 bg-[#446E51] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90">
+                      <button type="submit" className="w-full h-12 bg-[#67BFA1] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90">
                         <Plus size={18} /> Crear Sprint
                       </button>
                     </form>
@@ -503,7 +524,7 @@ const ProjectConfigView = ({
             {/* Members Section - always visible, actions gated */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
           <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
-            <Users className="text-[#446E51]" /> Roles de Equipo
+            <Users className="text-[#67BFA1]" /> Roles de Equipo
           </h3>
           <p className="text-sm text-slate-500 mb-4">Gestiona a los miembros asignados en general a este proyecto.</p>
 
@@ -515,16 +536,16 @@ const ProjectConfigView = ({
                 value={memberSearch}
                 onChange={e => setMemberSearch(e.target.value)}
                 placeholder="Buscar miembro..."
-                className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#446E51] focus:border-transparent outline-none text-sm"
+                className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] focus:border-transparent outline-none text-sm"
               />
             </div>
             <div className="relative">
               <button
                 onClick={() => setShowRoleFilter(!showRoleFilter)}
-                className={`h-10 px-3 rounded-xl border flex items-center gap-2 text-sm font-medium transition-colors ${memberRoleFilters.size > 0 ? 'border-[#446E51] bg-[#446E51]/10 text-[#446E51]' : 'border-gray-200 text-slate-500 hover:border-slate-300'}`}
+                className={`h-10 px-3 rounded-xl border flex items-center gap-2 text-sm font-medium transition-colors ${memberRoleFilters.size > 0 ? 'border-[#67BFA1] bg-[#67BFA1]/10 text-[#67BFA1]' : 'border-gray-200 text-slate-500 hover:border-slate-300'}`}
               >
                 <SlidersHorizontal size={15} />
-                Rol{memberRoleFilters.size > 0 && <span className="text-[10px] bg-[#446E51] text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">{memberRoleFilters.size}</span>}
+                Rol{memberRoleFilters.size > 0 && <span className="text-[10px] bg-[#67BFA1] text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">{memberRoleFilters.size}</span>}
               </button>
               {showRoleFilter && (
                 <div className="absolute right-0 top-12 bg-white border border-slate-100 rounded-xl shadow-lg z-20 min-w-[180px] py-2 animate-in fade-in zoom-in duration-150">
@@ -540,10 +561,10 @@ const ProjectConfigView = ({
                         })}
                         className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-50 transition-colors text-left"
                       >
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${active ? 'bg-[#446E51] border-[#446E51]' : 'border-slate-300'}`}>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${active ? 'bg-[#67BFA1] border-[#67BFA1]' : 'border-slate-300'}`}>
                           {active && <Check size={10} className="text-white" />}
                         </div>
-                        <span className={active ? 'text-[#446E51] font-semibold' : 'text-slate-600'}>{r.nombreRol}</span>
+                        <span className={active ? 'text-[#67BFA1] font-semibold' : 'text-slate-600'}>{r.nombreRol}</span>
                       </button>
                     );
                   })}
@@ -576,14 +597,14 @@ const ProjectConfigView = ({
                     <select
                       value={editMemberRole}
                       onChange={e => setEditMemberRole(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#446E51] text-sm"
+                      className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm"
                     >
                       {roles.map(r => (
                         <option key={r.idRol} value={r.nombreRol}>{r.nombreRol}</option>
                       ))}
                     </select>
                     <div className="flex gap-2">
-                      <button onClick={saveEditMember} className="flex-1 h-9 bg-[#446E51] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
+                      <button onClick={saveEditMember} className="flex-1 h-9 bg-[#67BFA1] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-1">
                         <Check size={14} /> Guardar
                       </button>
                       <button onClick={() => setEditingMemberIdx(null)} className="flex-1 h-9 bg-gray-100 text-slate-600 rounded-lg text-sm font-bold flex items-center justify-center gap-1">
@@ -598,12 +619,12 @@ const ProjectConfigView = ({
                       <p className="text-xs text-slate-500">{m.email}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 text-[10px] font-black uppercase text-[#446E51] bg-[#446E51]/10 rounded">
+                      <span className="px-2 py-1 text-[10px] font-black uppercase text-[#67BFA1] bg-[#67BFA1]/10 rounded">
                         {m.role}
                       </span>
                       {canManageMembers && (
                         <>
-                          <button onClick={() => startEditMember(idx)} className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors">
+                          <button onClick={() => startEditMember(idx)} className="p-1.5 text-slate-400 hover:text-[#67BFA1] hover:bg-[#67BFA1]/10 rounded-lg transition-colors">
                             <Pencil size={14} />
                           </button>
                           <button onClick={() => handleDeleteMember(idx)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
@@ -631,14 +652,14 @@ const ProjectConfigView = ({
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Shield className="text-[#446E51]" /> Gestionar Roles
+                  <Shield className="text-[#67BFA1]" /> Gestionar Roles
                 </h3>
                 <p className="text-sm text-slate-500 mt-1">Crea roles personalizados con permisos específicos para tu equipo.</p>
               </div>
               {canManageMembers && (
                 <button
                   onClick={() => { setEditingRole(null); setShowCreateRoleModal(true); }}
-                  className="px-4 py-2.5 bg-[#446E51] text-white font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity text-sm"
+                  className="px-4 py-2.5 bg-[#67BFA1] text-white font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity text-sm"
                 >
                   <Plus size={16} /> Nuevo Rol
                 </button>
@@ -650,8 +671,8 @@ const ProjectConfigView = ({
                 <div key={role.idRol} className="border border-slate-100 rounded-xl overflow-hidden">
                   <div className="p-4 bg-slate-50 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#446E51]/10 flex items-center justify-center">
-                        <Shield size={16} className="text-[#446E51]" />
+                      <div className="w-8 h-8 rounded-lg bg-[#67BFA1]/10 flex items-center justify-center">
+                        <Shield size={16} className="text-[#67BFA1]" />
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-800">{role.nombreRol}</h4>
@@ -661,7 +682,7 @@ const ProjectConfigView = ({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => toggleRoleExpand(role.idRol)}
-                        className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-[#67BFA1] hover:bg-[#67BFA1]/10 rounded-lg transition-colors"
                         title="Ver permisos"
                       >
                         <Eye size={14} />
@@ -670,7 +691,7 @@ const ProjectConfigView = ({
                         <>
                           <button
                             onClick={() => { setEditingRole(role); setShowCreateRoleModal(true); }}
-                            className="p-1.5 text-slate-400 hover:text-[#446E51] hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-[#67BFA1] hover:bg-[#67BFA1]/10 rounded-lg transition-colors"
                             title="Editar rol"
                           >
                             <Pencil size={14} />
@@ -698,7 +719,7 @@ const ProjectConfigView = ({
                           {rolePermisos[role.idRol].map(p => (
                             <span
                               key={p.idPermiso}
-                              className="px-3 py-1.5 text-xs font-semibold bg-[#446E51]/10 text-[#446E51] rounded-lg"
+                              className="px-3 py-1.5 text-xs font-semibold bg-[#67BFA1]/10 text-[#67BFA1] rounded-lg"
                             >
                               {p.descripcion || p.nombrePermiso}
                             </span>

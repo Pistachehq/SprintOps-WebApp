@@ -41,6 +41,16 @@ public class Proyecto {
     @Column(name = "estado_del_proyecto", length = 50)
     private String estadoDelProyecto;
 
+    /** Portada de la card en home: imagen subida por el equipo (visible para todos los miembros). */
+    @Column(name = "card_cover_custom")
+    private Boolean cardCoverCustom = false;
+
+    @Column(name = "card_cover_version")
+    private Long cardCoverVersion = 0L;
+
+    @Column(name = "card_cover_content_type", length = 100)
+    private String cardCoverContentType;
+
     @ManyToOne
     @JoinColumn(name = "Equipo_id_equipo")
     private Equipo equipo;

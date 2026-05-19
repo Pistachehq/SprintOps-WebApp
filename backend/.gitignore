@@ -1,5 +1,7 @@
 HELP.md
+application-local.properties
 target/
+uploads/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

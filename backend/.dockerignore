@@ -1,0 +1,13 @@
+target
+.idea
+.vscode
+*.iml
+.gitignore
+.git
+.DS_Store
+src/test
+HELP.md
+mvnw.cmd
+README*
+docs
+uploads
