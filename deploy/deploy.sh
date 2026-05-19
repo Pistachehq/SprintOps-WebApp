@@ -136,26 +136,14 @@ step "Preparando registro de contenedores (OCIR)"
 OCIR_NAMESPACE="${OCIR_NAMESPACE:-$(oci os ns get --query 'data' --raw-output)}"
 OCIR_REGISTRY="${REGION_KEY,,}.ocir.io"
 
-# El username para hacer docker login a OCIR depende de si el usuario vive en un
-# Identity Domain (default en cuentas Free Trial nuevas) o en IAM legacy.
+# El username para hacer docker login a OCIR varía según cómo esté configurada
+# la identidad de la cuenta. En vez de adivinar, probamos varios formatos.
 RAW_USER_NAME="$(oci iam user get --user-id "$USER_OCID" --query 'data.name' --raw-output 2>/dev/null || true)"
 IDENTITY_PROVIDER_ID="$(oci iam user get --user-id "$USER_OCID" --query 'data."identity-provider-id"' --raw-output 2>/dev/null || true)"
 
-if [[ -z "${OCIR_DOCKER_USER:-}" ]]; then
-  if [[ -n "$IDENTITY_PROVIDER_ID" && "$IDENTITY_PROVIDER_ID" != "null" ]]; then
-    # Federado (Identity Domain). Formato: <namespace>/oracleidentitycloudservice/<username>
-    OCIR_DOCKER_USER="${OCIR_NAMESPACE}/oracleidentitycloudservice/${RAW_USER_NAME}"
-  elif [[ "$RAW_USER_NAME" == *"@"* ]]; then
-    # Heurística: si el username tiene @, asume Identity Domain (Default)
-    OCIR_DOCKER_USER="${OCIR_NAMESPACE}/oracleidentitycloudservice/${RAW_USER_NAME}"
-  else
-    OCIR_DOCKER_USER="${OCIR_NAMESPACE}/${RAW_USER_NAME}"
-  fi
-fi
-
 OCIR_USER="$RAW_USER_NAME"
 green "OCIR registry: $OCIR_REGISTRY/$OCIR_NAMESPACE/${APP_PREFIX}-*"
-green "OCIR docker user: $OCIR_DOCKER_USER"
+green "OCIR username (raw): $RAW_USER_NAME"
 
 if [[ -z "${OCIR_AUTH_TOKEN:-}" && -f "$HOME/.ocir-token" ]]; then
   OCIR_AUTH_TOKEN="$(cat "$HOME/.ocir-token")"
@@ -176,14 +164,33 @@ if [[ -z "${OCIR_AUTH_TOKEN:-}" ]]; then
   chmod 600 "$HOME/.ocir-token"
 fi
 
-step "docker login a OCIR"
-if ! echo "$OCIR_AUTH_TOKEN" | docker login "$OCIR_REGISTRY" \
-      --username "$OCIR_DOCKER_USER" --password-stdin; then
-  red "Falló el docker login con username '$OCIR_DOCKER_USER'."
-  red "Si tu cuenta usa Identity Domain pero el dominio NO es 'Default', necesitas"
-  red "cambiar 'oracleidentitycloudservice' por el nombre real del dominio."
-  red "Puedes probar a mano:"
-  red "  docker login $OCIR_REGISTRY -u '${OCIR_NAMESPACE}/<DOMAIN>/${RAW_USER_NAME}'"
+step "docker login a OCIR (probando formatos comunes)"
+# Lista de candidatos en orden de probabilidad. Permite forzar el correcto con OCIR_DOCKER_USER.
+CANDIDATE_USERS=()
+if [[ -n "${OCIR_DOCKER_USER:-}" ]]; then
+  CANDIDATE_USERS+=("$OCIR_DOCKER_USER")
+fi
+CANDIDATE_USERS+=("${OCIR_NAMESPACE}/${RAW_USER_NAME}")
+CANDIDATE_USERS+=("${OCIR_NAMESPACE}/Default/${RAW_USER_NAME}")
+CANDIDATE_USERS+=("${OCIR_NAMESPACE}/oracleidentitycloudservice/${RAW_USER_NAME}")
+
+LOGIN_OK=false
+for candidate in "${CANDIDATE_USERS[@]}"; do
+  echo "  · Intentando $candidate"
+  if echo "$OCIR_AUTH_TOKEN" | docker login "$OCIR_REGISTRY" \
+        --username "$candidate" --password-stdin 2>/dev/null | grep -q "Login Succeeded"; then
+    OCIR_DOCKER_USER="$candidate"
+    LOGIN_OK=true
+    green "  ✓ OK con: $OCIR_DOCKER_USER"
+    break
+  fi
+done
+
+if ! $LOGIN_OK; then
+  red "Ninguno de los formatos de username funcionó."
+  red "Verifica el token (regenéralo si dudas) y vuelve a correr."
+  red "También puedes forzar el username manualmente:"
+  red "  OCIR_DOCKER_USER='${OCIR_NAMESPACE}/<DOMAIN>/${RAW_USER_NAME}' bash deploy/deploy.sh"
   exit 1
 fi
 
