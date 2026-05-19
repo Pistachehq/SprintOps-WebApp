@@ -1,7 +1,21 @@
-const API_BASE = 'http://localhost:8080/api';
+/**
+ * Base del API:
+ *  - En desarrollo apunta a http://localhost:8080/api por defecto.
+ *  - En producción se usa /api (mismo origen que el frontend, nginx hace proxy al backend).
+ *  - Se puede forzar con VITE_API_BASE en build-time si quieres apuntar a otro origen.
+ */
+const RAW_API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV
+    ? 'http://localhost:8080/api'
+    : '/api');
+
+const API_BASE = String(RAW_API_BASE).replace(/\/+$/, '');
 
 /** Origen del backend (sin /api), para OAuth y redirecciones */
-const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+const API_ORIGIN = API_BASE.endsWith('/api')
+  ? API_BASE.slice(0, -4)
+  : (typeof window !== 'undefined' ? window.location.origin : '');
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;

@@ -1,0 +1,153 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: sprintops
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  GROQ_MODEL: "llama-3.3-70b-versatile"
+  PROJECT_CARD_COVER_DIR: "/data/project-card-covers"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-uploads
+  namespace: sprintops
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: oci-bv
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: sprintops
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: __BACKEND_IMAGE__
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          env:
+            - name: DB_URL
+              value: "jdbc:mysql://mysql.sprintops.svc.cluster.local:3306/sprintops_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: password
+            - name: FRONTEND_BASE_URL
+              value: "__FRONTEND_BASE_URL__"
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: groqApiKey
+                  optional: true
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: googleClientId
+                  optional: true
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: googleClientSecret
+                  optional: true
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: githubClientId
+                  optional: true
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: githubClientSecret
+                  optional: true
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: telegramBotToken
+                  optional: true
+            - name: TELEGRAM_BOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: telegramBotUsername
+                  optional: true
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /api/proyectos
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /api/proyectos
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: uploads
+              mountPath: /data/project-card-covers
+              subPath: project-card-covers
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: backend-uploads
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: sprintops
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
