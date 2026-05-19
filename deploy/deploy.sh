@@ -212,12 +212,44 @@ if ! $SKIP_BUILD; then
   # Detectar si "docker" es Docker real (con buildx) o Podman (Cloud Shell)
   CONTAINER_TOOL="docker"
   USE_BUILDX=false
+  IS_PODMAN=false
   if docker --version 2>/dev/null | grep -qi podman; then
+    IS_PODMAN=true
     USE_BUILDX=false
     green "Detectado podman (Cloud Shell). Se usará 'docker build --platform' directo."
   elif docker buildx version >/dev/null 2>&1; then
     USE_BUILDX=true
     green "Detectado docker con buildx. Se usará 'docker buildx build --push'."
+  fi
+
+  # Si construimos para arquitectura distinta a la del host, necesitamos QEMU
+  HOST_ARCH="$(uname -m)"
+  TARGET_ARCH="${PLATFORMS##*/}"
+  case "$TARGET_ARCH" in
+    arm64|aarch64) NEED_QEMU_FOR="aarch64" ;;
+    amd64|x86_64)  NEED_QEMU_FOR="x86_64"  ;;
+    *)             NEED_QEMU_FOR="$TARGET_ARCH" ;;
+  esac
+  if [[ "$HOST_ARCH" != "$NEED_QEMU_FOR" ]]; then
+    step "Verificando QEMU para emular $PLATFORMS (host es $HOST_ARCH)"
+    if ! docker run --rm --platform "$PLATFORMS" docker.io/library/alpine:3.20 uname -m 2>/dev/null | grep -qi "$NEED_QEMU_FOR"; then
+      yellow "QEMU no responde. Intentando instalar qemu-user-static..."
+      if command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y qemu-user-static || true
+      elif command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get update -y && sudo apt-get install -y qemu-user-static || true
+      fi
+      if ! docker run --rm --platform "$PLATFORMS" docker.io/library/alpine:3.20 uname -m 2>/dev/null | grep -qi "$NEED_QEMU_FOR"; then
+        red "No pude configurar QEMU para $PLATFORMS."
+        red "Opciones:"
+        red "  1) sudo dnf install -y qemu-user-static && vuelve a correr deploy.sh"
+        red "  2) Si tus nodos no son ARM, corre: PLATFORMS=linux/amd64 bash deploy/deploy.sh"
+        exit 1
+      fi
+      green "QEMU listo para $PLATFORMS."
+    else
+      green "QEMU ya responde."
+    fi
   fi
 
   if $USE_BUILDX; then

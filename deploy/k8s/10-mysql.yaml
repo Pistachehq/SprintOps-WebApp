@@ -33,7 +33,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: mysql
-          image: mysql:8.0
+          image: docker.io/library/mysql:8.0
           args:
             - "--default-authentication-plugin=mysql_native_password"
             - "--character-set-server=utf8mb4"

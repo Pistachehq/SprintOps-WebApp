@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ---------- build ----------
-FROM node:20-alpine AS build
+FROM docker.io/library/node:20-alpine AS build
 WORKDIR /app
 ENV CI=true
 
@@ -18,7 +18,7 @@ ENV VITE_API_BASE=${VITE_API_BASE}
 RUN npm run build
 
 # ---------- runtime ----------
-FROM nginx:1.27-alpine
+FROM docker.io/library/nginx:1.27-alpine
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/sprintops.conf
 COPY --from=build /app/dist /usr/share/nginx/html

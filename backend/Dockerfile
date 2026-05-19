@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ---------- build ----------
-FROM eclipse-temurin:17-jdk AS build
+FROM docker.io/library/eclipse-temurin:17-jdk AS build
 WORKDIR /workspace
 
 # Cache de dependencias
@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.m2 \
  && cp target/*.jar /workspace/app.jar
 
 # ---------- runtime ----------
-FROM eclipse-temurin:17-jre
+FROM docker.io/library/eclipse-temurin:17-jre
 WORKDIR /app
 RUN useradd -m -u 1001 spring && mkdir -p /data/project-card-covers && chown -R spring:spring /data
 USER spring
