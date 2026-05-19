@@ -4,6 +4,8 @@ import com.pistache.sprintops_backend.dto.CreateSprintRequest;
 import com.pistache.sprintops_backend.dto.SprintDTO;
 import com.pistache.sprintops_backend.model.Sprint;
 import com.pistache.sprintops_backend.model.Proyecto;
+import com.pistache.sprintops_backend.dto.DeveloperSprintKpisDTO;
+import com.pistache.sprintops_backend.service.DeveloperSprintKpisService;
 import com.pistache.sprintops_backend.service.SprintService;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.repository.SprintRepository;
@@ -27,6 +29,8 @@ public class SprintController {
     private ProyectoService proyectoService;
     @Autowired
     private SprintRepository sprintRepository;
+    @Autowired
+    private DeveloperSprintKpisService developerSprintKpisService;
 
     @GetMapping
     public List<SprintDTO> getAll() {
@@ -40,6 +44,18 @@ public class SprintController {
         return sprintService.findById(id)
                 .map(s -> ResponseEntity.ok(SprintDTO.fromEntity(s)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * KPIs de un desarrollador en el sprint (tareas asignadas en ese sprint).
+     * {@code viewerUserId}: usuario autenticado en la app (query); debe ser miembro del equipo.
+     */
+    @GetMapping("/{sprintId}/kpis/desarrollador/{developerId}")
+    public ResponseEntity<DeveloperSprintKpisDTO> getDeveloperKpis(
+            @PathVariable Integer sprintId,
+            @PathVariable Integer developerId,
+            @RequestParam("viewerUserId") Integer viewerUserId) {
+        return ResponseEntity.ok(developerSprintKpisService.compute(sprintId, developerId, viewerUserId));
     }
 
     @GetMapping("/proyecto/{projectId}")
