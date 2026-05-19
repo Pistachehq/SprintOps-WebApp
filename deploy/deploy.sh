@@ -209,24 +209,39 @@ FRONTEND_IMAGE="$OCIR_REGISTRY/$OCIR_NAMESPACE/${APP_PREFIX}-frontend:$IMAGE_TAG
 # 3) Construir y subir imágenes (multi-arch usando buildx)
 # -----------------------------------------------------------------------------
 if ! $SKIP_BUILD; then
-  step "Preparando buildx (cross-compile para $PLATFORMS)"
-  docker buildx inspect sprintops-builder >/dev/null 2>&1 || \
-    docker buildx create --name sprintops-builder --use --bootstrap >/dev/null
-  docker buildx use sprintops-builder >/dev/null
+  # Detectar si "docker" es Docker real (con buildx) o Podman (Cloud Shell)
+  CONTAINER_TOOL="docker"
+  USE_BUILDX=false
+  if docker --version 2>/dev/null | grep -qi podman; then
+    USE_BUILDX=false
+    green "Detectado podman (Cloud Shell). Se usará 'docker build --platform' directo."
+  elif docker buildx version >/dev/null 2>&1; then
+    USE_BUILDX=true
+    green "Detectado docker con buildx. Se usará 'docker buildx build --push'."
+  fi
 
-  step "Build & push backend → $BACKEND_IMAGE"
-  docker buildx build \
-    --platform "$PLATFORMS" \
-    --tag "$BACKEND_IMAGE" \
-    --push \
-    "$REPO_DIR/backend"
+  if $USE_BUILDX; then
+    step "Preparando buildx (cross-compile para $PLATFORMS)"
+    docker buildx inspect sprintops-builder >/dev/null 2>&1 || \
+      docker buildx create --name sprintops-builder --use --bootstrap >/dev/null
+    docker buildx use sprintops-builder >/dev/null
 
-  step "Build & push frontend → $FRONTEND_IMAGE"
-  docker buildx build \
-    --platform "$PLATFORMS" \
-    --tag "$FRONTEND_IMAGE" \
-    --push \
-    "$REPO_DIR/frontend"
+    step "Build & push backend → $BACKEND_IMAGE"
+    docker buildx build --platform "$PLATFORMS" --tag "$BACKEND_IMAGE" --push "$REPO_DIR/backend"
+
+    step "Build & push frontend → $FRONTEND_IMAGE"
+    docker buildx build --platform "$PLATFORMS" --tag "$FRONTEND_IMAGE" --push "$REPO_DIR/frontend"
+  else
+    step "Build backend (platform=$PLATFORMS) → $BACKEND_IMAGE"
+    docker build --platform "$PLATFORMS" -t "$BACKEND_IMAGE" "$REPO_DIR/backend"
+    step "Push backend"
+    docker push "$BACKEND_IMAGE"
+
+    step "Build frontend (platform=$PLATFORMS) → $FRONTEND_IMAGE"
+    docker build --platform "$PLATFORMS" -t "$FRONTEND_IMAGE" "$REPO_DIR/frontend"
+    step "Push frontend"
+    docker push "$FRONTEND_IMAGE"
+  fi
 else
   yellow "--skip-build activo: usando tag '$IMAGE_TAG' tal cual."
 fi
