@@ -15,7 +15,10 @@ RUN npm ci --include=dev --no-audit --no-fund \
     require.resolve(p); \
   } \
   console.log('deps ok'); \
-  "
+  " \
+ && npm cache clean --force \
+ && rm -rf node_modules/recharts/umd node_modules/recharts/lib \
+ && find node_modules -type f \( -name '*.md' -o -name '*.map' \) -delete 2>/dev/null || true
 
 # Solo fuentes y config de build (no re-copiar package*.json para no desincronizar node_modules)
 COPY index.html vite.config.js eslint.config.js ./
@@ -24,7 +27,9 @@ COPY src ./src
 
 ARG VITE_API_BASE=/api
 ENV VITE_API_BASE=${VITE_API_BASE}
-RUN npm run build
+RUN npm run build \
+ && rm -rf node_modules \
+ && npm cache clean --force
 
 # ---------- runtime ----------
 FROM docker.io/library/nginx:1.27-alpine

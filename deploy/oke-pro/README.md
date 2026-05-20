@@ -173,3 +173,10 @@ terminar la presentación corre `destroy.sh`. Total real: prácticamente $0.
 - **El backend queda en CrashLoopBackOff** → `kubectl -n sprintops logs deploy/backend`. Normalmente es algo del wallet (path TNS_ADMIN) o el password de la ADB.
 - **El LoadBalancer no obtiene IP** → revisa la subnet `svclb-subnet` y que el cluster esté en estado ACTIVE.
 - **`docker login` falla** → verifica el formato del usuario. Si tu cuenta está en un Identity Domain, suele ser `<tenancy_namespace>/oracleidentitycloudservice/<email>`.
+- **`no space left on device` al build del frontend** → Cloud Shell tiene poco disco. El script `java-builds.sh` intenta `npm run build` en el host y solo empaqueta `dist/` en nginx. Antes de reintentar:
+  ```bash
+  bash deploy/oke-pro/utils/disk-free.sh
+  rm -f ~/.sprintops-oke-pro/state/FRONTEND_BUILT
+  bash deploy/oke-pro/utils/java-builds.sh
+  ```
+  Si aún falla, borra también `rm -rf ~/SprintOps-WebApp/frontend/node_modules` y vuelve a correr.

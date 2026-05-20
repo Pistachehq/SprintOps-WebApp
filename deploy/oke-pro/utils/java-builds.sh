@@ -69,11 +69,30 @@ fi
 # ---------------------------------------------------------------------------
 if ! state_done FRONTEND_BUILT; then
   echo "Building frontend image $OCIR_FRONTEND_IMAGE ..."
+  bash "$SPRINTOPS_HOME/utils/disk-free.sh"
+
   cd "$SPRINTOPS_REPO_ROOT/frontend"
-  # --no-cache: evita reutilizar capa npm ci vieja sin motion-utils / @dnd-kit hoisted
-  docker build --no-cache --platform linux/amd64 \
-    --build-arg VITE_API_BASE=/api \
-    -t "$OCIR_FRONTEND_IMAGE" .
+  export CI=true NODE_ENV=development
+
+  # Cloud Shell suele quedarse sin disco al commitear capas con node_modules (~400+ MB).
+  # Preferimos vite build en el host y solo empaquetar dist/ en nginx (~pocos MB).
+  if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+    echo "Frontend: npm run build en host + Dockerfile.prebuilt (ahorra disco) ..."
+    rm -rf dist node_modules
+    npm ci --include=dev --no-audit --no-fund
+    VITE_API_BASE=/api npm run build
+    rm -rf node_modules
+    npm cache clean --force 2>/dev/null || true
+    test -f dist/index.html
+    docker build --platform linux/amd64 -f Dockerfile.prebuilt -t "$OCIR_FRONTEND_IMAGE" .
+    rm -rf dist
+  else
+    echo "Frontend: build completo dentro de Docker (requiere mas disco) ..."
+    docker build --no-cache --platform linux/amd64 \
+      --build-arg VITE_API_BASE=/api \
+      -t "$OCIR_FRONTEND_IMAGE" .
+  fi
+
   docker push "$OCIR_FRONTEND_IMAGE"
   state_set FRONTEND_IMAGE "$OCIR_FRONTEND_IMAGE"
   state_set_done FRONTEND_BUILT

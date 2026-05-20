@@ -1,0 +1,10 @@
+# Imagen nginx solo con dist/ ya generado (build en host; ahorra disco en Cloud Shell).
+# Uso: VITE_API_BASE=/api npm run build  &&  docker build -f Dockerfile.prebuilt .
+
+FROM docker.io/library/nginx:1.27-alpine
+RUN rm -f /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/sprintops.conf
+COPY dist /usr/share/nginx/html
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1

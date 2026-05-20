@@ -1,5 +1,5 @@
 node_modules
-dist
+# dist: no ignorar — Dockerfile.prebuilt lo copia tras npm run build en host
 .git
 .DS_Store
 .idea
