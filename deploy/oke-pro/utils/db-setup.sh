@@ -22,10 +22,21 @@ fi
 TMP_WALLET="$(mktemp -d)"
 unzip -o -q "$WALLET_ZIP" -d "$TMP_WALLET"
 
-# Crear/actualizar el Secret oracle-wallet con TODOS los archivos del wallet
+# El zip de ADB crea un subdirectorio (p.ej. Wallet_SPRINTOPSKQ8O/). Los archivos deben
+# quedar en la raiz del Secret para que TNS_ADMIN=/oracle/wallet encuentre tnsnames.ora.
+WALLET_DIR="$TMP_WALLET"
+if [[ ! -f "$WALLET_DIR/tnsnames.ora" ]]; then
+  WALLET_DIR="$(find "$TMP_WALLET" -name tnsnames.ora -print -quit | xargs -r dirname)"
+fi
+if [[ -z "$WALLET_DIR" || ! -f "$WALLET_DIR/tnsnames.ora" ]]; then
+  echo "ERROR: tnsnames.ora no encontrado tras descomprimir $WALLET_ZIP"
+  exit 1
+fi
+echo "Wallet dir: $WALLET_DIR ($(ls "$WALLET_DIR" | tr '\n' ' '))"
+
 kubectl -n sprintops delete secret oracle-wallet --ignore-not-found
 kubectl -n sprintops create secret generic oracle-wallet \
-  --from-file="$TMP_WALLET"
+  --from-file="$WALLET_DIR"
 
 # Secret con el password de ADMIN
 kubectl -n sprintops delete secret db-credentials --ignore-not-found
