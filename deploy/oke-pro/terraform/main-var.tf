@@ -60,9 +60,9 @@ variable "nodeCount" {
 }
 
 variable "kubernetesVersion" {
-  description = "Version de Kubernetes para el cluster. Si la version queda obsoleta, OCI rechaza la creacion; revisa versiones disponibles en https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengaboutk8sversions.htm."
+  description = "Version de Kubernetes para cluster y node pool (deben coincidir con la imagen OL del node pool). Si OCI la depreca, actualiza este valor."
   type        = string
-  default     = "v1.34.2"
+  default     = "v1.35.2"
 }
 
 variable "adbCpuCoreCount" {

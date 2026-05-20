@@ -55,25 +55,42 @@ resource "oci_containerengine_node_pool" "main_pool" {
   }
 
   ssh_public_key = var.sshPublicKey
+
+  depends_on = [oci_containerengine_cluster.sprintops]
 }
 
-# Auto-detectar la imagen Oracle Linux 8 mas reciente compatible con el shape
+# Imagenes validas para ESTE cluster (version K8s ya aplicada). Evita mezclar ARM con E3.Flex.
 data "oci_containerengine_node_pool_option" "options" {
-  node_pool_option_id = "all"
-  compartment_id      = var.ociCompartmentOcid
+  compartment_id = var.ociCompartmentOcid
+  cluster_id       = oci_containerengine_cluster.sprintops.id
 }
 
 locals {
-  # Para shapes ARM (A1.Flex) Oracle pone "aarch64" en el nombre. Para los demas (E3, E4, etc.) es x86_64.
-  is_arm = length(regexall("A1\\.", var.nodeShape)) > 0
-  matching_images = [
+  # E3/E4 = x86_64. A1.Flex = ARM (aarch64 en el nombre de la imagen).
+  is_arm_shape = length(regexall("A1\\.", var.nodeShape)) > 0
+
+  arch_matching_sources = [
     for source in data.oci_containerengine_node_pool_option.options.sources :
-    source.image_id
-    if (
-      local.is_arm
-      ? length(regexall("Oracle-Linux-8.*-aarch64-20[0-9]*", source.source_name)) > 0
-      : (length(regexall("Oracle-Linux-8.*-20[0-9]*", source.source_name)) > 0 && length(regexall("aarch64", source.source_name)) == 0)
+    source
+    if source.source_type == "IMAGE" && (
+      local.is_arm_shape
+      ? length(regexall("(?i)aarch64|arm64", source.source_name)) > 0
+      : length(regexall("(?i)aarch64|arm64", source.source_name)) == 0
     )
   ]
-  oracle_linux_image_id = local.matching_images[0]
+
+  # Mismo criterio que el lab: Oracle Linux reciente, ya filtrado por cluster_id + arquitectura.
+  oracle_linux_sources = [
+    for source in local.arch_matching_sources :
+    source
+    if length(regexall("Oracle-Linux-[0-9]+\\.[0-9]+-20[0-9]+", source.source_name)) > 0
+      || (
+        local.is_arm_shape
+        ? length(regexall("Oracle-Linux-8.*-aarch64", source.source_name)) > 0
+        : length(regexall("Oracle-Linux-8.*-20[0-9]+", source.source_name)) > 0
+      )
+  ]
+
+  selected_node_source = length(local.oracle_linux_sources) > 0 ? local.oracle_linux_sources[length(local.oracle_linux_sources) - 1] : local.arch_matching_sources[length(local.arch_matching_sources) - 1]
+  oracle_linux_image_id = local.selected_node_source.image_id
 }
