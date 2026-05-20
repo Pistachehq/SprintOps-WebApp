@@ -13,8 +13,6 @@ env:
     OCIR_NAMESPACE: "axf5izecp5nx"
     OCIR_BACKEND_REPO: "sprintops-kq8o-backend"
     OCIR_USERNAME: "oracleidentitycloudservice/a00838462@tec.mx"
-  exportedVariables:
-    - BACKEND_IMAGE_URI
 
 steps:
   - type: Command
@@ -72,13 +70,6 @@ steps:
       docker push "${IMAGE}"
       docker push "${IMAGE_LATEST}"
       echo "Pushed ${IMAGE}"
-
-      EXPORT_FILE="${OCI_DEVOPS_EXPORT_VARIABLES_FILE:-${OCI_WORKSPACE_DIR}/exportedVariables}"
-      mkdir -p "$(dirname "$EXPORT_FILE")"
-      echo "BACKEND_IMAGE_URI=${IMAGE}" >> "$EXPORT_FILE"
-      echo "BACKEND_IMAGE_URI=${IMAGE}"
-
-outputArtifacts:
-  - name: sprintops_backend_image
-    type: DOCKER_IMAGE
-    location: ${BACKEND_IMAGE_URI}
+      echo "BUILD OK — imagen en OCIR: ${IMAGE}"
+      # Sin outputArtifacts: evita INTERNAL_ERROR en "Save output artifacts".
+      # La imagen ya quedo en OCIR por docker push; el deploy puede usar :latest o el tag del commit.
