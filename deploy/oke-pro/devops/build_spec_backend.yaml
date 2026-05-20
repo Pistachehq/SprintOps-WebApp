@@ -41,9 +41,13 @@ steps:
         exit 1
       fi
 
-      echo "=== docker build ==="
+      echo "=== docker build (Dockerfile.devops, sin cache mounts) ==="
+      df -h / /var/tmp 2>/dev/null || true
       cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
-      docker build --platform linux/amd64 -t "sprintops-backend:${SHORT_HASH}" .
+      export DOCKER_BUILDKIT=0
+      docker build --progress=plain --platform linux/amd64 \
+        -f Dockerfile.devops \
+        -t "sprintops-backend:${SHORT_HASH}" .
 
       echo "=== docker login OCIR ==="
       LOGIN_OK=false

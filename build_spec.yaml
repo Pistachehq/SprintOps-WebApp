@@ -35,7 +35,9 @@ steps:
       fi
 
       cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
-      docker build --platform linux/amd64 -t "sprintops-backend:${SHORT_HASH}" .
+      export DOCKER_BUILDKIT=0
+      docker build --progress=plain --platform linux/amd64 \
+        -f Dockerfile.devops -t "sprintops-backend:${SHORT_HASH}" .
 
       LOGIN_OK=false
       for U in "${OCIR_NAMESPACE}/${OCIR_USERNAME}" "${OCIR_NAMESPACE}/a00838462@tec.mx"; do
