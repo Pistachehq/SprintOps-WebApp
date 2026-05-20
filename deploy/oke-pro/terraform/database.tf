@@ -13,7 +13,21 @@ resource "oci_database_autonomous_database" "sprintops_db" {
   license_model            = var.adbIsFreeTier ? "LICENSE_INCLUDED" : "BRING_YOUR_OWN_LICENSE"
   is_auto_scaling_enabled  = false
 
-  # Habilitar acceso publico con TLS mutuo (default). Suficiente para que pods de OKE conecten via wallet.
+  # Acceso publico con TLS mutuo (default). Suficiente para que pods de OKE conecten via wallet.
+
+  # OCI renombro las Always Free ADB a "Autonomous AI Database" y ahora usan ECPU en lugar de OCPU.
+  # Al refrescar el estado, OCI reporta cpu_core_count=0 (porque internamente es compute_count en ECPUs),
+  # lo que hace que Terraform quiera "corregirlo" y la API rechaza el update en free tier.
+  # Decimos a Terraform que ignore estos campos para no entrar en drift permanente.
+  lifecycle {
+    ignore_changes = [
+      cpu_core_count,
+      compute_count,
+      compute_model,
+      data_storage_size_in_tbs,
+      data_storage_size_in_gb,
+    ]
+  }
 }
 
 # Generar el wallet (zip con TNS aliases + tlskey + ojdbc.properties) para meterlo como Secret en K8s.
