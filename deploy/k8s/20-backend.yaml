@@ -40,6 +40,17 @@ spec:
       labels:
         app: backend
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: ["mysql"]
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: backend
           image: __BACKEND_IMAGE__
@@ -48,6 +59,8 @@ spec:
             - configMapRef:
                 name: backend-config
           env:
+            - name: JAVA_OPTS
+              value: "-Xms200m -Xmx340m -XX:+UseSerialGC -XX:MaxMetaspaceSize=120m -Djava.security.egd=file:/dev/./urandom"
             - name: DB_URL
               value: "jdbc:mysql://mysql.sprintops.svc.cluster.local:3306/sprintops_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true"
             - name: DB_USERNAME
@@ -123,11 +136,11 @@ spec:
             failureThreshold: 6
           resources:
             requests:
-              cpu: "200m"
-              memory: "512Mi"
+              cpu: "100m"
+              memory: "420Mi"
             limits:
-              cpu: "1500m"
-              memory: "1Gi"
+              cpu: "900m"
+              memory: "560Mi"
           volumeMounts:
             - name: uploads
               mountPath: /data/project-card-covers

@@ -164,6 +164,24 @@ if $DESTROY; then
   exit 0
 fi
 
+# Auto-detectar la arquitectura del node pool y sobrescribir PLATFORMS
+NODE_POOL_SHAPE="$(oci ce node-pool list --cluster-id "$CLUSTER_OCID" --compartment-id "$COMPARTMENT_OCID" --query 'data[0]."node-shape"' --raw-output 2>/dev/null || echo "")"
+if [[ -n "$NODE_POOL_SHAPE" ]]; then
+  case "$NODE_POOL_SHAPE" in
+    *A1*|*Ampere*)
+      PLATFORMS="linux/arm64"
+      green "Node pool shape: $NODE_POOL_SHAPE → PLATFORMS=$PLATFORMS"
+      ;;
+    *E2*|*E3*|*E4*|*E5*|*B1*|*B2*|*X*)
+      PLATFORMS="linux/amd64"
+      green "Node pool shape: $NODE_POOL_SHAPE → PLATFORMS=$PLATFORMS"
+      ;;
+    *)
+      yellow "Node pool shape '$NODE_POOL_SHAPE' no reconocido, uso PLATFORMS=$PLATFORMS"
+      ;;
+  esac
+fi
+
 # -----------------------------------------------------------------------------
 # 2) Detectar tenancy namespace de OCIR + auth token para docker login
 # -----------------------------------------------------------------------------

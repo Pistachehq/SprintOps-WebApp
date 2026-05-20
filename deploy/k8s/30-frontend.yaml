@@ -7,7 +7,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -37,11 +37,11 @@ spec:
             periodSeconds: 30
           resources:
             requests:
-              cpu: "50m"
-              memory: "64Mi"
+              cpu: "30m"
+              memory: "32Mi"
             limits:
-              cpu: "300m"
-              memory: "256Mi"
+              cpu: "200m"
+              memory: "96Mi"
 ---
 apiVersion: v1
 kind: Service
