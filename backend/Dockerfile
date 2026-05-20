@@ -1,21 +1,15 @@
 # syntax=docker/dockerfile:1.7
 
-# ---------- build ----------
-FROM docker.io/library/eclipse-temurin:17-jdk AS build
+# ---------- build (imagen con Maven; evita apt-get install maven en Cloud Shell) ----------
+FROM docker.io/library/maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
 
-# Cache de dependencias
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    if [ -f mvnw ]; then chmod +x mvnw; ./mvnw -B -q dependency:go-offline; \
-    else apt-get update && apt-get install -y --no-install-recommends maven && rm -rf /var/lib/apt/lists/* \
-      && mvn -B -q -DskipTests dependency:go-offline; fi
+RUN --mount=type=cache,target=/root/.m2 mvn -B -q -DskipTests dependency:go-offline
 
-# Build
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
-    if [ -f mvnw ]; then ./mvnw -B -q -DskipTests package; \
-    else mvn -B -q -DskipTests package; fi \
+    mvn -B -q -DskipTests package \
  && cp target/*.jar /workspace/app.jar
 
 # ---------- runtime ----------
