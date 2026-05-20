@@ -3,16 +3,25 @@
 # ---------- build ----------
 FROM docker.io/library/node:20-alpine AS build
 WORKDIR /app
+
+# Vite/Rollup necesitan devDependencies (react, vite). NODE_ENV=production las omite en npm ci.
 ENV CI=true
+ENV NODE_ENV=development
 
-# package-lock + .npmrc (install-strategy=hoisted) para que Vite/Rollup resuelva deps hermanas
 COPY package.json package-lock.json .npmrc ./
-RUN npm ci --no-audit --no-fund \
- && test -f node_modules/@dnd-kit/utilities/package.json \
- && test -f node_modules/motion-utils/package.json
+RUN npm ci --include=dev --no-audit --no-fund \
+ && node -e " \
+  for (const p of ['@dnd-kit/utilities','motion-utils','recharts','classcat','zustand','vite']) { \
+    require.resolve(p); \
+  } \
+  console.log('deps ok'); \
+  "
 
-COPY . .
-# /api por defecto (mismo origen, nginx hace proxy). Se puede sobrescribir con --build-arg.
+# Solo fuentes y config de build (no re-copiar package*.json para no desincronizar node_modules)
+COPY index.html vite.config.js eslint.config.js ./
+COPY public ./public
+COPY src ./src
+
 ARG VITE_API_BASE=/api
 ENV VITE_API_BASE=${VITE_API_BASE}
 RUN npm run build

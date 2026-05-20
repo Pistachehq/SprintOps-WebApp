@@ -6,6 +6,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
+/** Alias a paquete en node_modules raiz (evita fallos Rollup en Docker con deps hoisted). */
+function nm(subpath) {
+  return path.resolve(rootDir, 'node_modules', subpath)
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -13,29 +18,45 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
-    // framer-motion 12 importa motion-utils/motion-dom como paquetes hermanos; en Docker+Rollup
-    // a veces no los resuelve sin alias/dedupe explicitos.
     alias: {
-      'motion-utils': path.resolve(rootDir, 'node_modules/motion-utils'),
-      'motion-dom': path.resolve(rootDir, 'node_modules/motion-dom'),
+      'motion-utils': nm('motion-utils'),
+      'motion-dom': nm('motion-dom'),
+      '@dnd-kit/utilities': nm('@dnd-kit/utilities'),
+      '@dnd-kit/core': nm('@dnd-kit/core'),
+      '@dnd-kit/sortable': nm('@dnd-kit/sortable'),
+      recharts: nm('recharts'),
+      classcat: nm('classcat'),
+      zustand: nm('zustand'),
     },
     dedupe: [
+      'react',
+      'react-dom',
       'framer-motion',
       'motion-utils',
       'motion-dom',
       '@dnd-kit/core',
       '@dnd-kit/sortable',
       '@dnd-kit/utilities',
+      '@xyflow/react',
+      'recharts',
+      'classcat',
+      'zustand',
     ],
   },
   optimizeDeps: {
     include: [
+      'react',
+      'react-dom',
       'framer-motion',
       'motion-utils',
       'motion-dom',
       '@dnd-kit/core',
       '@dnd-kit/sortable',
       '@dnd-kit/utilities',
+      '@xyflow/react',
+      'recharts',
+      'classcat',
+      'zustand',
     ],
   },
 })
