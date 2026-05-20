@@ -5,11 +5,9 @@ FROM docker.io/library/node:20-alpine AS build
 WORKDIR /app
 ENV CI=true
 
-# Lock-aware install
-COPY package.json ./
-COPY package-lock.json* npm-shrinkwrap.json* yarn.lock* pnpm-lock.yaml* ./
-RUN if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then npm ci; \
-    else npm install --no-audit --no-fund; fi
+# Instalacion reproducible (package-lock debe estar en el repo)
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 # /api por defecto (mismo origen, nginx hace proxy). Se puede sobrescribir con --build-arg.
