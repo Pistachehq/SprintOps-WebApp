@@ -83,12 +83,15 @@ resource "oci_core_security_list" "endpoint" {
   compartment_id = var.ociCompartmentOcid
   vcn_id         = oci_core_vcn.okevcn.id
   display_name   = "${local.app_label}-endpoint-sl"
-  # Egress: comunicacion con Oracle Services y workers
+
   egress_security_rules {
     destination      = data.oci_core_services.services.services.0.cidr_block
     destination_type = "SERVICE_CIDR_BLOCK"
     protocol         = "6"
-    tcp_options { min = 443; max = 443 }
+    tcp_options {
+      min = 443
+      max = 443
+    }
   }
   egress_security_rules {
     destination = "10.0.10.0/24"
@@ -97,26 +100,38 @@ resource "oci_core_security_list" "endpoint" {
   egress_security_rules {
     destination = "10.0.10.0/24"
     protocol    = "1"
-    icmp_options { type = 3; code = 4 }
+    icmp_options {
+      type = 3
+      code = 4
+    }
   }
-  # Ingress: trafico desde internet al API endpoint y desde workers
+
   ingress_security_rules {
-    source   = "0.0.0.0/0"
-    protocol = "6"
-    tcp_options { min = 6443; max = 6443 }
     description = "Acceso externo al API endpoint de Kubernetes"
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    tcp_options {
+      min = 6443
+      max = 6443
+    }
   }
   ingress_security_rules {
-    source   = "10.0.10.0/24"
-    protocol = "6"
-    tcp_options { min = 6443; max = 6443 }
     description = "Workers al API endpoint"
+    source      = "10.0.10.0/24"
+    protocol    = "6"
+    tcp_options {
+      min = 6443
+      max = 6443
+    }
   }
   ingress_security_rules {
-    source   = "10.0.10.0/24"
-    protocol = "6"
-    tcp_options { min = 12250; max = 12250 }
     description = "Workers al control plane"
+    source      = "10.0.10.0/24"
+    protocol    = "6"
+    tcp_options {
+      min = 12250
+      max = 12250
+    }
   }
 }
 
@@ -136,36 +151,57 @@ resource "oci_core_security_list" "nodepool" {
   compartment_id = var.ociCompartmentOcid
   vcn_id         = oci_core_vcn.okevcn.id
   display_name   = "${local.app_label}-nodepool-sl"
-  # Egress
-  egress_security_rules { destination = "10.0.10.0/24"; protocol = "all" }
+
   egress_security_rules {
-    destination = "10.0.0.0/28"
-    protocol    = "6"
-    tcp_options { min = 6443; max = 6443 }
+    destination = "10.0.10.0/24"
+    protocol    = "all"
   }
   egress_security_rules {
     destination = "10.0.0.0/28"
     protocol    = "6"
-    tcp_options { min = 12250; max = 12250 }
+    tcp_options {
+      min = 6443
+      max = 6443
+    }
+  }
+  egress_security_rules {
+    destination = "10.0.0.0/28"
+    protocol    = "6"
+    tcp_options {
+      min = 12250
+      max = 12250
+    }
   }
   egress_security_rules {
     destination      = data.oci_core_services.services.services.0.cidr_block
     destination_type = "SERVICE_CIDR_BLOCK"
     protocol         = "6"
-    tcp_options { min = 443; max = 443 }
+    tcp_options {
+      min = 443
+      max = 443
+    }
   }
-  egress_security_rules { destination = "0.0.0.0/0"; protocol = "all" }
-  # Ingress
-  ingress_security_rules { source = "10.0.10.0/24"; protocol = "all" }
+  egress_security_rules {
+    destination = "0.0.0.0/0"
+    protocol    = "all"
+  }
+
+  ingress_security_rules {
+    source   = "10.0.10.0/24"
+    protocol = "all"
+  }
   ingress_security_rules {
     source   = "10.0.0.0/28"
     protocol = "6"
   }
   ingress_security_rules {
-    source   = "0.0.0.0/0"
-    protocol = "6"
-    tcp_options { min = 22; max = 22 }
     description = "SSH a worker nodes"
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    tcp_options {
+      min = 22
+      max = 22
+    }
   }
 }
 
@@ -185,6 +221,13 @@ resource "oci_core_security_list" "svclb" {
   compartment_id = var.ociCompartmentOcid
   vcn_id         = oci_core_vcn.okevcn.id
   display_name   = "${local.app_label}-svclb-sl"
-  egress_security_rules { destination = "0.0.0.0/0"; protocol = "6" }
-  ingress_security_rules { source = "0.0.0.0/0"; protocol = "6" }
+
+  egress_security_rules {
+    destination = "0.0.0.0/0"
+    protocol    = "6"
+  }
+  ingress_security_rules {
+    source   = "0.0.0.0/0"
+    protocol = "6"
+  }
 }
