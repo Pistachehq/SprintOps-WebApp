@@ -5,9 +5,11 @@ FROM docker.io/library/node:20-alpine AS build
 WORKDIR /app
 ENV CI=true
 
-# Instalacion reproducible (package-lock debe estar en el repo)
-COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+# package-lock + .npmrc (install-strategy=hoisted) para que Vite/Rollup resuelva deps hermanas
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --no-audit --no-fund \
+ && test -f node_modules/@dnd-kit/utilities/package.json \
+ && test -f node_modules/motion-utils/package.json
 
 COPY . .
 # /api por defecto (mismo origen, nginx hace proxy). Se puede sobrescribir con --build-arg.

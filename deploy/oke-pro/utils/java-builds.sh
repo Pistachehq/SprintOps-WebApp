@@ -70,7 +70,8 @@ fi
 if ! state_done FRONTEND_BUILT; then
   echo "Building frontend image $OCIR_FRONTEND_IMAGE ..."
   cd "$SPRINTOPS_REPO_ROOT/frontend"
-  docker build --platform linux/amd64 \
+  # --no-cache: evita reutilizar capa npm ci vieja sin motion-utils / @dnd-kit hoisted
+  docker build --no-cache --platform linux/amd64 \
     --build-arg VITE_API_BASE=/api \
     -t "$OCIR_FRONTEND_IMAGE" .
   docker push "$OCIR_FRONTEND_IMAGE"

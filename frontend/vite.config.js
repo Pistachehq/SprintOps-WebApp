@@ -19,9 +19,23 @@ export default defineConfig({
       'motion-utils': path.resolve(rootDir, 'node_modules/motion-utils'),
       'motion-dom': path.resolve(rootDir, 'node_modules/motion-dom'),
     },
-    dedupe: ['framer-motion', 'motion-utils', 'motion-dom'],
+    dedupe: [
+      'framer-motion',
+      'motion-utils',
+      'motion-dom',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
+    ],
   },
   optimizeDeps: {
-    include: ['framer-motion', 'motion-utils', 'motion-dom'],
+    include: [
+      'framer-motion',
+      'motion-utils',
+      'motion-dom',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
+    ],
   },
 })
