@@ -1,5 +1,4 @@
-# OCI DevOps — Build pipeline: backend → OCIR
-# Pipeline > Parameters (obligatorio): OCI_AUTH_TOKEN = Auth Token OCIR (tipo Secret)
+# Raiz del repo — mismo spec que deploy/oke-pro/devops/build_spec_backend.yaml (Reto D3 PDF)
 
 version: 0.1
 component: build
@@ -22,57 +21,38 @@ steps:
     command: |
       set -eo pipefail
       echo "=== SprintOps backend build ==="
-      echo "Commit: ${OCI_PRIMARY_SOURCE_COMMIT_HASH:-unknown}"
-      echo "Source dir: ${OCI_PRIMARY_SOURCE_DIR:-.}"
-
       SHORT_HASH="${OCI_PRIMARY_SOURCE_COMMIT_HASH:0:7}"
       IMAGE="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_BACKEND_REPO}:${SHORT_HASH}"
       IMAGE_LATEST="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_BACKEND_REPO}:latest"
 
-      # Token: pipeline secret OCI_AUTH_TOKEN o AUTH_TOKEN (como en la UI), o at.cfg en el repo
       AUTH_TOKEN="${OCI_AUTH_TOKEN:-${AUTH_TOKEN:-}}"
       if [ -z "$AUTH_TOKEN" ] && [ -f "${OCI_PRIMARY_SOURCE_DIR}/at.cfg" ]; then
         AUTH_TOKEN="$(tr -d '\n' < "${OCI_PRIMARY_SOURCE_DIR}/at.cfg")"
-        echo "Using OCIR token from at.cfg"
       fi
       if [ -z "$AUTH_TOKEN" ]; then
-        echo "ERROR: Falta token OCIR (parametro OCI_AUTH_TOKEN o AUTH_TOKEN tipo Secret)."
-        echo "  Pipeline > Parameters > Name: OCI_AUTH_TOKEN  Type: Secret"
+        echo "ERROR: Agrega parametro secreto OCI_AUTH_TOKEN al pipeline."
         exit 1
       fi
 
-      echo "=== docker build ==="
       cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
       docker build --platform linux/amd64 -t "sprintops-backend:${SHORT_HASH}" .
 
-      echo "=== docker login OCIR ==="
       LOGIN_OK=false
-      for U in \
-        "${OCIR_NAMESPACE}/${OCIR_USERNAME}" \
-        "${OCIR_NAMESPACE}/oracleidentitycloudservice/${OCIR_USERNAME#*/}" \
-        "${OCIR_NAMESPACE}/a00838462@tec.mx"; do
-        echo "Trying login user: $U"
+      for U in "${OCIR_NAMESPACE}/${OCIR_USERNAME}" "${OCIR_NAMESPACE}/a00838462@tec.mx"; do
         if echo "$AUTH_TOKEN" | docker login "${OCIR_REGION}.ocir.io" -u "$U" --password-stdin; then
-          LOGIN_OK=true
-          break
+          LOGIN_OK=true; break
         fi
       done
-      if [ "$LOGIN_OK" != "true" ]; then
-        echo "ERROR: docker login fallo. Revisa OCI_AUTH_TOKEN y OCIR_USERNAME."
-        exit 1
-      fi
+      [ "$LOGIN_OK" = "true" ] || { echo "ERROR: docker login"; exit 1; }
 
-      echo "=== docker push ==="
       docker tag "sprintops-backend:${SHORT_HASH}" "${IMAGE}"
       docker tag "sprintops-backend:${SHORT_HASH}" "${IMAGE_LATEST}"
       docker push "${IMAGE}"
       docker push "${IMAGE_LATEST}"
-      echo "Pushed ${IMAGE}"
 
       EXPORT_FILE="${OCI_DEVOPS_EXPORT_VARIABLES_FILE:-${OCI_WORKSPACE_DIR}/exportedVariables}"
       mkdir -p "$(dirname "$EXPORT_FILE")"
       echo "BACKEND_IMAGE_URI=${IMAGE}" >> "$EXPORT_FILE"
-      echo "BACKEND_IMAGE_URI=${IMAGE}"
 
 outputArtifacts:
   - name: sprintops_backend_image
