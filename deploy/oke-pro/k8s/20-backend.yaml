@@ -1,0 +1,161 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: sprintops
+data:
+  SPRING_PROFILES_ACTIVE: "prod,oracle"
+  GROQ_MODEL: "llama-3.3-70b-versatile"
+  PROJECT_CARD_COVER_DIR: "/data/project-card-covers"
+  # TNS_ADMIN apunta a donde montaremos el wallet en el pod
+  TNS_ADMIN: "/oracle/wallet"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-uploads
+  namespace: sprintops
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: oci-bv
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: sprintops
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: __BACKEND_IMAGE__
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          env:
+            - name: JAVA_OPTS
+              value: "-XX:MaxRAMPercentage=70.0 -Djava.security.egd=file:/dev/./urandom"
+            # URL de conexion: usa TNS alias "_high" (1 OCPU, alta concurrencia)
+            - name: DB_URL
+              value: "jdbc:oracle:thin:@__DB_TNS_NAME___high?TNS_ADMIN=/oracle/wallet"
+            - name: DB_USERNAME
+              value: "ADMIN"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: adminPassword
+            - name: FRONTEND_BASE_URL
+              value: "__FRONTEND_BASE_URL__"
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: groqApiKey
+                  optional: true
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: googleClientId
+                  optional: true
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: googleClientSecret
+                  optional: true
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: githubClientId
+                  optional: true
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: githubClientSecret
+                  optional: true
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: telegramBotToken
+                  optional: true
+            - name: TELEGRAM_BOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: telegramBotUsername
+                  optional: true
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /api/proyectos
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 18
+          livenessProbe:
+            httpGet:
+              path: /api/proyectos
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 30
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1500Mi"
+          volumeMounts:
+            - name: uploads
+              mountPath: /data/project-card-covers
+              subPath: project-card-covers
+            - name: oracle-wallet
+              mountPath: /oracle/wallet
+              readOnly: true
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: backend-uploads
+        - name: oracle-wallet
+          secret:
+            secretName: oracle-wallet
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: sprintops
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
