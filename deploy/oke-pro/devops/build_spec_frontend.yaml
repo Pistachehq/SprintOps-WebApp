@@ -1,0 +1,57 @@
+# OCI DevOps — Build pipeline: frontend (npm en runner + Dockerfile.prebuilt) → OCIR
+# build_spec_path: deploy/oke-pro/devops/build_spec_frontend.yaml
+
+version: 0.1
+component: build
+runAs: root
+shell: bash
+timeoutInSeconds: 3600
+
+env:
+  variables:
+    OCIR_REGION: "mx-queretaro-1"
+    OCIR_NAMESPACE: "axf5izecp5nx"
+    OCIR_FRONTEND_REPO: "sprintops-kq8o-frontend"
+    OCIR_USERNAME: "oracleidentitycloudservice/a00838462@tec.mx"
+    VITE_API_BASE: "/api"
+  exportedVariables:
+    - FRONTEND_IMAGE_URI
+
+steps:
+  - type: Command
+    name: Build dist and push frontend image
+    command: |
+      set -euo pipefail
+      SHORT_HASH="${OCI_PRIMARY_SOURCE_COMMIT_HASH:0:7}"
+      IMAGE="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_FRONTEND_REPO}:${SHORT_HASH}"
+      IMAGE_LATEST="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_FRONTEND_REPO}:latest"
+
+      echo "Building frontend commit ${SHORT_HASH}..."
+      cd "${OCI_PRIMARY_SOURCE_DIR}/frontend"
+      export CI=true NODE_ENV=development
+      npm ci --include=dev --no-audit --no-fund
+      VITE_API_BASE="${VITE_API_BASE}" npm run build
+      rm -rf node_modules
+
+      docker build --platform linux/amd64 -f Dockerfile.prebuilt \
+        -t "sprintops-frontend:${SHORT_HASH}" .
+
+      if [ -z "${OCI_AUTH_TOKEN:-}" ]; then
+        echo "ERROR: Define el secreto OCI_AUTH_TOKEN en el pipeline."
+        exit 1
+      fi
+      echo "${OCI_AUTH_TOKEN}" | docker login "${OCIR_REGION}.ocir.io" \
+        -u "${OCIR_NAMESPACE}/${OCIR_USERNAME}" --password-stdin
+
+      docker tag "sprintops-frontend:${SHORT_HASH}" "${IMAGE}"
+      docker tag "sprintops-frontend:${SHORT_HASH}" "${IMAGE_LATEST}"
+      docker push "${IMAGE}"
+      docker push "${IMAGE_LATEST}"
+
+      echo "FRONTEND_IMAGE_URI=${IMAGE}" >> "${OCI_DEVOPS_EXPORT_VARIABLES_FILE}"
+      echo "Pushed ${IMAGE}"
+
+outputArtifacts:
+  - name: sprintops_frontend_image
+    type: DOCKER_IMAGE
+    location: ${FRONTEND_IMAGE_URI}

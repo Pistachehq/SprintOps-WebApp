@@ -93,7 +93,13 @@ Abre esa URL en el navegador y ya estás dentro.
 
 El script es **idempotente**: vuelve a correr `source deploy/oke-pro/setup.sh` y continúa donde quedó (gracias a `~/.sprintops-oke-pro/state/`). Si quieres reiniciar todo desde cero borra ese directorio.
 
-### 5. Tirar el deploy (importante para no gastar)
+### 5. CI/CD (Reto D3 — OCI DevOps)
+
+Con la infra ya desplegada (`setup.sh`), automatiza build + deploy:
+
+→ **[devops/README-CICD.md](devops/README-CICD.md)** (pipelines, triggers, capturas del reto).
+
+### 6. Tirar el deploy (importante para no gastar)
 
 ```bash
 source deploy/oke-pro/destroy.sh

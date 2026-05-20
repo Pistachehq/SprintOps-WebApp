@@ -1,0 +1,54 @@
+# OCI DevOps — Build pipeline: backend → OCIR
+# Crear en consola: Build pipeline > Add stage > Managed build > build_spec_path:
+#   deploy/oke-pro/devops/build_spec_backend.yaml
+#
+# Parámetros del pipeline (variables de entorno en la UI, o editar defaults abajo):
+#   OCIR_REGION, OCIR_NAMESPACE, OCIR_BACKEND_REPO, OCIR_USERNAME
+
+version: 0.1
+component: build
+runAs: root
+shell: bash
+timeoutInSeconds: 3600
+
+env:
+  variables:
+    OCIR_REGION: "mx-queretaro-1"
+    OCIR_NAMESPACE: "axf5izecp5nx"
+    OCIR_BACKEND_REPO: "sprintops-kq8o-backend"
+    OCIR_USERNAME: "oracleidentitycloudservice/a00838462@tec.mx"
+  exportedVariables:
+    - BACKEND_IMAGE_URI
+
+steps:
+  - type: Command
+    name: Build and push backend image
+    command: |
+      set -euo pipefail
+      SHORT_HASH="${OCI_PRIMARY_SOURCE_COMMIT_HASH:0:7}"
+      IMAGE="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_BACKEND_REPO}:${SHORT_HASH}"
+      IMAGE_LATEST="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_BACKEND_REPO}:latest"
+
+      echo "Building backend commit ${SHORT_HASH}..."
+      cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
+      docker build --platform linux/amd64 -t "sprintops-backend:${SHORT_HASH}" .
+
+      if [ -z "${OCI_AUTH_TOKEN:-}" ]; then
+        echo "ERROR: Define el secreto OCI_AUTH_TOKEN en el pipeline (Auth Token de OCIR)."
+        exit 1
+      fi
+      echo "${OCI_AUTH_TOKEN}" | docker login "${OCIR_REGION}.ocir.io" \
+        -u "${OCIR_NAMESPACE}/${OCIR_USERNAME}" --password-stdin
+
+      docker tag "sprintops-backend:${SHORT_HASH}" "${IMAGE}"
+      docker tag "sprintops-backend:${SHORT_HASH}" "${IMAGE_LATEST}"
+      docker push "${IMAGE}"
+      docker push "${IMAGE_LATEST}"
+
+      echo "BACKEND_IMAGE_URI=${IMAGE}" >> "${OCI_DEVOPS_EXPORT_VARIABLES_FILE}"
+      echo "Pushed ${IMAGE}"
+
+outputArtifacts:
+  - name: sprintops_backend_image
+    type: DOCKER_IMAGE
+    location: ${BACKEND_IMAGE_URI}
