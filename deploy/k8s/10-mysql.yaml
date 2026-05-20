@@ -33,11 +33,15 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: mysql
-          image: mysql:8.0
+          image: docker.io/library/mysql:8.0
           args:
             - "--default-authentication-plugin=mysql_native_password"
             - "--character-set-server=utf8mb4"
             - "--collation-server=utf8mb4_unicode_ci"
+            - "--innodb-buffer-pool-size=64M"
+            - "--max-connections=30"
+            - "--performance-schema=OFF"
+            - "--skip-name-resolve"
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -77,11 +81,11 @@ spec:
               mountPath: /var/lib/mysql
           resources:
             requests:
-              cpu: "200m"
-              memory: "512Mi"
+              cpu: "100m"
+              memory: "280Mi"
             limits:
-              cpu: "1000m"
-              memory: "1Gi"
+              cpu: "500m"
+              memory: "380Mi"
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -90,4 +94,4 @@ spec:
         storageClassName: oci-bv
         resources:
           requests:
-            storage: 50Gi
+            storage: 20Gi

@@ -1,0 +1,79 @@
+name: sprintops
+
+services:
+  mysql:
+    image: docker.io/library/mysql:8.0
+    container_name: sprintops-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD requerido en .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sprintops_db}
+      MYSQL_USER: ${MYSQL_USER:-sprintops}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD requerido en .env}
+    command:
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--innodb-buffer-pool-size=64M"
+      - "--max-connections=30"
+      - "--performance-schema=OFF"
+      - "--skip-name-resolve"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - sprintops
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  backend:
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE requerido en .env}
+    container_name: sprintops-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_OPTS: "-Xms200m -Xmx320m -XX:+UseSerialGC -XX:MaxMetaspaceSize=120m -Djava.security.egd=file:/dev/./urandom"
+      DB_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-sprintops_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true"
+      DB_USERNAME: ${MYSQL_USER:-sprintops}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      PROJECT_CARD_COVER_DIR: /data/project-card-covers
+    volumes:
+      - backend-uploads:/data/project-card-covers
+    networks:
+      - sprintops
+
+  frontend:
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE requerido en .env}
+    container_name: sprintops-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - sprintops
+
+networks:
+  sprintops:
+    name: sprintops
+
+volumes:
+  mysql-data:
+    name: sprintops-mysql-data
+  backend-uploads:
+    name: sprintops-backend-uploads

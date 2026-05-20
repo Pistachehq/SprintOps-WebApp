@@ -1,0 +1,9 @@
+# Estado local (passwords, OCIDs, etc.) y wallets de Oracle: NO commitear.
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/wallet.zip
+terraform/wallet/
+*.tfvars
+*.tfvars.json
