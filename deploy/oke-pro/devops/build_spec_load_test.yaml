@@ -1,0 +1,103 @@
+# OCI DevOps — Pipeline de prueba de carga (Apache JMeter)
+# Crear Build pipeline con spec: deploy/oke-pro/devops/build_spec_load_test.yaml
+#
+# Parámetros del pipeline (Variables):
+#   TARGET_HOST          IP o hostname del Load Balancer (ej. 163.192.154.208)
+#   LOAD_PROJECT_ID      Id proyecto (tras seed-load-test-data.sh)
+#   LOAD_SPRINT_ID       Id sprint
+#   THREADS              Usuarios virtuales (recomendado: 15)
+#   RAMP_UP              Segundos de rampa (recomendado: 30)
+#   DURATION             Segundos de duración (recomendado: 180)
+# Opcional: TARGET_PROTOCOL (http), TARGET_PORT (80), THINK_TIME_MS (500)
+
+version: 0.1
+component: build
+runAs: root
+shell: bash
+timeoutInSeconds: 2400
+
+env:
+  variables:
+    JMETER_VERSION: "5.6.3"
+    TARGET_PROTOCOL: "http"
+    TARGET_PORT: "80"
+    TARGET_HOST: "127.0.0.1"
+    LOAD_PROJECT_ID: "1"
+    LOAD_SPRINT_ID: "1"
+    THREADS: "15"
+    RAMP_UP: "30"
+    DURATION: "180"
+    THINK_TIME_MS: "500"
+
+steps:
+  - type: Command
+    name: Install JMeter and run load test
+    command: |
+      set -eo pipefail
+      echo "=== SprintOps JMeter load test ==="
+      echo "Commit: ${OCI_PRIMARY_SOURCE_COMMIT_HASH:-unknown}"
+      SRC="${OCI_PRIMARY_SOURCE_DIR:-.}"
+      cd "$SRC"
+
+      if [ -z "${TARGET_HOST}" ] || [ "${TARGET_HOST}" = "127.0.0.1" ]; then
+        echo "WARN: TARGET_HOST no configurado o es localhost."
+        echo "  En DevOps > Pipeline > Parameters define TARGET_HOST con la IP del Load Balancer."
+      fi
+
+      echo "=== Descargar Apache JMeter ${JMETER_VERSION} ==="
+      JM_DIR="/tmp/apache-jmeter-${JMETER_VERSION}"
+      if [ ! -x "${JM_DIR}/bin/jmeter" ]; then
+        curl -fsSL "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" \
+          | tar -xz -C /tmp
+      fi
+      export PATH="${JM_DIR}/bin:$PATH"
+      jmeter -v
+
+      echo "=== Comprobar que la app responde ==="
+      curl -sfS --max-time 15 "${TARGET_PROTOCOL}://${TARGET_HOST}:${TARGET_PORT}/" -o /dev/null \
+        || { echo "ERROR: no responde el frontend en ${TARGET_HOST}"; exit 1; }
+
+      OUT_DIR="${SRC}/load-test/jmeter/results/run-${OCI_BUILD_RUN_ID:-local}"
+      mkdir -p "$OUT_DIR"
+      JTL="${OUT_DIR}/results.jtl"
+      REPORT="${OUT_DIR}/html-report"
+
+      echo "=== Ejecutar plan JMeter (no-GUI) ==="
+      echo "  host=${TARGET_HOST} project=${LOAD_PROJECT_ID} sprint=${LOAD_SPRINT_ID}"
+      echo "  threads=${THREADS} ramp=${RAMP_UP}s duration=${DURATION}s"
+
+      cd "${SRC}/load-test/jmeter"
+      jmeter -n \
+        -t sprintops-reto-load.jmx \
+        -l "$JTL" \
+        -e -o "$REPORT" \
+        -JTARGET_PROTOCOL="${TARGET_PROTOCOL}" \
+        -JTARGET_HOST="${TARGET_HOST}" \
+        -JTARGET_PORT="${TARGET_PORT}" \
+        -JLOAD_PROJECT_ID="${LOAD_PROJECT_ID}" \
+        -JLOAD_SPRINT_ID="${LOAD_SPRINT_ID}" \
+        -JTHREADS="${THREADS}" \
+        -JRAMP_UP="${RAMP_UP}" \
+        -JDURATION="${DURATION}" \
+        -JTHINK_TIME_MS="${THINK_TIME_MS}"
+
+      echo "=== Resumen (primeras líneas del JTL) ==="
+      tail -n 5 "$JTL" || true
+
+      echo ""
+      echo "LOAD TEST OK"
+      echo "  JTL:    $JTL"
+      echo "  HTML:   $REPORT/index.html"
+      echo ""
+      echo "Descarga artefactos del build run o copia desde el runner si configuraste outputArtifacts."
+
+  - type: Command
+    name: Archive results
+    command: |
+      set -eo pipefail
+      SRC="${OCI_PRIMARY_SOURCE_DIR:-.}"
+      RUN_DIR=$(find "${SRC}/load-test/jmeter/results" -maxdepth 1 -type d -name 'run-*' 2>/dev/null | sort | tail -1)
+      if [ -n "$RUN_DIR" ]; then
+        echo "Resultados en: $RUN_DIR"
+        ls -la "$RUN_DIR"
+      fi

@@ -156,6 +156,20 @@ El CI/CD asume que el namespace `sprintops` y los Secrets ya existen.
 
 ---
 
+## Prueba de carga (JMeter)
+
+Pipeline aparte (no sustituye build/deploy):
+
+1. **Build pipelines** → **Create** → `sprintops-load-test`.
+2. **Managed build** → spec: `deploy/oke-pro/devops/build_spec_load_test.yaml`.
+3. Variables obligatorias: `TARGET_HOST`, `LOAD_PROJECT_ID`, `LOAD_SPRINT_ID` (generados con `load-test/scripts/seed-load-test-data.sh`).
+4. Recomendado: `THREADS=15`, `RAMP_UP=30`, `DURATION=180`.
+5. **Manual run** → revisar log `LOAD TEST OK` y reporte HTML en artefactos.
+
+Documentación completa: [load-test/README.md](../../../load-test/README.md).
+
+---
+
 ## Alternativa: GitHub Actions
 
 Si el reto permite GitHub Actions en lugar de OCI DevOps, se puede añadir `.github/workflows/oke-deploy.yml` más adelante; para el PDF de Oracle prioriza **OCI DevOps** como arriba.

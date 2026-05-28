@@ -39,13 +39,16 @@ steps:
         exit 1
       fi
 
-      echo "=== docker build (Dockerfile.devops, sin cache mounts) ==="
+      echo "=== docker build ==="
       df -h / /var/tmp 2>/dev/null || true
+      docker version 2>/dev/null || true
       cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
-      export DOCKER_BUILDKIT=0
-      docker build --progress=plain --platform linux/amd64 \
-        -f Dockerfile.devops \
-        -t "sprintops-backend:${SHORT_HASH}" .
+      if [ ! -f Dockerfile.devops ]; then
+        echo "ERROR: falta backend/Dockerfile.devops — haz git push y Sync del mirror."
+        exit 1
+      fi
+      # Sin --platform ni DOCKER_BUILDKIT=0 (en DevOps a veces provoca exit 125)
+      docker build --progress=plain -f Dockerfile.devops -t "sprintops-backend:${SHORT_HASH}" .
 
       echo "=== docker login OCIR ==="
       LOGIN_OK=false
