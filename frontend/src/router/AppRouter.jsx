@@ -1,30 +1,36 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Layout from '../components/Layout';
-import LoginPage from '../features/login/LoginPage';
-import VerifyEmailPage from '../features/login/VerifyEmailPage';
-import HomePage from '../features/home/HomePage';
-import ProjectPage from '../features/project/ProjectPage';
-import SprintsPage from '../features/sprint/SprintsPage';
-import IssuesBoard from '../features/issues/IssuesBoard';
-import ReflectionPage from '../features/reflection/ReflectionPage';
-import SprintManagerPage from '../features/sprintManager/SprintManagerPage';
-import PlanningPage from '../features/planning/PlanningPage';
-import SprintSubLayout from '../features/sprint/components/SprintSubLayout';
-import TaskDetailPage from '../features/planning/taskDetail/TaskDetailPage';
-import ProfilePage from '../features/profile/ProfilePage';
-import IssueUniversePage from '../features/issueUniverse/IssueUniversePage';
-import TimelinePage from '../features/timeline/TimelinePage';
-import { useAuth } from '../features/auth/hooks/useAuth';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import LandingPage from "../features/landingPage/LandingPage";
+import LoginPage from "../features/login/LoginPage";
+import VerifyEmailPage from "../features/login/VerifyEmailPage";
+import HomePage from "../features/home/HomePage";
+import ProjectPage from "../features/project/ProjectPage";
+import SprintsPage from "../features/sprint/SprintsPage";
+import IssuesBoard from "../features/issues/IssuesBoard";
+import ReflectionPage from "../features/reflection/ReflectionPage";
+import SprintManagerPage from "../features/sprintManager/SprintManagerPage";
+import PlanningPage from "../features/planning/PlanningPage";
+import SprintSubLayout from "../features/sprint/components/SprintSubLayout";
+import TaskDetailPage from "../features/planning/taskDetail/TaskDetailPage";
+import ProfilePage from "../features/profile/ProfilePage";
+import IssueUniversePage from "../features/issueUniverse/IssueUniversePage";
+import TimelinePage from "../features/timeline/TimelinePage";
+import { useAuth } from "../features/auth/hooks/useAuth";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate transition="none" to="/login" />;
+  return isAuthenticated ? (
+    children
+  ) : (
+    <Navigate transition="none" to="/login" />
+  );
 };
 
 const AppRouter = () => {
   return (
     <Routes>
+      <Route path="/landingPage" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
 
@@ -41,7 +47,10 @@ const AppRouter = () => {
         <Route path="projects" element={<HomePage />} />
         <Route path="project/:projectId/sprints" element={<SprintsPage />} />
         <Route path="project/:projectId/timeline" element={<TimelinePage />} />
-        <Route path="project/:projectId/universe" element={<IssueUniversePage />} />
+        <Route
+          path="project/:projectId/universe"
+          element={<IssueUniversePage />}
+        />
         <Route path="project/:projectId" element={<ProjectPage />} />
         <Route path="sprint/:id">
           <Route index element={<SprintManagerPage />} />
@@ -51,7 +60,10 @@ const AppRouter = () => {
             <Route path="reflection" element={<ReflectionPage />} />
           </Route>
         </Route>
-        <Route path="sprint/:sprintId/planning/task/:taskId" element={<TaskDetailPage />} />
+        <Route
+          path="sprint/:sprintId/planning/task/:taskId"
+          element={<TaskDetailPage />}
+        />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Route>
