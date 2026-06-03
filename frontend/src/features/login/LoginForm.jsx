@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { User, Mail, Lock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAuth } from '../auth/hooks/useAuth';
-import apiClient, { API_ORIGIN } from '../../data/api/apiClient';
+import React, { useState } from "react";
+import { User, Mail, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAuth } from "../auth/hooks/useAuth";
+import apiClient, { API_ORIGIN } from "../../data/api/apiClient";
 
-const GoogleLogo = ({ className = 'shrink-0' }) => (
-  <svg className={className} viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+const GoogleLogo = ({ className = "shrink-0" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    width={20}
+    height={20}
+    aria-hidden
+  >
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -26,7 +32,7 @@ const GoogleLogo = ({ className = 'shrink-0' }) => (
   </svg>
 );
 
-const GitHubLogo = ({ className = 'shrink-0 text-white' }) => (
+const GitHubLogo = ({ className = "shrink-0 text-white" }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
@@ -40,10 +46,10 @@ const GitHubLogo = ({ className = 'shrink-0 text-white' }) => (
 );
 
 const LoginForm = () => {
-  const [mode, setMode] = useState('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registerDone, setRegisterDone] = useState(null);
   const navigate = useNavigate();
@@ -51,13 +57,13 @@ const LoginForm = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/home');
+      navigate("/home");
     } catch (err) {
-      setError(err.message || 'Correo o contraseña incorrectos');
+      setError(err.message || "Correo o contraseña incorrectos");
     } finally {
       setLoading(false);
     }
@@ -65,20 +71,21 @@ const LoginForm = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setRegisterDone(null);
     setLoading(true);
     try {
-      const res = await apiClient.post('/auth/register', { email, password });
+      const res = await apiClient.post("/auth/register", { email, password });
       setRegisterDone(res);
-      toast.success(res.message || 'Cuenta creada');
+      toast.success(res.message || "Cuenta creada");
       if (!res.emailDispatched) {
-        toast.message('Sin SMTP', {
-          description: 'El enlace de verificación aparece en los logs del backend.',
+        toast.message("Sin SMTP", {
+          description:
+            "El enlace de verificación aparece en los logs del backend.",
         });
       }
     } catch (err) {
-      setError(err.message || 'No se pudo registrar');
+      setError(err.message || "No se pudo registrar");
     } finally {
       setLoading(false);
     }
@@ -99,7 +106,7 @@ const LoginForm = () => {
       </div>
 
       <form
-        onSubmit={mode === 'login' ? handleLogin : handleRegister}
+        onSubmit={mode === "login" ? handleLogin : handleRegister}
         className="mt-8 space-y-[15px]"
       >
         <div className="relative">
@@ -111,7 +118,10 @@ const LoginForm = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <Mail size={24} className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Mail
+            size={24}
+            className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
         </div>
 
         <div className="relative">
@@ -122,12 +132,15 @@ const LoginForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={mode === 'register' ? 6 : undefined}
+            minLength={mode === "register" ? 6 : undefined}
           />
-          <Lock size={24} className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Lock
+            size={24}
+            className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
         </div>
 
-        {mode === 'register' && (
+        {mode === "register" && (
           <>
             <p className="text-center text-[11px] font-bold uppercase tracking-[0.14em] text-[#312D2A] pt-1">
               REGISTRATE CON
@@ -141,7 +154,9 @@ const LoginForm = () => {
                 <GoogleLogo />
                 Google
               </button>
-              <span className="text-gray-400 text-sm font-medium px-1 shrink-0">|</span>
+              <span className="text-gray-400 text-sm font-medium px-1 shrink-0">
+                |
+              </span>
               <button
                 type="button"
                 onClick={startGitHubLogin}
@@ -161,12 +176,12 @@ const LoginForm = () => {
             className="w-full h-[48px] bg-[#67BFA1] text-white rounded-[10px] font-bold text-base hover:opacity-90 transition-opacity mt-4 disabled:opacity-60"
           >
             {loading
-              ? mode === 'login'
-                ? 'Iniciando...'
-                : 'Registrando...'
-              : mode === 'login'
-                ? 'Iniciar Sesion'
-                : 'Crear cuenta'}
+              ? mode === "login"
+                ? "Iniciando..."
+                : "Registrando..."
+              : mode === "login"
+                ? "Iniciar Sesion"
+                : "Crear cuenta"}
           </button>
         </div>
 
@@ -184,12 +199,12 @@ const LoginForm = () => {
       </form>
 
       <div className="mt-5 text-center space-y-2">
-        {mode === 'login' ? (
+        {mode === "login" ? (
           <button
             type="button"
             onClick={() => {
-              setMode('register');
-              setError('');
+              setMode("register");
+              setError("");
               setRegisterDone(null);
             }}
             className="text-[#67BFA1] font-bold text-sm underline-offset-2 hover:underline"
@@ -200,8 +215,8 @@ const LoginForm = () => {
           <button
             type="button"
             onClick={() => {
-              setMode('login');
-              setError('');
+              setMode("login");
+              setError("");
               setRegisterDone(null);
             }}
             className="text-[#67BFA1] font-bold text-sm underline-offset-2 hover:underline"
@@ -210,16 +225,6 @@ const LoginForm = () => {
           </button>
         )}
       </div>
-
-      {mode === 'login' && (
-        <div className="mt-[10px] text-center">
-          <p className="text-[12px] text-slate-500">
-            Correos demo:{' '}
-            <strong>axel@example.com, sm@example.com, po@example.com</strong> (Contraseña:{' '}
-            <strong>123</strong>)
-          </p>
-        </div>
-      )}
     </div>
   );
 };
