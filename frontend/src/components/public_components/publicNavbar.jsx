@@ -1,10 +1,12 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import Avatar from "../Avatar";
-import SearchBar from "../SearchBar";
 import FilledButton from "../../components/public_components/filled_button";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 
 const PublicNavbar = () => {
+  const navigate = useNavigate();
+  const handleRegister = () => {
+    navigate("/login", { state: { mode: "register" } });
+  };
   return (
     <nav className="h-[70px] bg-[#2B2B2B] px-10 flex items-center sticky top-0 z-40 shadow-sm justify-between">
       <Link
@@ -19,6 +21,12 @@ const PublicNavbar = () => {
       </Link>
 
       <div className="flex items-center gap-6 min-w-[200px] justify-end">
+        <FilledButton
+          text="Registrarse"
+          color="#333938"
+          onClick={handleRegister}
+        />
+
         <FilledButton text="Iniciar Sesión" color="#4db6ac" path="/login" />
       </div>
     </nav>
