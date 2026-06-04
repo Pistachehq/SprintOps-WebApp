@@ -1,6 +1,5 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import FilledButton from "../../components/public_components/filled_button";
-import { useAuth } from "../../features/auth/hooks/useAuth";
 
 const PublicNavbar = () => {
   const navigate = useNavigate();
