@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Mail, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../auth/hooks/useAuth";
 import apiClient, { API_ORIGIN } from "../../data/api/apiClient";
@@ -53,6 +53,7 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [registerDone, setRegisterDone] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const handleLogin = async (e) => {
@@ -98,6 +99,14 @@ const LoginForm = () => {
   const startGitHubLogin = () => {
     window.location.href = `${API_ORIGIN}/oauth2/authorization/github`;
   };
+
+  useEffect(() => {
+    if (location.state?.mode === "register") {
+      setMode(location.state.mode);
+    } else if (location.state?.mode === undefined && mode !== "login") {
+      setMode("login");
+    }
+  }, [location.state?.mode]);
 
   return (
     <div className="relative w-full">
