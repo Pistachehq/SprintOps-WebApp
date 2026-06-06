@@ -143,3 +143,8 @@ nav a:hover {
     transform: translateY(-52%) scale(1.03);
   }
 }
+
+.hero-content {
+  position: relative;
+  max-width: 580px;
+}
