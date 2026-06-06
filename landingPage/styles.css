@@ -94,3 +94,13 @@ nav a:hover {
 .btn-nav:hover {
   background: var(--pistache-dark) !important;
 }
+
+/* ─── HERO ───────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 6rem 5vw 4rem;
+}
