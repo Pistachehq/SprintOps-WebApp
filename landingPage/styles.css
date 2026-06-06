@@ -43,3 +43,22 @@ header {
   justify-content: space-between;
   padding: 0 5vw;
 }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+}
+
+.logo-text {
+  font-family: "DM Serif Display", serif;
+  font-size: 1.35rem;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
