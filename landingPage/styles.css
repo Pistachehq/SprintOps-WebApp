@@ -319,3 +319,27 @@ h1 em {
   background-size: 48px 48px;
   pointer-events: none;
 }
+
+.cta-section .section-label {
+  color: var(--pistache-light);
+}
+
+.cta-section .section-title {
+  color: #fff;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 560px;
+}
+
+.cta-section .section-sub {
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 auto 2.5rem;
+}
+
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: relative;
+}
