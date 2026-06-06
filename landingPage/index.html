@@ -122,36 +122,33 @@
     </footer>
 
     <script>
-      // Scroll reveal optimizado
+      // Scroll reveal - Ajuste final de sensibilidad
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               entry.target.classList.add("visible");
-              observer.unobserve(entry.target); // Optimización añadida
+              observer.unobserve(entry.target);
             }
           });
         },
-        { threshold: 0.1 },
+        { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }, // Valores finales pulidos
       );
 
-      // Corrección del selector para incluir animaciones escalonadas
       document
         .querySelectorAll(".reveal, .reveal-stagger")
         .forEach((el) => observer.observe(el));
 
-      // Resaltado de navegación - Versión experimental con color verde
+      // Smooth nav highlight
       const sections = document.querySelectorAll("section[id]");
       const navLinks = document.querySelectorAll('nav a[href^="#"]');
 
-      // Volviendo al scroll nativo para mayor fluidez
       window.addEventListener("scroll", () => {
         let current = "";
         sections.forEach((section) => {
           if (window.scrollY >= section.offsetTop - 100) current = section.id;
         });
         navLinks.forEach((link) => {
-          // Cambiado a #fff para mejorar la legibilidad sobre fondos oscuros
           link.style.color =
             link.getAttribute("href") === "#" + current
               ? "#fff"
