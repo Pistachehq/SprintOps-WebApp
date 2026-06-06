@@ -120,5 +120,24 @@
       </div>
       <p class="footer-copy">© 2026 Pistache. Todos los derechos reservados.</p>
     </footer>
+
+    <script>
+      // Scroll reveal - Primera versión
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      // Error intencional para simular fix: querySelectorAl
+      document
+        .querySelectorAll(".reveal")
+        .forEach((el) => observer.observe(el));
+    </script>
   </body>
 </html>
