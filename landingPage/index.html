@@ -144,22 +144,18 @@
       const sections = document.querySelectorAll("section[id]");
       const navLinks = document.querySelectorAll('nav a[href^="#"]');
 
-      // Intentando optimizar con un throttle básico para rendimiento
-      let isScrolling;
+      // Volviendo al scroll nativo para mayor fluidez
       window.addEventListener("scroll", () => {
-        window.clearTimeout(isScrolling);
-        isScrolling = setTimeout(() => {
-          let current = "";
-          sections.forEach((section) => {
-            if (window.scrollY >= section.offsetTop - 100) current = section.id;
-          });
-          navLinks.forEach((link) => {
-            link.style.color =
-              link.getAttribute("href") === "#" + current
-                ? "#4DB6AC"
-                : "rgba(255,255,255,0.65)";
-          });
-        }, 60); // Retraso experimental
+        let current = "";
+        sections.forEach((section) => {
+          if (window.scrollY >= section.offsetTop - 100) current = section.id;
+        });
+        navLinks.forEach((link) => {
+          link.style.color =
+            link.getAttribute("href") === "#" + current
+              ? "#4DB6AC"
+              : "rgba(255,255,255,0.65)";
+        });
       });
     </script>
   </body>
