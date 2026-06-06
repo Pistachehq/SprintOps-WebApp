@@ -30,3 +30,16 @@ body {
   line-height: 1.6;
   overflow-x: hidden; /* Fix añadido */
 }
+
+/* ─── HEADER ─────────────────────────────────────────── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--header-bg);
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5vw;
+}
