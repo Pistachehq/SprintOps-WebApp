@@ -151,9 +151,10 @@
           if (window.scrollY >= section.offsetTop - 100) current = section.id;
         });
         navLinks.forEach((link) => {
+          // Cambiado a #fff para mejorar la legibilidad sobre fondos oscuros
           link.style.color =
             link.getAttribute("href") === "#" + current
-              ? "#4DB6AC"
+              ? "#fff"
               : "rgba(255,255,255,0.65)";
         });
       });
