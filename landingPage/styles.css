@@ -477,3 +477,22 @@ footer {
     transform: translateY(0);
   }
 }
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hero-blob {
+    display: none;
+  }
+  .steps::before {
+    display: none;
+  }
+  .steps {
+    gap: 2rem;
+  }
+  nav .nav-links {
+    display: none;
+  }
+  .hero-stats {
+    gap: 1.5rem;
+  }
+}
