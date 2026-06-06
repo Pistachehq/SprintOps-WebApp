@@ -163,3 +163,23 @@ nav a:hover {
   border-radius: 99px;
   margin-bottom: 1.5rem;
 }
+
+.hero-badge-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--pistache);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.7);
+  }
+}
