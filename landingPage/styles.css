@@ -5,3 +5,16 @@
   margin: 0;
   padding: 0;
 }
+
+:root {
+  --pistache: #4db6ac;
+  --pistache-dark: #3a9e94;
+  --pistache-light: #b2dfdb;
+  --pistache-pale: #e0f2f1;
+  --bg: #f0efed;
+  --bg-card: #ffffff;
+  --ink: #1a1a2e;
+  --ink-soft: #4a4a5a;
+  --ink-muted: #8a8a9a;
+  --header-bg: #2b2b2b;
+}
