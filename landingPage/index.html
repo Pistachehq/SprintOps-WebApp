@@ -122,21 +122,22 @@
     </footer>
 
     <script>
-      // Scroll reveal - Primera versión
+      // Scroll reveal optimizado
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               entry.target.classList.add("visible");
+              observer.unobserve(entry.target); // Optimización añadida
             }
           });
         },
         { threshold: 0.1 },
       );
 
-      // Error intencional para simular fix: querySelectorAl
+      // Corrección del selector para incluir animaciones escalonadas
       document
-        .querySelectorAll(".reveal")
+        .querySelectorAll(".reveal, .reveal-stagger")
         .forEach((el) => observer.observe(el));
     </script>
   </body>
