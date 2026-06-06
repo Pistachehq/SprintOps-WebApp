@@ -62,3 +62,21 @@ header {
   color: #fff;
   letter-spacing: -0.02em;
 }
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+nav a {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+nav a:hover {
+  color: #fff;
+}
