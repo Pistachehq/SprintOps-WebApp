@@ -80,3 +80,16 @@ nav a {
 nav a:hover {
   color: #fff;
 }
+
+.btn-nav {
+  background: var(--pistache);
+  color: #fff !important;
+  padding: 0.5rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600 !important;
+  transition: background 0.2s !important;
+}
+
+.btn-nav:hover {
+  background: var(--pistache-dark) !important;
+}
