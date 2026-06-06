@@ -299,3 +299,23 @@ h1 em {
   align-self: stretch;
   margin: 4px 0;
 }
+
+/* ─── CTA SECTION ────────────────────────────────────── */
+.cta-section {
+  background: var(--header-bg);
+  text-align: center;
+  padding: 7rem 5vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(77, 182, 172, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77, 182, 172, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
