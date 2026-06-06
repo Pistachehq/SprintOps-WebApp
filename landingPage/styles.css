@@ -131,4 +131,15 @@ nav a:hover {
   border-radius: 50%;
   opacity: 0.55;
   pointer-events: none;
+  animation: float 8s ease-in-out infinite; /* Añadido para probar dinamismo */
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-52%) scale(1.03);
+  }
 }
