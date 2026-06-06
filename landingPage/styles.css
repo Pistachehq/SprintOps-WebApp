@@ -18,3 +18,14 @@
   --ink-muted: #8a8a9a;
   --header-bg: #2b2b2b;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+}
