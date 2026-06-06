@@ -28,4 +28,5 @@ body {
   background: var(--bg);
   color: var(--ink);
   line-height: 1.6;
+  overflow-x: hidden; /* Fix añadido */
 }
