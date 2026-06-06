@@ -183,3 +183,26 @@ nav a:hover {
     transform: scale(0.7);
   }
 }
+
+h1 {
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--pistache);
+}
+
+.hero-sub {
+  font-size: 1.075rem;
+  color: var(--ink-soft);
+  max-width: 460px;
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+  line-height: 1.7;
+}
