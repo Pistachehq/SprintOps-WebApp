@@ -107,10 +107,57 @@ nav a:hover {
 .hero {
   position: relative;
   min-height: calc(100vh - 72px);
-  display: flex;
+  display: grid; /* Cambiado de flex a grid */
+  grid-template-columns: 1.2fr 1fr; /* Columna izquierda un poco más ancha */
   align-items: center;
+  gap: 4rem;
   overflow: hidden;
   padding: 6rem 5vw 4rem;
+}
+
+/*Contenedor del Mockup con perspectiva 3D */
+.hero-mockup-container {
+  position: relative;
+  perspective: 1000px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+.hero-mockup-img {
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  border-radius: 16px;
+  box-shadow:
+    -10px 20px 40px rgba(0, 0, 0, 0.15),
+    -2px 5px 10px rgba(0, 0, 0, 0.08);
+
+  transform: rotateY(-20px) rotateX(10deg) rotateZ(-2deg);
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+
+.hero-mockup-container:hover .hero-mockup-img {
+  transform: rotateY(-10deg) rotateX(5deg) rotateZ(-1deg) translateY(-5px);
+}
+
+@media (max-width: 968px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    padding-top: 4rem;
+  }
+
+  .hero-mockup-img {
+    transform: none;
+    max-width: 100%;
+  }
+
+  .hero-mockup-container:hover .hero-mockup-img {
+    transform: translateY(-5px);
+  }
 }
 
 .hero-grid-bg {
