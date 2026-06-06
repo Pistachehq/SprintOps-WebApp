@@ -162,6 +162,7 @@ nav a:hover {
   padding: 0.3rem 0.85rem;
   border-radius: 99px;
   margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease both;
 }
 
 .hero-badge-dot {
@@ -191,6 +192,7 @@ h1 {
   letter-spacing: -0.03em;
   color: var(--ink);
   margin-bottom: 1.25rem;
+  animation: fadeUp 0.6s 0.1s ease both;
 }
 
 h1 em {
@@ -205,12 +207,14 @@ h1 em {
   margin-bottom: 2.5rem;
   font-weight: 300;
   line-height: 1.7;
+  animation: fadeUp 0.6s 0.2s ease both;
 }
 
 .hero-actions {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  animation: fadeUp 0.6s 0.3s ease both;
 }
 
 .btn-primary {
@@ -271,6 +275,7 @@ h1 em {
   display: flex;
   gap: 2.5rem;
   margin-top: 3.5rem;
+  animation: fadeUp 0.6s 0.4s ease both;
 }
 
 .stat-item {
@@ -460,4 +465,15 @@ footer {
   opacity: 1;
   transform: none;
   transition-delay: 0.3s;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
