@@ -114,3 +114,21 @@ nav a:hover {
   background-size: 48px 48px;
   pointer-events: none;
 }
+
+.hero-blob {
+  position: absolute;
+  right: -8vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(640px, 55vw);
+  height: min(640px, 55vw);
+  background: radial-gradient(
+    ellipse at 40% 40%,
+    #b2dfdb 0%,
+    #e0f2f1 45%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  opacity: 0.55;
+  pointer-events: none;
+}
