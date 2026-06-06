@@ -432,3 +432,32 @@ footer {
   opacity: 1;
   transform: none;
 }
+
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease;
+}
+
+.reveal-stagger.visible > *:nth-child(1) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+.reveal-stagger.visible > *:nth-child(2) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.1s;
+}
+.reveal-stagger.visible > *:nth-child(3) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.2s;
+}
+.reveal-stagger.visible > *:nth-child(4) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.3s;
+}
