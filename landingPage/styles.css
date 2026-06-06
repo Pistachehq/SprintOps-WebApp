@@ -230,6 +230,7 @@ h1 em {
   transition:
     background 0.2s,
     transform 0.15s;
+  box-shadow: 0 4px 14px rgba(77, 182, 172, 0.35); /* Añadida profundidad visual */
 }
 
 .btn-primary:hover {
