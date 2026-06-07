@@ -638,5 +638,26 @@ footer {
  color: rgba(255, 255, 255, 0.65);
 }
 
+.rag-flow-body {
+ padding: 1.25rem;
+ display: flex;
+ flex-direction: column;
+}
+
+
+.flow-step {
+ display: flex;
+ gap: 14px;
+ align-items: stretch;
+}
+
+
+.flow-step-left {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ flex-shrink: 0;
+}
+
 
 
