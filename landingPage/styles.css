@@ -699,6 +699,44 @@ footer {
  display: none;
 }
 
+.flow-tag {
+ display: inline-flex;
+ align-items: center;
+ gap: 5px;
+ font-size: 0.68rem;
+ font-weight: 600;
+ letter-spacing: 0.06em;
+ text-transform: uppercase;
+ padding: 3px 10px;
+ border-radius: 99px;
+ margin-bottom: 6px;
+}
+
+
+.flow-tag.input {
+ background: var(--pistache-pale);
+ color: var(--pistache-dark);
+}
+
+
+.flow-tag.retrieval {
+ background: #e8f0fe;
+ color: #1a56a0;
+}
+
+
+.flow-tag.generation {
+ background: #fef3e2;
+ color: #93610a;
+}
+
+
+.flow-tag.output {
+ background: #e6f4ea;
+ color: #2d6a3f;
+}
+
+
 
 
 
