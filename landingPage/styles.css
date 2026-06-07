@@ -561,3 +561,9 @@ footer {
  flex-direction: column;
  gap: 1.25rem;
 }
+
+.rag-metric-row {
+ display: grid;
+ grid-template-columns: repeat(3, 1fr);
+ gap: 12px;
+}
