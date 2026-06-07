@@ -594,4 +594,15 @@ footer {
 }
 
 
+/* flujo de rag*/
+
+.rag-grid {
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 2rem;
+ align-items: start;
+ margin-top: 3rem;
+}
+
+
 
