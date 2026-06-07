@@ -604,5 +604,39 @@ footer {
  margin-top: 3rem;
 }
 
+.rag-flow-card {
+ background: var(--bg-card);
+ border-radius: 16px;
+ border: 1px solid rgba(77, 182, 172, 0.15);
+ overflow: hidden;
+}
+
+
+.rag-flow-header {
+ background: var(--header-bg);
+ padding: 1rem 1.25rem;
+ display: flex;
+ align-items: center;
+ gap: 10px;
+}
+
+
+.rag-flow-header-dot {
+ width: 8px;
+ height: 8px;
+ border-radius: 50%;
+ background: var(--pistache);
+ animation: pulse 2s infinite;
+}
+
+
+.rag-flow-header span {
+ font-size: 0.78rem;
+ font-weight: 600;
+ letter-spacing: 0.06em;
+ text-transform: uppercase;
+ color: rgba(255, 255, 255, 0.65);
+}
+
 
 
