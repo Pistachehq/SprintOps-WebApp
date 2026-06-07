@@ -659,5 +659,46 @@ footer {
  flex-shrink: 0;
 }
 
+.flow-num {
+ width: 32px;
+ height: 32px;
+ border-radius: 50%;
+ background: var(--pistache-pale);
+ color: var(--pistache-dark);
+ font-size: 0.8rem;
+ font-weight: 600;
+ font-family: "DM Serif Display", serif;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ flex-shrink: 0;
+}
+
+
+.flow-line {
+ width: 1px;
+ flex: 1;
+ min-height: 16px;
+ background: rgba(77, 182, 172, 0.25);
+ margin: 4px 0;
+}
+
+
+.flow-step-right {
+ padding-bottom: 1.25rem;
+ flex: 1;
+}
+
+
+.flow-step:last-child .flow-step-right {
+ padding-bottom: 0;
+}
+
+
+.flow-step:last-child .flow-line {
+ display: none;
+}
+
+
 
 
