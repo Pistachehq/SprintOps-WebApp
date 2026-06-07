@@ -586,4 +586,12 @@ footer {
  margin-bottom: 4px;
 }
 
+.rag-metric-label {
+ font-size: 0.73rem;
+ color: var(--ink-muted);
+ font-weight: 500;
+ line-height: 1.3;
+}
+
+
 
