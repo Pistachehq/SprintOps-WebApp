@@ -576,3 +576,14 @@ footer {
  text-align: center;
 }
 
+.rag-metric-num {
+ font-family: "DM Serif Display", serif;
+ font-size: 1.8rem;
+ color: var(--pistache);
+ letter-spacing: -0.02em;
+ display: block;
+ line-height: 1;
+ margin-bottom: 4px;
+}
+
+
