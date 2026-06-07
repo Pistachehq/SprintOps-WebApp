@@ -552,3 +552,12 @@ footer {
   }
 }
 
+/* Seccion 2 */
+
+
+/* ─── columna derecha ───────────────────────────────── */
+.rag-right {
+ display: flex;
+ flex-direction: column;
+ gap: 1.25rem;
+}
