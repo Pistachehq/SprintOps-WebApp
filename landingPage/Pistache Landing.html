@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pistache — Gestión ágil de proyectos</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#161d2e;
+    --ink-soft:#2a3142;
+    --charcoal:#272624;
+    --charcoal-2:#1f1e1c;
+    --cream:#edeae3;
+    --cream-2:#f5f3ee;
+    --surface:#ffffff;
+    --teal:#57bfa5;
+    --teal-600:#43a98e;
+    --teal-700:#34917a;
+    --teal-tint:#dcefe9;
+    --teal-tint-2:#eaf5f1;
+    --body:#5c5f66;
+    --body-soft:#83868d;
+    --line:#e2ddd3;
+    --line-soft:#ebe7df;
+    /* step badge colors */
+    --b-teal-bg:#d8efe7;   --b-teal-fg:#2f8c75;
+    --b-blue-bg:#dde8fb;   --b-blue-fg:#3f6fc4;
+    --b-amber-bg:#f8eccf;  --b-amber-fg:#b07d22;
+    --b-green-bg:#d9f0df;  --b-green-fg:#3f9d63;
+    --shadow-card:0 1px 2px rgba(22,29,46,.04), 0 12px 30px -12px rgba(22,29,46,.12);
+    --shadow-float:0 30px 70px -28px rgba(22,29,46,.45), 0 8px 24px -16px rgba(22,29,46,.3);
+    --ease:cubic-bezier(.22,.78,.26,1);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--body);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--teal);color:#fff}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+
+  .serif{font-family:'Playfair Display',Georgia,serif}
+  .wrap{width:min(1240px,100% - 48px);margin-inline:auto}
+
+  /* ---------------- Header ---------------- */
+  header{
+    position:sticky;top:0;z-index:60;
+    background:var(--charcoal);
+    border-bottom:1px solid rgba(255,255,255,.06);
+    transition:box-shadow .3s var(--ease);
+  }
+  header.scrolled{box-shadow:0 10px 30px -18px rgba(0,0,0,.6)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{height:48px;width:auto}
+  .nav-links{display:flex;align-items:center;gap:38px}
+  .nav-links a{
+    color:#c9c7c2;font-size:14.5px;font-weight:500;letter-spacing:.01em;
+    position:relative;padding:6px 0;transition:color .2s var(--ease);
+  }
+  .nav-links a::after{
+    content:"";position:absolute;left:0;bottom:0;height:2px;width:0;
+    background:var(--teal);transition:width .28s var(--ease);
+  }
+  .nav-links a:hover{color:#fff}
+  .nav-links a:hover::after{width:100%}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;
+    border:none;cursor:pointer;border-radius:11px;
+    transition:transform .18s var(--ease), box-shadow .25s var(--ease), background .2s var(--ease);
+  }
+  .btn svg{width:18px;height:18px}
+  .btn-primary{
+    background:var(--teal);color:#fff;padding:12px 22px;
+    box-shadow:0 10px 22px -12px rgba(67,169,142,.9);
+  }
+  .btn-primary:hover{background:var(--teal-600);transform:translateY(-2px);box-shadow:0 16px 30px -12px rgba(67,169,142,.95)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-lg{padding:16px 30px;font-size:16.5px;border-radius:13px}
+  .btn-ghost{background:transparent;color:#e9e7e2;padding:11px 20px;border:1px solid rgba(255,255,255,.16)}
+  .btn-ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.3)}
+  .btn .arrow{transition:transform .25s var(--ease)}
+  .btn:hover .arrow{transform:translateX(4px)}
+
+  .nav-cta{display:flex;align-items:center;gap:16px}
+  .header-login{color:#e9e7e2;font-size:14.5px;font-weight:500}
+  .header-login:hover{color:#fff}
+
+  /* ---------------- Backgrounds ---------------- */
+  .grid-bg{position:relative}
+  .grid-bg::before{
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(to right, rgba(22,29,46,.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(22,29,46,.045) 1px, transparent 1px);
+    background-size:54px 54px;
+    -webkit-mask-image:radial-gradient(120% 90% at 70% 10%, #000 35%, transparent 80%);
+    mask-image:radial-gradient(120% 90% at 70% 10%, #000 35%, transparent 80%);
+  }
+  .blob{
+    position:absolute;border-radius:50%;pointer-events:none;z-index:0;
+    background:radial-gradient(circle at 38% 38%, rgba(87,191,165,.26), rgba(87,191,165,.08) 52%, transparent 70%);
+    filter:blur(8px);
+  }
+
+  /* ---------------- Hero ---------------- */
+  .hero{position:relative;padding:84px 0 96px;overflow:hidden}
+  .hero .blob{width:560px;height:560px;top:-160px;right:-180px}
+  .hero-grid{
+    position:relative;z-index:2;display:grid;
+    grid-template-columns:1.02fr 1.05fr;gap:56px;align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    background:var(--teal-tint);color:var(--teal-700);
+    font-size:12.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+    padding:8px 15px;border-radius:999px;margin-bottom:26px;
+  }
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(87,191,165,.6);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(87,191,165,.55)}70%{box-shadow:0 0 0 9px rgba(87,191,165,0)}100%{box-shadow:0 0 0 0 rgba(87,191,165,0)}}
+
+  h1.hero-title{
+    font-family:'Playfair Display',serif;font-weight:800;color:var(--ink);
+    font-size:clamp(48px,5.6vw,82px);line-height:1.03;letter-spacing:-.015em;
+    margin-bottom:24px;
+  }
+  h1.hero-title .accent{color:var(--teal);font-style:italic;font-weight:700;display:block}
+  .hero-lead{font-size:19px;line-height:1.6;color:var(--body);max-width:30em;margin-bottom:36px}
+  .hero-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .play-link{display:inline-flex;align-items:center;gap:11px;color:var(--ink);font-weight:600;font-size:15px}
+  .play-link .pc{
+    width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);
+    display:grid;place-items:center;background:var(--surface);transition:all .22s var(--ease);
+  }
+  .play-link:hover .pc{border-color:var(--teal);background:var(--teal-tint-2);transform:scale(1.06)}
+  .play-link svg{width:15px;height:15px;color:var(--teal-700);margin-left:2px}
+
+  /* hero mockup */
+  .mockup-stage{position:relative;perspective:1600px}
+  .mockup{
+    position:relative;z-index:2;border-radius:16px;overflow:hidden;
+    box-shadow:var(--shadow-float);background:#1f1e1c;
+    transform:rotateY(-9deg) rotateX(3deg) translateZ(0);
+    transition:transform .6s var(--ease);will-change:transform;
+  }
+  .mockup img{width:100%;display:block}
+  .mockup-stage:hover .mockup{transform:rotateY(-3deg) rotateX(1deg)}
+  .float-chip{
+    position:absolute;z-index:3;background:var(--surface);border:1px solid var(--line-soft);
+    border-radius:13px;padding:13px 16px;box-shadow:var(--shadow-card);
+    display:flex;align-items:center;gap:11px;font-size:13.5px;
+  }
+  .float-chip .ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .float-chip strong{color:var(--ink);font-weight:600;display:block;font-size:14px;line-height:1.2}
+  .float-chip span{color:var(--body-soft);font-size:12.5px}
+  .chip-a{top:-26px;left:-34px;animation:floaty 5.5s ease-in-out infinite}
+  .chip-b{bottom:-22px;right:-26px;animation:floaty 6.5s ease-in-out infinite .8s}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+  /* hero stats */
+  .hero-stats{
+    position:relative;z-index:2;display:flex;gap:0;margin-top:74px;
+    border-top:1px solid var(--line);padding-top:30px;max-width:760px;
+  }
+  .hero-stats .stat{flex:1;padding-right:34px;position:relative}
+  .hero-stats .stat + .stat{padding-left:34px}
+  .hero-stats .stat + .stat::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:1px;background:var(--line)}
+  .hero-stats .num{font-family:'Playfair Display',serif;font-weight:700;color:var(--ink);font-size:30px;line-height:1;margin-bottom:8px}
+  .hero-stats .lbl{font-size:14px;color:var(--body-soft);line-height:1.4}
+
+  /* ---------------- Section scaffolding ---------------- */
+  section{position:relative}
+  .sec-pad{padding:104px 0}
+  .sec-head{max-width:640px;margin-bottom:56px}
+  .sec-head.center{margin-inline:auto;text-align:center}
+  .sec-eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--teal-700);font-size:12.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:20px}
+  .sec-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+  h2.sec-title{font-family:'Playfair Display',serif;font-weight:700;color:var(--ink);font-size:clamp(34px,3.6vw,50px);line-height:1.08;letter-spacing:-.01em}
+  h2.sec-title .it{font-style:italic;color:var(--teal)}
+  .sec-sub{font-size:18px;color:var(--body);margin-top:20px;line-height:1.6}
+
+  /* ---------------- RAG differentiator ---------------- */
+  .rag{background:var(--cream-2);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .rag .blob{width:480px;height:480px;top:40px;right:-200px;opacity:.7}
+  .rag-grid{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1.04fr;gap:64px;align-items:center}
+  .rag-left h2{margin-bottom:24px}
+  .stat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+  .stat-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:22px 20px;text-align:center;transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+  .stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-card)}
+  .stat-card .v{font-family:'Playfair Display',serif;font-weight:700;color:var(--teal-700);font-size:34px;line-height:1;margin-bottom:9px}
+  .stat-card .k{font-size:13px;color:var(--body-soft)}
+
+  /* flow card */
+  .flow-card{position:relative;z-index:2;background:var(--surface);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-card);border:1px solid var(--line-soft)}
+  .flow-head{position:relative;background:var(--charcoal);color:#fff;padding:20px 26px;overflow:hidden}
+  .flow-head .glow{position:absolute;top:-90px;right:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(87,191,165,.55),transparent 65%)}
+  .flow-head .ttl{position:relative;display:flex;align-items:center;gap:11px;font-size:13px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
+  .flow-head .ttl .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px var(--teal)}
+  .flow-body{padding:12px 26px 26px}
+  .flow-step{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:20px 0;position:relative}
+  .flow-step + .flow-step{border-top:1px solid var(--line-soft)}
+  .step-rail{display:flex;flex-direction:column;align-items:center}
+  .step-num{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--cream-2);color:var(--body-soft);display:grid;place-items:center;font-weight:700;font-size:14px;flex:none;transition:all .35s var(--ease)}
+  .flow-step.active .step-num{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 0 0 5px var(--teal-tint)}
+  .step-line{width:2px;flex:1;background:var(--line-soft);margin-top:8px;min-height:14px}
+  .flow-step:last-child .step-line{display:none}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:4px 10px;border-radius:6px;margin-bottom:9px}
+  .badge.teal{background:var(--b-teal-bg);color:var(--b-teal-fg)}
+  .badge.blue{background:var(--b-blue-bg);color:var(--b-blue-fg)}
+  .badge.amber{background:var(--b-amber-bg);color:var(--b-amber-fg)}
+  .badge.green{background:var(--b-green-bg);color:var(--b-green-fg)}
+  .step-title{font-size:18px;font-weight:600;color:var(--ink);line-height:1.25;margin-bottom:6px}
+  .step-desc{font-size:14.5px;color:var(--body);margin-bottom:13px}
+  .pill{display:inline-block;font-size:12.5px;color:var(--body-soft);background:var(--cream);border:1px solid var(--line-soft);border-radius:7px;padding:5px 11px}
+  .pill b{color:var(--ink-soft);font-weight:600}
+
+  /* ---------------- Features ---------------- */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .feat{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:30px 28px 32px;transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s var(--ease);position:relative;overflow:hidden}
+  .feat:hover{transform:translateY(-6px);box-shadow:var(--shadow-card);border-color:var(--teal-tint)}
+  .feat .ic{width:50px;height:50px;border-radius:13px;background:var(--teal-tint-2);display:grid;place-items:center;margin-bottom:22px;transition:background .3s var(--ease)}
+  .feat:hover .ic{background:var(--teal-tint)}
+  .feat .ic svg{width:24px;height:24px;color:var(--teal-700)}
+  .feat h3{font-size:20px;color:var(--ink);font-weight:600;margin-bottom:11px;letter-spacing:-.01em}
+  .feat p{font-size:15px;color:var(--body);line-height:1.6}
+  .feat .sheen{position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(87,191,165,.06) 50%,transparent 70%);opacity:0;transition:opacity .4s var(--ease)}
+  .feat:hover .sheen{opacity:1}
+
+  /* ---------------- Workflow strip ---------------- */
+  .how{background:var(--cream-2);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;counter-reset:hs}
+  .how-step{position:relative;padding-top:74px}
+  .how-step::before{counter-increment:hs;content:"0" counter(hs);font-family:'Playfair Display',serif;font-size:54px;font-weight:700;line-height:1;color:var(--teal);opacity:.5;position:absolute;top:0;left:-4px}
+  .how-step h4{font-size:20px;color:var(--ink);font-weight:600;margin-bottom:10px;position:relative}
+  .how-step p{font-size:15px;color:var(--body);line-height:1.6;position:relative}
+  .how-step .bar{height:3px;width:46px;background:var(--teal);border-radius:2px;margin-bottom:18px}
+
+  /* ---------------- CTA ---------------- */
+  .cta-band{position:relative;overflow:hidden;background:linear-gradient(160deg,#1f3e38 0%, #245047 45%, #2f6157 100%)}
+  .cta-band .blob{width:680px;height:680px;top:-260px;left:-120px;background:radial-gradient(circle at 40% 40%,rgba(87,191,165,.5),transparent 65%);opacity:.7}
+  .cta-band .blob.two{top:auto;bottom:-320px;left:auto;right:-160px}
+  .cta-inner{position:relative;z-index:2;text-align:center;padding:108px 0;max-width:760px;margin-inline:auto}
+  .cta-inner h2{font-family:'Playfair Display',serif;color:#fff;font-weight:700;font-size:clamp(36px,4vw,56px);line-height:1.08;letter-spacing:-.01em;margin-bottom:22px}
+  .cta-inner h2 .it{font-style:italic;color:var(--teal)}
+  .cta-inner p{color:rgba(255,255,255,.78);font-size:19px;margin-bottom:38px;line-height:1.6}
+  .cta-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  .cta-band .btn-primary{background:var(--teal);box-shadow:0 16px 36px -14px rgba(0,0,0,.5)}
+  .cta-band .btn-primary:hover{background:#65cdb3}
+
+  /* ---------------- Footer ---------------- */
+  footer{background:var(--charcoal-2);color:#b6b4af;padding:64px 0 34px}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;padding-bottom:48px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .foot-brand img{height:56px;margin-bottom:22px}
+  .foot-brand p{font-size:14.5px;color:#8d8b86;max-width:30ch;line-height:1.6}
+  .foot-col h5{color:#fff;font-size:13px;font-weight:600;letter-spacing:.04em;margin-bottom:16px}
+  .foot-col a{display:block;font-size:14px;color:#9d9b96;padding:6px 0;transition:color .18s var(--ease)}
+  .foot-col a:hover{color:var(--teal)}
+  .foot-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:26px;font-size:13px;color:#7e7c77;flex-wrap:wrap;gap:14px}
+  .foot-bottom .socials{display:flex;gap:14px}
+  .foot-bottom .socials a{width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;transition:all .2s var(--ease)}
+  .foot-bottom .socials a:hover{background:var(--teal);border-color:var(--teal);color:#fff}
+  .foot-bottom .socials svg{width:16px;height:16px}
+
+  /* ---------------- Reveal animations (creative per section) ---------------- */
+  html.no-js .reveal,html.no-js [class*="rv-"]{opacity:1;transform:none;filter:none}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}
+  .reveal.d4{transition-delay:.32s}.reveal.d5{transition-delay:.4s}
+
+  /* Variant: slide from left (RAG left column) */
+  .rv-left{opacity:0;transform:translateX(-60px);filter:blur(6px);transition:opacity .9s var(--ease),transform .9s var(--ease),filter .7s var(--ease)}
+  .rv-left.in{opacity:1;transform:none;filter:none}
+
+  /* Variant: slide from right (RAG flow card) */
+  .rv-right{opacity:0;transform:translateX(70px) rotate(2deg);filter:blur(6px);transition:opacity .95s var(--ease),transform .95s var(--ease),filter .7s var(--ease)}
+  .rv-right.in{opacity:1;transform:none;filter:none}
+
+  /* Variant: rise + scale + tilt (Features cards) */
+  .rv-rise{opacity:0;transform:translateY(60px) scale(.9) rotateX(12deg);transform-origin:center bottom;transition:opacity .8s var(--ease),transform .9s var(--ease)}
+  .rv-rise.in{opacity:1;transform:none}
+  .feat-grid{perspective:1400px}
+
+  /* Variant: horizontal slide for How-it-works steps */
+  .rv-slide{opacity:0;transform:translateX(-80px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+  .rv-slide.in{opacity:1;transform:none}
+  .how-step .bar{transform:scaleX(0);transform-origin:left;transition:transform .9s var(--ease) .25s}
+  .how-step.in .bar{transform:scaleX(1)}
+
+  /* Variant: zoom-in for CTA */
+  .rv-zoom{opacity:0;transform:scale(.78);filter:blur(8px);transition:opacity 1s var(--ease),transform 1s var(--ease),filter .8s var(--ease)}
+  .rv-zoom.in{opacity:1;transform:none;filter:none}
+
+  /* Variant: flip-up for section headers (Features center) */
+  .rv-flip{opacity:0;transform:perspective(900px) rotateX(-35deg) translateY(20px);transform-origin:center top;transition:opacity .8s var(--ease),transform .9s var(--ease)}
+  .rv-flip.in{opacity:1;transform:none}
+
+  /* Scroll-driven custom props */
+  .hero{--p:0}
+  .hero .blob{transform:translate3d(calc(var(--p) * -40px), calc(var(--p) * 60px), 0) scale(calc(1 + var(--p) * .15));transition:transform .15s linear}
+  .mockup-stage{--m:0}
+  .mockup-stage .mockup{will-change:transform}
+  .float-chip{--f:0}
+  .chip-a{transform:translateY(calc(var(--f) * -30px))}
+  .chip-b{transform:translateY(calc(var(--f) * 30px))}
+
+  /* Features: scroll-tilt active state */
+  .feat{--t:0;transform:perspective(900px) rotateX(calc(var(--t) * -4deg)) translateY(calc(var(--t) * -6px))}
+  .feat:hover{--t:0}
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal,[class*="rv-"]{opacity:1;transform:none;filter:none;transition:none}
+    .chip-a,.chip-b,.eyebrow .dot{animation:none}
+    .how-step .bar{transform:none}
+  }
+
+  /* ---------------- Responsive ---------------- */
+  @media (max-width:980px){
+    .hero-grid,.rag-grid{grid-template-columns:1fr;gap:52px}
+    .mockup{transform:none}
+    .mockup-stage:hover .mockup{transform:none}
+    .feat-grid,.how-steps{grid-template-columns:1fr}
+    .foot-grid{grid-template-columns:1fr 1fr;gap:32px}
+    .nav-links{display:none}
+    .chip-a{left:0}.chip-b{right:0}
+  }
+  @media (max-width:560px){
+    .hero-stats{flex-direction:column;gap:22px}
+    .hero-stats .stat,.hero-stats .stat + .stat{padding:0}
+    .hero-stats .stat + .stat::before{display:none}
+    .stat-cards{grid-template-columns:1fr}
+    .foot-grid{grid-template-columns:1fr}
+    .sec-pad{padding:72px 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img src="assets/logo-pistache.png" alt="Pistache"></a>
+    <nav class="nav-links">
+      <a href="#producto">Producto</a>
+      <a href="#rag">SprintOps</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#features">Características</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="header-login" href="#">Entrar</a>
+      <button class="btn btn-primary">Iniciar sesión</button>
+    </div>
+  </div>
+</header>
+
+<a id="top"></a>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero grid-bg" id="producto">
+  <span class="blob"></span>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow reveal"><span class="dot"></span>Gestión ágil de proyectos</span>
+      <h1 class="hero-title reveal d1">Menos Gestión<span class="accent">Más Desarrollo</span></h1>
+      <p class="hero-lead reveal d2">Pistache reúne a Product Owners y equipos de desarrollo en un solo espacio colaborativo — planifica, asigna y entrega con confianza, sprint a sprint.</p>
+      <div class="hero-actions reveal d3">
+        <button class="btn btn-primary btn-lg">Comenzar aquí
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <a class="play-link" href="#rag">
+          <span class="pc"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+          Ver cómo funciona
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat reveal d2"><div class="num">100%</div><div class="lbl">Ágil por diseño</div></div>
+        <div class="stat reveal d3"><div class="num">Sprints</div><div class="lbl">Centrados en el equipo</div></div>
+        <div class="stat reveal d4"><div class="num">RAG AI</div><div class="lbl">Habla con tu desarrollo como un compañero más</div></div>
+      </div>
+    </div>
+
+    <div class="hero-visual reveal d2">
+      <div class="mockup-stage">
+        <div class="mockup"><img src="assets/mockup-projects.png" alt="Panel de proyectos de Pistache"></div>
+        <div class="float-chip chip-a">
+          <span class="ico" style="background:var(--b-green-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3f9d63" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <span><strong>Sprint entregado</strong><span>SprintOps · 19 ago 2026</span></span>
+        </div>
+        <div class="float-chip chip-b">
+          <span class="ico" style="background:var(--teal-tint)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2f8c75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <span><strong>"¿Qué falta del sprint?"</strong><span>Respuesta en &lt;2 seg</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RAG DIFFERENTIATOR ===================== -->
+<section class="rag sec-pad grid-bg" id="rag">
+  <span class="blob"></span>
+  <div class="wrap rag-grid">
+    <div class="rag-left">
+      <span class="sec-eyebrow rv-left"><span class="dot"></span>Diferenciador IA</span>
+      <h2 class="sec-title rv-left d1">Habla con tus sprints,<br><span class="it">no con comandos</span></h2>
+      <p class="sec-sub rv-left d2">SprintOps implementa RAG (Retrieval-Augmented Generation) para entender el contexto de tu proyecto en tiempo real. Sin curva de aprendizaje. Sin comandos técnicos. Solo lenguaje natural.</p>
+      <div class="stat-cards">
+        <div class="stat-card rv-rise d2"><div class="v" data-count="30" data-prefix="+" data-suffix="%">+30%</div><div class="k">Eficiencia operativa</div></div>
+        <div class="stat-card rv-rise d3"><div class="v" data-count="66" data-prefix="−" data-suffix="%">−66%</div><div class="k">Tiempo de búsqueda</div></div>
+        <div class="stat-card rv-rise d4"><div class="v">&lt;2s</div><div class="k">Respuesta contextual</div></div>
+      </div>
+    </div>
+
+    <div class="rag-right rv-right d2">
+      <div class="flow-card">
+        <div class="flow-head">
+          <span class="glow"></span>
+          <div class="ttl"><span class="dot"></span>Flujo RAG en SprintOps</div>
+        </div>
+        <div class="flow-body" id="flow">
+          <div class="flow-step">
+            <div class="step-rail"><div class="step-num">1</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <span class="badge teal">Entrada</span>
+              <div class="step-title">Consulta en lenguaje natural</div>
+              <p class="step-desc">El developer escribe en Telegram sin recordar comandos técnicos.</p>
+              <span class="pill"><b>Telegram Bot</b> API</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-rail"><div class="step-num">2</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <span class="badge blue">Recuperación</span>
+              <div class="step-title">Búsqueda semántica de contexto</div>
+              <p class="step-desc">Recupera tareas, sprints, issues y docs relevantes usando embeddings.</p>
+              <span class="pill"><b>Oracle DB</b> · Embeddings</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-rail"><div class="step-num">3</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <span class="badge amber">Generación</span>
+              <div class="step-title">LLM + contexto del proyecto</div>
+              <p class="step-desc">El modelo genera una respuesta precisa enriquecida con el contexto recuperado.</p>
+              <span class="pill"><b>LLM</b> · Groq API</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-rail"><div class="step-num">4</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <span class="badge green">Respuesta</span>
+              <div class="step-title">Acción accionable en &lt;2 seg</div>
+              <p class="step-desc">Respuesta entregada con trazabilidad del contexto usado para generarla.</p>
+              <span class="pill"><b>&lt;2 segundos</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="sec-pad" id="features">
+  <div class="wrap">
+    <div class="sec-head center">
+      <span class="sec-eyebrow rv-flip" style="justify-content:center"><span class="dot"></span>Una plataforma, todo el flujo</span>
+      <h2 class="sec-title rv-flip d1">Todo lo que tu equipo necesita<br>para entregar <span class="it">sprint a sprint</span></h2>
+    </div>
+    <div class="feat-grid">
+      <article class="feat rv-rise d1">
+        <span class="sheen"></span>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></div>
+        <h3>Tableros de sprint</h3>
+        <p>Planifica, prioriza y arrastra tareas por estado. El backlog se mantiene ordenado y cada miembro sabe qué sigue.</p>
+      </article>
+      <article class="feat rv-rise d2">
+        <span class="sheen"></span>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>Roles y asignación</h3>
+        <p>Product Owners y desarrolladores en un mismo espacio. Asigna responsables, define alcance y reparte la carga del equipo.</p>
+      </article>
+      <article class="feat rv-rise d3">
+        <span class="sheen"></span>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>Asistente RAG</h3>
+        <p>Pregunta por el estado de un sprint, issues abiertos o dependencias. Responde con el contexto real de tu proyecto.</p>
+      </article>
+      <article class="feat rv-rise d1">
+        <span class="sheen"></span>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+        <h3>Bot de Telegram</h3>
+        <p>Consulta y actualiza tu proyecto desde el chat que ya usas. Sin abrir otra pestaña, sin recordar comandos.</p>
+      </article>
+      <article class="feat rv-rise d2">
+        <span class="sheen"></span>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+        <h3>Métricas en vivo</h3>
+        <p>Velocidad, cierres y avance del sprint a la vista. Detecta cuellos de botella antes de que cuesten una entrega.</p>
+      </article>
+      <article class="feat rv-rise d3">
+        <span class="sheen"></span>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Trazabilidad total</h3>
+        <p>Cada respuesta del asistente cita el contexto que usó. Decisiones explicables, auditables y confiables.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="how sec-pad" id="como">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-eyebrow rv-left"><span class="dot"></span>Cómo funciona</span>
+      <h2 class="sec-title rv-left d1">De la idea a la entrega<br>en <span class="it">tres pasos</span></h2>
+    </div>
+    <div class="how-steps">
+      <div class="how-step rv-slide d1">
+        <div class="bar"></div>
+        <h4>Crea tu proyecto</h4>
+        <p>Define el proyecto, invita a tu equipo y arma el primer sprint. Pistache prepara el tablero y el backlog por ti.</p>
+      </div>
+      <div class="how-step rv-slide d2">
+        <div class="bar"></div>
+        <h4>Planifica y asigna</h4>
+        <p>Reparte tareas, fija fechas y deja claras las prioridades. Cada quien sabe qué hacer y cuándo entregarlo.</p>
+      </div>
+      <div class="how-step rv-slide d3">
+        <div class="bar"></div>
+        <h4>Pregunta y entrega</h4>
+        <p>Consulta el avance en lenguaje natural y entrega con confianza. El contexto vive contigo, sprint a sprint.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="cta-band">
+  <span class="blob"></span>
+  <span class="blob two"></span>
+  <div class="wrap cta-inner">
+    <h2 class="rv-zoom">Deja de gestionar.<br><span class="it">Empieza a construir.</span></h2>
+    <p class="rv-zoom d1">Lleva a tu equipo a un solo espacio colaborativo y deja que SprintOps responda por ti. Empieza gratis hoy.</p>
+    <div class="cta-actions rv-zoom d2">
+      <button class="btn btn-primary btn-lg">Comenzar aquí
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <img src="assets/logo-pistache.png" alt="Pistache">
+        <p>Gestión ágil de proyectos para Product Owners y equipos de desarrollo. Menos gestión, más desarrollo.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Producto</h5>
+        <a href="#producto">Tableros</a>
+        <a href="#rag">SprintOps RAG</a>
+        <a href="#features">Características</a>
+        <a href="#como">Cómo funciona</a>
+      </div>
+      <div class="foot-col">
+        <h5>Empresa</h5>
+        <a href="#">Sobre nosotros</a>
+        <a href="#">Contacto</a>
+      </div>
+      <div class="foot-col">
+        <h5>Recursos</h5>
+        <a href="#">Soporte</a>
+        <a href="#">Privacidad</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Pistache. Todos los derechos reservados.</span>
+      <div class="socials">
+        <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.3 8.3L23.2 22h-6.6l-5.2-6.8L5.4 22H2.3l7.8-8.9L1.2 2h6.8l4.7 6.2zm-1.1 18h1.7L7.3 3.8H5.5z"/></svg></a>
+        <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.3 6.8 9.7.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9 9 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5 4-1.4 6.8-5.2 6.8-9.7C22 6.6 17.5 2 12 2z"/></svg></a>
+        <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM8.3 18.3v-7H6v7zM7.1 10a1.3 1.3 0 1 0 0-2.7 1.3 1.3 0 0 0 0 2.7zm11.2 8.3v-3.8c0-2-.4-3.6-2.8-3.6-1.1 0-1.9.6-2.2 1.2v-1H11v7h2.3v-3.5c0-.9.2-1.8 1.3-1.8s1.3 1 1.3 1.9v3.4z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Header shadow on scroll
+  const hdr = document.getElementById('hdr');
+  const onScroll = () => hdr.classList.toggle('scrolled', window.scrollY > 60);
+  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+  // Scroll reveal (covers .reveal and all rv-* variants)
+  const revealSel = '.reveal, [class*="rv-"]';
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll(revealSel).forEach(el => io.observe(el));
+  // Safety: reveal anything in the initial viewport right away
+  requestAnimationFrame(() => {
+    document.querySelectorAll(revealSel).forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.92) el.classList.add('in');
+    });
+  });
+
+  // Hero parallax + floating chips drift driven by scroll
+  const heroEl = document.querySelector('.hero');
+  const stageEl = document.querySelector('.mockup-stage');
+  const chipA = document.querySelector('.chip-a');
+  const chipB = document.querySelector('.chip-b');
+  function heroParallax(){
+    if(!heroEl) return;
+    const h = heroEl.offsetHeight;
+    const y = Math.min(1, Math.max(0, window.scrollY / h));
+    heroEl.style.setProperty('--p', y.toFixed(3));
+    if (chipA) chipA.style.setProperty('--f', y.toFixed(3));
+    if (chipB) chipB.style.setProperty('--f', y.toFixed(3));
+    if (stageEl){
+      // subtle rise as you scroll past hero
+      stageEl.style.transform = `translateY(${(-y*30).toFixed(1)}px)`;
+    }
+  }
+  heroParallax();
+  window.addEventListener('scroll', heroParallax, {passive:true});
+
+  // Features cards: per-card scroll tilt depending on viewport position
+  const feats = document.querySelectorAll('.feat');
+  function featTilt(){
+    const vh = window.innerHeight;
+    feats.forEach(card => {
+      const r = card.getBoundingClientRect();
+      const center = r.top + r.height/2;
+      const rel = (center - vh/2) / (vh/2); // -1 (top) .. 1 (bottom)
+      const clamped = Math.max(-1, Math.min(1, rel));
+      card.style.setProperty('--t', clamped.toFixed(3));
+    });
+  }
+  featTilt();
+  window.addEventListener('scroll', featTilt, {passive:true});
+
+  // Animated count-up for stat cards
+  function animateCount(el){
+    const target = parseFloat(el.dataset.count);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const dur = 1100; const start = performance.now();
+    function tick(now){
+      const p = Math.min(1, (now - start)/dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const countIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting){ animateCount(e.target); countIO.unobserve(e.target); } });
+  }, {threshold:0.6});
+  document.querySelectorAll('[data-count]').forEach(el => countIO.observe(el));
+
+  // RAG flow auto-highlight loop
+  (function(){
+    const steps = [...document.querySelectorAll('#flow .flow-step')];
+    if(!steps.length) return;
+    let i = 0, running = false;
+    function step(){
+      steps.forEach((s,idx) => s.classList.toggle('active', idx === i));
+      i = (i + 1) % steps.length;
+    }
+    const flowIO = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !running){ running = true; step(); setInterval(step, 1700); }
+      });
+    }, {threshold:0.3});
+    flowIO.observe(document.getElementById('flow'));
+  })();
+
+  // Subtle mockup parallax tilt on mouse
+  const stage = document.querySelector('.mockup-stage');
+  const mock = document.querySelector('.mockup');
+  if (stage && window.matchMedia('(min-width:981px)').matches){
+    stage.addEventListener('mousemove', (e) => {
+      const r = stage.getBoundingClientRect();
+      const dx = (e.clientX - r.left)/r.width - .5;
+      const dy = (e.clientY - r.top)/r.height - .5;
+      mock.style.transform = `rotateY(${-9 + dx*8}deg) rotateX(${3 - dy*8}deg)`;
+    });
+    stage.addEventListener('mouseleave', () => { mock.style.transform = ''; });
+  }
+</script>
+</body>
+</html>
