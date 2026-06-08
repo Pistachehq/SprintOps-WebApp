@@ -1,18 +1,9 @@
-<<<<<<< Updated upstream
-import React, { useState } from "react";
-import { User, Mail, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { useAuth } from "../auth/hooks/useAuth";
-import apiClient, { API_ORIGIN } from "../../data/api/apiClient";
-=======
 import React, { useState } from 'react';
 import { User, Mail, Lock, LockOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../auth/hooks/useAuth';
 import apiClient, { API_ORIGIN } from '../../data/api/apiClient';
->>>>>>> Stashed changes
 
 const GoogleLogo = ({ className = "shrink-0" }) => (
   <svg
@@ -55,18 +46,11 @@ const GitHubLogo = ({ className = "shrink-0 text-white" }) => (
 );
 
 const LoginForm = () => {
-<<<<<<< Updated upstream
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-=======
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
->>>>>>> Stashed changes
   const [loading, setLoading] = useState(false);
   const [registerDone, setRegisterDone] = useState(null);
   const navigate = useNavigate();
@@ -155,8 +139,6 @@ const LoginForm = () => {
             size={24}
             className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
           />
-<<<<<<< Updated upstream
-=======
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
@@ -166,7 +148,6 @@ const LoginForm = () => {
           >
             {showPassword ? <LockOpen size={24} /> : <Lock size={24} />}
           </button>
->>>>>>> Stashed changes
         </div>
 
         {mode === "register" && (
