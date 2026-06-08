@@ -15,6 +15,9 @@ const TaskList = ({ role, sprintId, issuesData }) => {
 
   const { issues, addIssue, deleteIssue, assignIssue } = issuesData;
   const [members, setMembers] = useState([]);
+  const [sprintStartDate, setSprintStartDate] = useState(null);
+  const [sprintEndDate, setSprintEndDate] = useState(null);
+  const [projectEndDate, setProjectEndDate] = useState(null);
 
   // Cargar miembros por proyecto del sprint (no depender de issues[0]: sprint vacío = lista vacía antes).
   useEffect(() => {
@@ -22,8 +25,15 @@ const TaskList = ({ role, sprintId, issuesData }) => {
     let cancelled = false;
     sprintsRepository
       .getById(sprintId)
-      .then((sprint) => {
-        if (!sprint?.projectId || cancelled) return null;
+      .then(async (sprint) => {
+        if (cancelled) return null;
+        if (sprint?.startDate) setSprintStartDate(sprint.startDate);
+        if (sprint?.endDate) setSprintEndDate(sprint.endDate);
+        if (!sprint?.projectId) return null;
+        try {
+          const proj = await projectsRepository.getById(sprint.projectId);
+          if (!cancelled && proj?.end) setProjectEndDate(proj.end);
+        } catch {}
         return projectsRepository.getMembers(sprint.projectId);
       })
       .then((m) => {
@@ -84,11 +94,14 @@ const TaskList = ({ role, sprintId, issuesData }) => {
         )}
       </div>
 
-      <CreateIssueModal 
+      <CreateIssueModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateIssue}
         sprintIssues={issues}
+        sprintStartDate={sprintStartDate}
+        sprintEndDate={sprintEndDate}
+        projectEndDate={projectEndDate}
       />
     </div>
   );

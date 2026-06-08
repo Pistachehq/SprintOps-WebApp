@@ -15,6 +15,7 @@ public class CreateIssueRequest {
     private String priority;
     private Integer storyPoints;
     private Integer parentIssueId;
+    private List<Integer> parentIssueIds;
     private List<Integer> assigneeIds;
     private LocalDate endDate;
     private String tagLabel;

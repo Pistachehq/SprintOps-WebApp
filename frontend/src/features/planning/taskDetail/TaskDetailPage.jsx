@@ -21,14 +21,22 @@ const TaskDetailPage = () => {
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [members, setMembers] = useState([]);
+  const [sprintStartDate, setSprintStartDate] = useState(null);
+  const [sprintEndDate, setSprintEndDate] = useState(null);
+  const [projectEndDate, setProjectEndDate] = useState(null);
 
   const task = issues.find(t => String(t.id) === String(taskId));
 
   // Load permissions based on the user's role in this sprint's project
   useEffect(() => {
     sprintsRepository.getById(sprintId).then(sprint => {
+      if (sprint?.startDate) setSprintStartDate(sprint.startDate);
+      if (sprint?.endDate) setSprintEndDate(sprint.endDate);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
+        projectsRepository.getById(sprint.projectId)
+          .then(p => { if (p?.end) setProjectEndDate(p.end); })
+          .catch(() => {});
       }
     }).catch(() => {});
   }, [sprintId]);
@@ -185,6 +193,9 @@ const TaskDetailPage = () => {
         onEdit={handleEditIssue}
         issue={task}
         sprintIssues={issues}
+        sprintStartDate={sprintStartDate}
+        sprintEndDate={sprintEndDate}
+        projectEndDate={projectEndDate}
       />
     </div>
   );

@@ -46,22 +46,22 @@ const ReflectionPage = () => {
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden font-sans">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5 lg:items-stretch">
-        <div className="flex min-h-0 flex-col lg:h-full lg:min-h-0">
+    <div className="relative flex flex-col font-sans">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5 lg:items-stretch">
+        <div className="flex flex-col">
           <RetrospectiveForm form={retro} onChange={onRetroChange} dense stretch />
         </div>
-        <div className="flex min-h-0 flex-col lg:h-full lg:min-h-0">
-          <HealthCheckCard values={health} onChange={onHealthChange} dense stretch />
+        <div className="flex flex-col">
+          <HealthCheckCard values={health} onChange={onHealthChange} dense />
         </div>
       </div>
 
-      <div className="mt-3 shrink-0 pt-1 lg:mt-4">
+      <div className="mt-3 flex shrink-0 flex-col items-center pt-1 lg:mt-4">
         <button
           type="button"
           onClick={handleSaveAll}
           disabled={!canSubmit || showToast}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#67BFA1] py-3.5 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full max-w-md items-center justify-center gap-2 rounded-xl bg-[#67BFA1] px-6 py-3 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {showToast ? (
             <>

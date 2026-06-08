@@ -135,10 +135,6 @@ const LoginForm = () => {
             required
             minLength={mode === "register" ? 6 : undefined}
           />
-          <Lock
-            size={24}
-            className="absolute right-[16px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-          />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}

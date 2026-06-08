@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Settings, Plus, Users, LayoutList, Trash2, Pencil, X, Check, Copy, ChevronLeft, Calendar, Shield, Eye, Search, SlidersHorizontal, MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
@@ -166,9 +167,43 @@ const ProjectConfigView = ({
     });
   }, [sprints, sprintSearch]);
 
+  const validateSprintRange = (start, end, excludeSprintId = null) => {
+    if (!start || !end) {
+      toast.error('Las fechas de inicio y fin del sprint son obligatorias.');
+      return false;
+    }
+    if (end <= start) {
+      toast.error('La fecha de fin del sprint debe ser posterior a la de inicio.');
+      return false;
+    }
+    const pStart = formatDateForInput(project?.start);
+    const pEnd = formatDateForInput(project?.end);
+    if (pStart && start < pStart) {
+      toast.error(`La fecha de inicio del sprint no puede ser anterior al inicio del proyecto (${pStart}).`);
+      return false;
+    }
+    if (pEnd && end > pEnd) {
+      toast.error(`La fecha de fin del sprint no puede ser posterior al fin del proyecto (${pEnd}).`);
+      return false;
+    }
+    for (const s of sprints) {
+      if (excludeSprintId != null && String(s.id) === String(excludeSprintId)) continue;
+      const os = formatDateForInput(s.startDate);
+      const oe = formatDateForInput(s.endDate);
+      if (!os || !oe) continue;
+      const overlap = start <= oe && os <= end;
+      if (overlap) {
+        toast.error(`El rango se solapa con el sprint "${s.name}" (${os} — ${oe}).`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleAddSprint = async (e) => {
     e.preventDefault();
     if (!addSprint) return;
+    if (!validateSprintRange(startDate, endDate)) return;
     try {
       await addSprint({
         projectId,
@@ -187,6 +222,7 @@ const ProjectConfigView = ({
       setShowSprintCreate(false);
     } catch (err) {
       console.error('Error al crear sprint:', err);
+      toast.error(err?.message || 'No se pudo crear el sprint.');
     }
   };
 
@@ -247,14 +283,28 @@ const ProjectConfigView = ({
     }
   };
 
+  const projectEndDateMin = useMemo(() => {
+    const candidates = [formatDateForInput(project?.start)];
+    for (const s of sprints) {
+      const oe = formatDateForInput(s.endDate);
+      if (oe) candidates.push(oe);
+    }
+    return candidates.filter(Boolean).sort().pop() || '';
+  }, [project?.start, sprints]);
+
   const handleSaveProjectEndDate = async () => {
     if (!newProjectEndDate) return;
+    if (projectEndDateMin && newProjectEndDate < projectEndDateMin) {
+      toast.error(`La fecha de fin no puede ser anterior a ${projectEndDateMin} (inicio del proyecto o fin del sprint más tardío).`);
+      return;
+    }
     try {
       await projectsRepository.update(projectId, { end: newProjectEndDate });
       setIsEditingProjectEndDate(false);
       await onProjectUpdated?.();
     } catch (err) {
       console.error('Error al actualizar fecha del proyecto:', err);
+      toast.error(err?.message || 'No se pudo actualizar la fecha.');
     }
   };
 
@@ -336,8 +386,9 @@ const ProjectConfigView = ({
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Fecha de Finalización</p>
                 {isEditingProjectEndDate ? (
                   <div className="flex gap-2 items-center">
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
+                      min={projectEndDateMin || undefined}
                       value={newProjectEndDate}
                       onChange={e => setNewProjectEndDate(e.target.value)}
                       className="flex-1 h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm"
@@ -505,11 +556,25 @@ const ProjectConfigView = ({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha de inicio</label>
-                          <input required type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600" />
+                          <input
+                            required type="date"
+                            min={formatDateForInput(project?.start) || undefined}
+                            max={formatDateForInput(project?.end) || undefined}
+                            value={startDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600"
+                          />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha final</label>
-                          <input required type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600" />
+                          <input
+                            required type="date"
+                            min={startDate || formatDateForInput(project?.start) || undefined}
+                            max={formatDateForInput(project?.end) || undefined}
+                            value={endDate}
+                            onChange={e => setEndDate(e.target.value)}
+                            className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600"
+                          />
                         </div>
                       </div>
                       <button type="submit" className="w-full h-12 bg-[#67BFA1] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90">

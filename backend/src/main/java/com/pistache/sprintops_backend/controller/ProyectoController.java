@@ -5,6 +5,7 @@ import com.pistache.sprintops_backend.dto.ProyectoDTO;
 import com.pistache.sprintops_backend.dto.MiembroEquipoDTO;
 import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.ProyectoService;
+import com.pistache.sprintops_backend.util.DateRules;
 import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
 import com.pistache.sprintops_backend.service.ProyectoCardCoverService;
 import com.pistache.sprintops_backend.service.EquipoService;
@@ -45,6 +46,10 @@ public class ProyectoController {
     private ProyectoIssuesDocxExportService proyectoIssuesDocxExportService;
     @Autowired
     private ProyectoCardCoverService proyectoCardCoverService;
+    @Autowired
+    private com.pistache.sprintops_backend.repository.SprintRepository sprintRepository;
+    @Autowired
+    private com.pistache.sprintops_backend.repository.IssuesRepository issuesRepository;
 
     @GetMapping
     public List<ProyectoDTO> getAll() {
@@ -134,6 +139,7 @@ public class ProyectoController {
 
     @PostMapping
     public ResponseEntity<ProyectoDTO> create(@RequestBody CreateProyectoRequest request) {
+        DateRules.requireProjectCreate(request.getStart(), request.getEnd());
         // Create equipo for project
         Equipo equipo = new Equipo();
         equipo.setNombreEquipo("Equipo " + request.getName());
@@ -267,11 +273,25 @@ public class ProyectoController {
         }
         Proyecto proyecto = optProyecto.get();
 
+        LocalDate newStart = updates.containsKey("start") && updates.get("start") != null
+                ? LocalDate.parse((String) updates.get("start")) : null;
+        LocalDate newEnd = updates.containsKey("end") && updates.get("end") != null
+                ? LocalDate.parse((String) updates.get("end")) : null;
+
+        if (newStart != null || newEnd != null) {
+            DateRules.requireProjectUpdate(
+                    proyecto,
+                    newStart,
+                    newEnd,
+                    sprintRepository.findByProyectoIdProyecto(id),
+                    issuesRepository.findAllBelongingToProject(id));
+        }
+
         if (updates.containsKey("name")) proyecto.setNombreProyecto((String) updates.get("name"));
         if (updates.containsKey("description")) proyecto.setDescripcionProyecto((String) updates.get("description"));
         if (updates.containsKey("status")) proyecto.setEstadoDelProyecto((String) updates.get("status"));
-        if (updates.containsKey("end")) proyecto.setFechaFinProyecto(LocalDate.parse((String) updates.get("end")));
-        if (updates.containsKey("start")) proyecto.setFechaInicioProyecto(LocalDate.parse((String) updates.get("start")));
+        if (newEnd != null) proyecto.setFechaFinProyecto(newEnd);
+        if (newStart != null) proyecto.setFechaInicioProyecto(newStart);
 
         return ResponseEntity.ok(ProyectoDTO.fromEntity(proyectoService.save(proyecto)));
     }

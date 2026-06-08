@@ -3,6 +3,7 @@ package com.pistache.sprintops_backend.dto;
 import com.pistache.sprintops_backend.model.Issues;
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -17,6 +18,7 @@ public class IssueDTO {
     private String priority;
     private Integer storyPoints;
     private Integer parentIssueId;
+    private List<Integer> parentIssueIds;
     private List<Integer> assigneeIds;
     private Integer reporterId;
     private LocalDate createdAt;
@@ -34,6 +36,7 @@ public class IssueDTO {
         dto.setPriority(i.getPrioridadIssue());
         dto.setStoryPoints(i.getStoryPointsIssue());
         dto.setParentIssueId(i.getParentIssueId());
+        dto.setParentIssueIds(i.getParentIssueIds() != null ? new ArrayList<>(i.getParentIssueIds()) : new ArrayList<>());
         dto.setCreatedAt(i.getFechaCreacionIssue());
         dto.setCompletedAt(i.getFechaFinIssue());
         dto.setTagLabel(i.getTagLabel());

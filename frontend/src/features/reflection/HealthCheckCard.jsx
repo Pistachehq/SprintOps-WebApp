@@ -45,7 +45,7 @@ const HealthCheckCard = ({ values, onChange, dense = false, stretch = false }) =
         Health Check
       </h2>
 
-      <div className={`${rowGap} ${stretch ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
+      <div className={rowGap}>
         {HEALTH_METRIC_ITEMS.map((item) => (
           <div
             key={item.key}

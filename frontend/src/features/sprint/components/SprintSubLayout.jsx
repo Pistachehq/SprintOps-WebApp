@@ -11,6 +11,7 @@ import SprintIndicatorCard from '../../reflection/SprintIndicatorCard';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useIssues } from '../../issues/hooks/useIssues';
 import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
+import { projectsRepository } from '../../../data/repositories/projectsRepository';
 
 const SprintSubLayout = () => {
   const { id } = useParams();
@@ -20,17 +21,28 @@ const SprintSubLayout = () => {
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [sprintName, setSprintName] = useState('');
   const [projectId, setProjectId] = useState(null);
+  const [sprintStartDate, setSprintStartDate] = useState(null);
+  const [sprintEndDate, setSprintEndDate] = useState(null);
+  const [projectEndDate, setProjectEndDate] = useState(null);
   const [velocityModalOpen, setVelocityModalOpen] = useState(false);
   const [sprintIndicatorModalOpen, setSprintIndicatorModalOpen] = useState(false);
 
   useEffect(() => {
     setSprintName('');
     setProjectId(null);
+    setSprintStartDate(null);
+    setSprintEndDate(null);
+    setProjectEndDate(null);
     sprintsRepository.getById(id).then(sprint => {
       if (sprint?.name) setSprintName(sprint.name);
+      if (sprint?.startDate) setSprintStartDate(sprint.startDate);
+      if (sprint?.endDate) setSprintEndDate(sprint.endDate);
       if (sprint?.projectId != null) setProjectId(sprint.projectId);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
+        projectsRepository.getById(sprint.projectId)
+          .then(p => { if (p?.end) setProjectEndDate(p.end); })
+          .catch(() => {});
       }
     }).catch(() => {});
   }, [id]);
@@ -72,8 +84,8 @@ const SprintSubLayout = () => {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-10 bg-oracle-bg">
-      <div className="mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col overflow-hidden">
+    <div className={`flex flex-col px-10 pt-10 bg-oracle-bg ${tab === 'reflection' ? '' : 'min-h-0 flex-1 overflow-hidden'}`}>
+      <div className={`mx-auto flex w-full max-w-7xl flex-col ${tab === 'reflection' ? '' : 'min-h-0 flex-1 overflow-hidden'}`}>
         {/* ── Static Header (Does not move during transitions) ── */}
         <header className="mb-10 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-4">
           <div className="flex min-w-0 items-center gap-4">
@@ -129,18 +141,18 @@ const SprintSubLayout = () => {
         </header>
 
         {/* ── Animated Content Area ── */}
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-6">
+        <main className={`relative flex flex-col pb-6 ${tab === 'reflection' ? '' : 'min-h-0 flex-1 overflow-hidden'}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
               initial={{ x: 40, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -40, opacity: 0 }}
-              transition={{ 
-                duration: 0.5, 
+              transition={{
+                duration: 0.5,
                 ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic
               }}
-              className="flex h-full min-h-0 flex-1 flex-col"
+              className={`flex flex-col ${tab === 'reflection' ? '' : 'h-full min-h-0 flex-1'}`}
             >
               <Outlet context={{ setShowCreateIssue }} />
             </motion.div>
@@ -153,6 +165,9 @@ const SprintSubLayout = () => {
         onClose={() => setShowCreateIssue(false)}
         onCreate={handleCreateIssue}
         sprintIssues={issues}
+        sprintStartDate={sprintStartDate}
+        sprintEndDate={sprintEndDate}
+        projectEndDate={projectEndDate}
       />
 
       {canViewMetrics && (

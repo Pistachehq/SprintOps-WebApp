@@ -9,6 +9,7 @@ import com.pistache.sprintops_backend.service.DeveloperSprintKpisService;
 import com.pistache.sprintops_backend.service.SprintService;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.repository.SprintRepository;
+import com.pistache.sprintops_backend.util.DateRules;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -72,6 +73,13 @@ public class SprintController {
             return ResponseEntity.badRequest().build();
         }
 
+        DateRules.requireSprintRange(
+                optProyecto.get(),
+                request.getStartDate(),
+                request.getEndDate(),
+                sprintRepository.findByProyectoIdProyecto(request.getProjectId()),
+                null);
+
         Sprint sprint = new Sprint();
         sprint.setNombreSprint(request.getName());
         sprint.setObjetivoSprint(request.getGoal());
@@ -92,11 +100,27 @@ public class SprintController {
         }
         Sprint sprint = optSprint.get();
 
+        LocalDate newStart = updates.containsKey("startDate") && updates.get("startDate") != null
+                ? LocalDate.parse((String) updates.get("startDate")) : null;
+        LocalDate newEnd = updates.containsKey("endDate") && updates.get("endDate") != null
+                ? LocalDate.parse((String) updates.get("endDate")) : null;
+
+        if ((newStart != null || newEnd != null) && sprint.getProyecto() != null) {
+            LocalDate effStart = newStart != null ? newStart : sprint.getFechaInicioSprint();
+            LocalDate effEnd = newEnd != null ? newEnd : sprint.getFechaFinSprint();
+            DateRules.requireSprintRange(
+                    sprint.getProyecto(),
+                    effStart,
+                    effEnd,
+                    sprintRepository.findByProyectoIdProyecto(sprint.getProyecto().getIdProyecto()),
+                    sprint.getIdSprint());
+        }
+
         if (updates.containsKey("name")) sprint.setNombreSprint((String) updates.get("name"));
         if (updates.containsKey("goal")) sprint.setObjetivoSprint((String) updates.get("goal"));
         if (updates.containsKey("status")) sprint.setEstadoDelSprint((String) updates.get("status"));
-        if (updates.containsKey("startDate")) sprint.setFechaInicioSprint(LocalDate.parse((String) updates.get("startDate")));
-        if (updates.containsKey("endDate")) sprint.setFechaFinSprint(LocalDate.parse((String) updates.get("endDate")));
+        if (newStart != null) sprint.setFechaInicioSprint(newStart);
+        if (newEnd != null) sprint.setFechaFinSprint(newEnd);
         if (updates.containsKey("capacity")) sprint.setCapacidadStoryPoints(updates.get("capacity") != null ? ((Number) updates.get("capacity")).intValue() : null);
 
         return ResponseEntity.ok(SprintDTO.fromEntity(sprintService.save(sprint)));

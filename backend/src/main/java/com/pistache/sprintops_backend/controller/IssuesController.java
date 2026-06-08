@@ -14,6 +14,7 @@ import com.pistache.sprintops_backend.repository.IssuesRepository;
 import com.pistache.sprintops_backend.repository.LogsIssuesRepository;
 import com.pistache.sprintops_backend.repository.PapeleraIssueRepository;
 import com.pistache.sprintops_backend.service.LogsIssuesService;
+import com.pistache.sprintops_backend.util.DateRules;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -91,6 +92,17 @@ public class IssuesController {
 
     @PostMapping
     public ResponseEntity<IssueDTO> create(@RequestBody CreateIssueRequest request) {
+        Proyecto proyectoCtx = request.getProjectId() != null
+                ? proyectoService.findById(request.getProjectId()).orElse(null) : null;
+        Sprint sprintCtx = null;
+        if (request.getSprintId() != null) {
+            try {
+                sprintCtx = sprintService.findById(Integer.parseInt(request.getSprintId())).orElse(null);
+                if (proyectoCtx == null && sprintCtx != null) proyectoCtx = sprintCtx.getProyecto();
+            } catch (NumberFormatException ignored) {}
+        }
+        DateRules.requireIssueEnd(request.getEndDate(), true, proyectoCtx, sprintCtx);
+
         Issues issue = new Issues();
         issue.setTituloIssue(request.getTitle());
         issue.setDescripcionIssue(request.getDescription());
@@ -98,7 +110,17 @@ public class IssuesController {
         issue.setEstadoIssue(request.getStatus() != null ? request.getStatus() : "todo");
         issue.setPrioridadIssue(request.getPriority() != null ? request.getPriority() : "Medium");
         issue.setStoryPointsIssue(request.getStoryPoints() != null ? request.getStoryPoints() : 0);
-        issue.setParentIssueId(request.getParentIssueId());
+
+        Set<Integer> parents = new java.util.LinkedHashSet<>();
+        if (request.getParentIssueIds() != null) {
+            for (Integer pid : request.getParentIssueIds()) {
+                if (pid != null) parents.add(pid);
+            }
+        }
+        if (request.getParentIssueId() != null) parents.add(request.getParentIssueId());
+        issue.setParentIssueIds(parents);
+        issue.setParentIssueId(parents.isEmpty() ? null : parents.iterator().next());
+
         issue.setFechaCreacionIssue(LocalDate.now());
         issue.setFechaFinIssue(request.getEndDate());
         applyIssueTags(issue, request.getTagLabel(), request.getTagColor());
@@ -170,11 +192,31 @@ public class IssuesController {
         }
         if (updates.containsKey("endDate")) {
             String endDateStr = (String) updates.get("endDate");
-            issue.setFechaFinIssue(endDateStr != null ? LocalDate.parse(endDateStr) : null);
+            LocalDate newEnd = endDateStr != null ? LocalDate.parse(endDateStr) : null;
+            Sprint sprintCtx = null;
+            List<DescIssue> descs = descIssueRepository.findByIssueIdIssue(id);
+            if (!descs.isEmpty()) sprintCtx = descs.get(0).getSprint();
+            DateRules.requireIssueEnd(newEnd, false, issue.getProyecto(), sprintCtx);
+            issue.setFechaFinIssue(newEnd);
         }
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
-        if (updates.containsKey("parentIssueId")) issue.setParentIssueId((Integer) updates.get("parentIssueId"));
+        if (updates.containsKey("parentIssueIds")) {
+            @SuppressWarnings("unchecked")
+            List<Integer> rawParents = (List<Integer>) updates.get("parentIssueIds");
+            Set<Integer> parents = new java.util.LinkedHashSet<>();
+            if (rawParents != null) {
+                for (Integer pid : rawParents) if (pid != null) parents.add(pid);
+            }
+            issue.setParentIssueIds(parents);
+            issue.setParentIssueId(parents.isEmpty() ? null : parents.iterator().next());
+        } else if (updates.containsKey("parentIssueId")) {
+            Integer pid = (Integer) updates.get("parentIssueId");
+            issue.setParentIssueId(pid);
+            Set<Integer> parents = new java.util.LinkedHashSet<>();
+            if (pid != null) parents.add(pid);
+            issue.setParentIssueIds(parents);
+        }
 
         if (updates.containsKey("tagLabel") || updates.containsKey("tagColor")) {
             String label = updates.containsKey("tagLabel")

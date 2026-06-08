@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -45,6 +46,14 @@ public class Issues {
 
     @Column(name = "parent_issue_id")
     private Integer parentIssueId;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "issue_parents",
+            joinColumns = @JoinColumn(name = "issue_id")
+    )
+    @Column(name = "parent_issue_id")
+    private Set<Integer> parentIssueIds = new HashSet<>();
 
     @Column(name = "tag_label", length = 100)
     private String tagLabel;

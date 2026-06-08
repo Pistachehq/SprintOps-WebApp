@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { ArrowLeft, X, Orbit } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import IssueNode from './IssueNode';
 import SunNode from './SunNode';
 import { issuesRepository } from '../../data/repositories/issuesRepository';
@@ -16,22 +17,35 @@ import { projectsRepository } from '../../data/repositories/projectsRepository';
 
 const nodeTypes = { issueNode: IssueNode, sunNode: SunNode };
 
-function getSubtreeLeafCount(id, childMap) {
-  const children = childMap[id] || [];
-  if (children.length === 0) return 1;
-  return children.reduce((sum, c) => sum + getSubtreeLeafCount(c.id, childMap), 0);
+function getParentIdsOf(issue) {
+  if (Array.isArray(issue.parentIssueIds) && issue.parentIssueIds.length) {
+    return issue.parentIssueIds.map(Number);
+  }
+  return issue.parentIssueId ? [Number(issue.parentIssueId)] : [];
 }
 
-function buildGraph(issues, selectedId, projectName) {
+function getSubtreeLeafCount(id, childMap, seen = new Set()) {
+  if (seen.has(id)) return 1;
+  seen.add(id);
+  const children = childMap[id] || [];
+  if (children.length === 0) return 1;
+  return children.reduce((sum, c) => sum + getSubtreeLeafCount(c.id, childMap, seen), 0);
+}
+
+function buildGraph(issues, selectedId, highlightedIds, projectName) {
+  // childMap puede tener al mismo hijo bajo varios padres (DAG)
   const childMap = {};
+  const parentMap = {};
   issues.forEach(issue => {
-    if (issue.parentIssueId) {
-      if (!childMap[issue.parentIssueId]) childMap[issue.parentIssueId] = [];
-      childMap[issue.parentIssueId].push(issue);
-    }
+    const parents = getParentIdsOf(issue);
+    parentMap[issue.id] = parents;
+    parents.forEach(pid => {
+      if (!childMap[pid]) childMap[pid] = [];
+      childMap[pid].push(issue);
+    });
   });
 
-  const rootIssues = issues.filter(i => !i.parentIssueId);
+  const rootIssues = issues.filter(i => getParentIdsOf(i).length === 0);
   const hasChildren = (id) => (childMap[id]?.length || 0) > 0;
 
   const getSize = (depth) => {
@@ -40,6 +54,7 @@ function buildGraph(issues, selectedId, projectName) {
   };
 
   const SUN_SIZE = 180;
+  const SIBLING_GAP = 24; // margen visual mínimo entre esferas hermanas
   const nodes = [];
   const edges = [];
 
@@ -52,7 +67,13 @@ function buildGraph(issues, selectedId, projectName) {
     selectable: false,
   });
 
+  const placed = new Set();
+
   function layoutBranch(issue, originX, originY, angle, dist, depth) {
+    // Si ya está colocado por otro padre, no se vuelve a posicionar (evita duplicados / ciclos).
+    if (placed.has(issue.id)) return;
+    placed.add(issue.id);
+
     const size = getSize(depth);
     const x = originX + Math.cos(angle) * dist;
     const y = originY + Math.sin(angle) * dist;
@@ -66,6 +87,7 @@ function buildGraph(issues, selectedId, projectName) {
         size,
         depth,
         isSelected: issue.id === selectedId,
+        isHighlighted: highlightedIds?.has(issue.id) || false,
         hasChildren: hasChildren(issue.id),
       },
     });
@@ -73,37 +95,71 @@ function buildGraph(issues, selectedId, projectName) {
     const children = childMap[issue.id] || [];
     if (children.length === 0) return;
 
-    const childDist = 100 + size * 0.8 + getSize(depth + 1) * 0.5;
+    const childSize = getSize(depth + 1);
+    const baseChildDist = 100 + size * 0.8 + childSize * 0.5;
     const fanSpread = Math.min(Math.PI * 0.6, children.length * 0.35);
     const startAngle = angle - fanSpread / 2;
 
     const leafCounts = children.map(c => getSubtreeLeafCount(c.id, childMap));
     const totalLeaves = leafCounts.reduce((a, b) => a + b, 0);
 
-    let accumulated = 0;
-    children.forEach((child, ci) => {
-      const frac = (accumulated + leafCounts[ci] / 2) / totalLeaves;
-      accumulated += leafCounts[ci];
+    const fracs = [];
+    {
+      let acc = 0;
+      children.forEach((_, ci) => {
+        fracs.push((acc + leafCounts[ci] / 2) / totalLeaves);
+        acc += leafCounts[ci];
+      });
+    }
+
+    // Mínimo paso angular entre dos hermanos adyacentes (puede ser desigual con leafCounts)
+    let minAngularStep = Math.PI;
+    for (let i = 1; i < fracs.length; i++) {
+      minAngularStep = Math.min(minAngularStep, (fracs[i] - fracs[i - 1]) * fanSpread);
+    }
+
+    // Cuerda mínima entre hermanos = childSize + SIBLING_GAP. Despejamos distancia al origen.
+    let childDist = baseChildDist;
+    if (children.length > 1) {
+      const requiredChord = childSize + SIBLING_GAP;
+      const requiredDist = (requiredChord / 2) / Math.sin(Math.max(0.02, minAngularStep / 2));
+      childDist = Math.max(childDist, requiredDist);
+    }
+
+    fracs.forEach((frac, ci) => {
+      const child = children[ci];
       const childAngle = startAngle + frac * fanSpread;
+
+      const childParents = parentMap[child.id] || [];
+      const isPrimaryParent = childParents.length === 0 || Number(childParents[0]) === Number(issue.id);
 
       layoutBranch(child, x, y, childAngle, childDist, depth + 1);
 
+      const baseAlpha = Math.max(0.15, 0.55 - depth * 0.1);
       edges.push({
         id: `e-${issue.id}-${child.id}`,
         source: String(issue.id),
         target: String(child.id),
         type: 'straight',
         style: {
-          stroke: `rgba(140,200,160,${Math.max(0.15, 0.55 - depth * 0.1)})`,
+          stroke: `rgba(140,200,160,${isPrimaryParent ? baseAlpha : baseAlpha * 0.55})`,
           strokeWidth: Math.max(1, 2.5 - depth * 0.4),
+          strokeDasharray: isPrimaryParent ? undefined : '4 4',
         },
-        animated: depth < 1,
+        animated: depth < 1 && isPrimaryParent,
       });
     });
   }
 
-  const ORBIT_RADIUS = 280;
   const angleStep = (2 * Math.PI) / Math.max(rootIssues.length, 1);
+  const rootSize = getSize(0);
+  const baseOrbit = 280;
+  let ORBIT_RADIUS = baseOrbit;
+  if (rootIssues.length > 1) {
+    const requiredChord = rootSize + SIBLING_GAP;
+    const requiredOrbit = (requiredChord / 2) / Math.sin(Math.max(0.02, angleStep / 2));
+    ORBIT_RADIUS = Math.max(baseOrbit, requiredOrbit);
+  }
   const startOffset = -Math.PI / 2;
 
   rootIssues.forEach((issue, idx) => {
@@ -129,11 +185,12 @@ function buildGraph(issues, selectedId, projectName) {
 
 const UniverseFlow = ({ issues, sprintNames, projectName }) => {
   const [selectedIssue, setSelectedIssue] = useState(null);
-  const { setCenter } = useReactFlow();
+  const [highlightedIds, setHighlightedIds] = useState(() => new Set());
+  const { setCenter, fitView } = useReactFlow();
 
   const { nodes, edges } = useMemo(
-    () => buildGraph(issues, selectedIssue?.id, projectName),
-    [issues, selectedIssue, projectName]
+    () => buildGraph(issues, selectedIssue?.id, highlightedIds, projectName),
+    [issues, selectedIssue, highlightedIds, projectName]
   );
 
   const onNodeClick = useCallback((_event, node) => {
@@ -141,6 +198,7 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
     const issue = issues.find(i => String(i.id) === node.id);
     if (!issue) return;
     setSelectedIssue(issue);
+    setHighlightedIds(new Set());
 
     const size = node.data.size || 80;
     setCenter(
@@ -162,7 +220,7 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
         edges={edges}
         nodeTypes={nodeTypes}
         onNodeClick={onNodeClick}
-        onPaneClick={() => setSelectedIssue(null)}
+        onPaneClick={() => { setSelectedIssue(null); setHighlightedIds(new Set()); }}
         fitView
         fitViewOptions={{ padding: 0.25 }}
         minZoom={0.05}
@@ -176,19 +234,24 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
         />
       </ReactFlow>
 
-      {selectedIssue && (
-        <div
-          className="absolute top-24 right-8 w-80 z-50"
-          style={{ animation: 'cardIn 0.4s cubic-bezier(0.16,1,0.3,1)' }}
-        >
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-6 relative overflow-hidden">
+      <AnimatePresence mode="wait">
+        {selectedIssue && (
+          <motion.div
+            key={selectedIssue.id}
+            initial={{ opacity: 0, x: 24, scale: 0.96, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, x: 24, scale: 0.97, filter: 'blur(4px)' }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-24 right-8 w-80 z-50"
+          >
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-6 relative overflow-hidden">
             <div
               className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl"
               style={{ background: 'linear-gradient(90deg, #67BFA1, #8ed9c4, #67BFA1)' }}
             />
 
             <button
-              onClick={() => setSelectedIssue(null)}
+              onClick={() => { setSelectedIssue(null); setHighlightedIds(new Set()); }}
               className="absolute top-4 right-4 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
             >
               <X size={14} className="text-gray-500" />
@@ -208,6 +271,69 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
               </div>
             )}
 
+            {(() => {
+              const parentIds = Array.isArray(selectedIssue.parentIssueIds) && selectedIssue.parentIssueIds.length
+                ? selectedIssue.parentIssueIds
+                : (selectedIssue.parentIssueId ? [selectedIssue.parentIssueId] : []);
+              if (parentIds.length === 0) return null;
+              const parents = parentIds
+                .map(pid => issues.find(i => Number(i.id) === Number(pid)))
+                .filter(Boolean);
+              return (
+                <div className="mb-4 p-3 bg-[#67BFA1]/5 rounded-xl">
+                  <p className="text-[10px] font-bold text-[#67BFA1] uppercase tracking-widest mb-2">
+                    Sub-issue de
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {parents.map(p => {
+                      const active = highlightedIds.has(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            let nextSet;
+                            setHighlightedIds(prev => {
+                              nextSet = new Set(prev);
+                              if (nextSet.has(p.id)) nextSet.delete(p.id);
+                              else nextSet.add(p.id);
+                              return nextSet;
+                            });
+                            // Centrar la cámara para ver el seleccionado + los highlights activos
+                            window.requestAnimationFrame(() => {
+                              const ids = new Set(nextSet);
+                              if (selectedIssue) ids.add(selectedIssue.id);
+                              const focusNodes = Array.from(ids).map(id => ({ id: String(id) }));
+                              if (focusNodes.length > 0) {
+                                fitView({
+                                  nodes: focusNodes,
+                                  padding: 0.45,
+                                  duration: 700,
+                                  maxZoom: 1.5,
+                                });
+                              }
+                            });
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs transition-all ${
+                            active
+                              ? 'bg-[#67BFA1] border-[#67BFA1] shadow-md shadow-[#67BFA1]/30 scale-[1.03]'
+                              : 'bg-white border-[#67BFA1]/30 hover:bg-[#67BFA1]/10'
+                          }`}
+                        >
+                          <span className={`font-black ${active ? 'text-white' : 'text-[#67BFA1]'}`}>
+                            #{p.displayIndex || p.id}
+                          </span>
+                          <span className={`font-semibold truncate max-w-[160px] ${active ? 'text-white' : 'text-gray-700'}`}>
+                            {p.title}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <div>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sprint</p>
@@ -218,9 +344,10 @@ const UniverseFlow = ({ issues, sprintNames, projectName }) => {
                 <p className="text-sm font-bold text-[#67BFA1]">{selectedIssue.storyPoints || 0} SP</p>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

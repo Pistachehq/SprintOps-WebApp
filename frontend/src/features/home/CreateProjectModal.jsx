@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 import ProjectCodeModal from '../../components/ui/ProjectCodeModal';
+
+const todayISO = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   const [name, setName] = useState('');
@@ -18,7 +27,17 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    const today = todayISO();
+    if (start < today) {
+      toast.error('La fecha de inicio no puede ser anterior a hoy.');
+      return;
+    }
+    if (end <= start) {
+      toast.error('La fecha de fin debe ser posterior a la de inicio.');
+      return;
+    }
+
     const result = await onCreate({
       name,
       description,
@@ -74,16 +93,18 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha Inicio</label>
-                <input 
+                <input
                   required type="date"
+                  min={todayISO()}
                   className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                   value={start} onChange={e => setStart(e.target.value)}
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha Fin</label>
-                <input 
+                <input
                   required type="date"
+                  min={start || todayISO()}
                   className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                   value={end} onChange={e => setEnd(e.target.value)}
                 />

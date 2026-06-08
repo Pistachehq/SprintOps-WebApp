@@ -106,14 +106,7 @@ const MessageBubble = ({ message, onStreamProgress, onStreamDone }) => {
 
 const MAX_HISTORY_TURNS = 20;
 
-const ChatWindow = ({ onClose, projectId, userId }) => {
-  const [messages, setMessages] = useState(() => [
-    {
-      id: 1,
-      from: 'bot',
-      text: '¡Hola! Soy Pistache, conectado a Groq con contexto de este proyecto. Escribe /ayuda para comandos o pregúntame en natural (por ejemplo el daily de un compañero por fecha).',
-    },
-  ]);
+const ChatWindow = ({ onClose, projectId, userId, messages, setMessages }) => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -294,8 +287,17 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
   );
 };
 
+const INITIAL_MESSAGES = [
+  {
+    id: 1,
+    from: 'bot',
+    text: '¡Hola! Soy Pistache, conectado a Groq con contexto de este proyecto. Escribe /ayuda para comandos o pregúntame en natural (por ejemplo el daily de un compañero por fecha).',
+  },
+];
+
 const PistacheChatbot = ({ projectId, userId }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const shakeControls = useAnimationControls();
   const leftShellControls = useAnimationControls();
   const rightShellControls = useAnimationControls();
@@ -385,6 +387,8 @@ const PistacheChatbot = ({ projectId, userId }) => {
               onClose={() => setIsOpen(false)}
               projectId={projectId}
               userId={userId}
+              messages={messages}
+              setMessages={setMessages}
             />
           </div>
         )}
