@@ -112,3 +112,21 @@
     scrollbar-width: none;
   }
 }
+
+/* Oculta los iconos nativos de los inputs de contrasena (Edge, Chrome/Safari WebKit, Firefox)
+   para que solo se vea nuestro propio toggle (candado). */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+  width: 0;
+  height: 0;
+}
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-caps-lock-indicator {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}

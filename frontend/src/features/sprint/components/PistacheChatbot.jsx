@@ -43,8 +43,38 @@ const TypingIndicator = () => (
   </div>
 );
 
-const MessageBubble = ({ message }) => {
+const TYPEWRITER_SPEED_MS = 18;
+
+const MessageBubble = ({ message, onStreamProgress, onStreamDone }) => {
   const isBot = message.from === 'bot';
+  const isStreaming = !!message.streaming;
+  const fullText = message.fullText ?? message.text ?? '';
+  const [displayed, setDisplayed] = useState(isStreaming ? '' : fullText);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      setDisplayed(fullText);
+      return undefined;
+    }
+    let i = 0;
+    setDisplayed('');
+    const total = fullText.length;
+    // Para mensajes largos avanzamos más caracteres por tick.
+    const step = total > 400 ? 3 : total > 150 ? 2 : 1;
+    const interval = setInterval(() => {
+      i = Math.min(total, i + step);
+      setDisplayed(fullText.slice(0, i));
+      onStreamProgress?.();
+      if (i >= total) {
+        clearInterval(interval);
+        onStreamDone?.(message.id);
+      }
+    }, TYPEWRITER_SPEED_MS);
+    return () => clearInterval(interval);
+    // Solo re-ejecutar si cambia el mensaje (id) o su estado de streaming.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message.id, isStreaming]);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: isBot ? -20 : 20, y: 8 }}
@@ -59,7 +89,16 @@ const MessageBubble = ({ message }) => {
         }`}
         style={!isBot ? { background: ORACLE_MAIN } : {}}
       >
-        {message.text}
+        {displayed}
+        {isStreaming && (
+          <motion.span
+            aria-hidden="true"
+            className="inline-block align-baseline ml-0.5"
+            style={{ width: 2, height: '1em', background: ORACLE_MAIN, verticalAlign: 'text-bottom' }}
+            animate={{ opacity: [1, 0, 1] }}
+            transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        )}
       </div>
     </motion.div>
   );
@@ -92,7 +131,7 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
       if (m.from === 'user') {
         turns.push({ role: 'user', content: m.text });
       } else if (m.from === 'bot') {
-        turns.push({ role: 'assistant', content: m.text });
+        turns.push({ role: 'assistant', content: m.fullText ?? m.text });
       }
     }
     if (turns.length <= MAX_HISTORY_TURNS) {
@@ -127,7 +166,16 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
         history,
       };
       const { reply } = await apiClient.post('/chatbot/message', body);
-      setMessages(prev => [...prev, { id: Date.now() + 1, from: 'bot', text: reply || '(sin respuesta)' }]);
+      const finalText = reply || '(sin respuesta)';
+      setIsTyping(false);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        from: 'bot',
+        text: '',
+        fullText: finalText,
+        streaming: true,
+      }]);
+      return;
     } catch (err) {
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
@@ -168,7 +216,7 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
         <div className="flex items-center gap-3">
           <PistacheAvatar size={40} />
           <div>
-            <p className="text-white font-bold text-sm leading-tight">Oracle AI</p>
+            <p className="text-white font-bold text-sm leading-tight">Pistache</p>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse"
                 style={{ background: ORACLE_MAIN }} />
@@ -194,7 +242,16 @@ const ChatWindow = ({ onClose, projectId, userId }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
-        {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
+        {messages.map(msg => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            onStreamProgress={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            onStreamDone={id => setMessages(prev => prev.map(m => (
+              m.id === id ? { ...m, text: m.fullText ?? m.text, streaming: false } : m
+            )))}
+          />
+        ))}
         {isTyping && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             className="flex items-end gap-2">
