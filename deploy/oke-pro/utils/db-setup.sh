@@ -58,8 +58,14 @@ kubectl -n sprintops create secret generic backend-secrets \
 USERNAME="$(state_get OCIR_USERNAME)"
 NAMESPACE="$(state_get OCIR_NAMESPACE)"
 REGION="$(state_get REGION)"
-read -s -r -p "(Re)Pega tu Auth Token para crear el imagePullSecret de OCIR: " TOKEN
-echo
+if [[ -n "${OCIR_AUTH_TOKEN:-}" ]]; then
+  TOKEN="$OCIR_AUTH_TOKEN"
+elif [[ -f "$HOME/.ocir-token" ]]; then
+  TOKEN="$(tr -d '\n\r' < "$HOME/.ocir-token")"
+else
+  read -s -r -p "(Re)Pega tu Auth Token para crear el imagePullSecret de OCIR: " TOKEN
+  echo
+fi
 
 kubectl -n sprintops delete secret ocir-pull --ignore-not-found
 kubectl -n sprintops create secret docker-registry ocir-pull \
