@@ -111,9 +111,11 @@ fi
 # 5. Build + push de imagenes a OCIR
 # ---------------------------------------------------------------------------
 step "5) Build & push de imagenes"
-if ! state_done IMAGES_PUSHED; then
-  bash "$SPRINTOPS_HOME/utils/java-builds.sh"
+if [[ "${FORCE_REBUILD:-}" == "1" ]] || ! state_done IMAGES_PUSHED; then
+  FORCE_REBUILD="${FORCE_REBUILD:-}" bash "$SPRINTOPS_HOME/utils/java-builds.sh"
   state_set_done IMAGES_PUSHED
+else
+  echo "  (omitido: IMAGES_PUSHED ya marcado; usa FORCE_REBUILD=1 para reconstruir)"
 fi
 
 # ---------------------------------------------------------------------------
