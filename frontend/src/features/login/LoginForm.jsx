@@ -210,16 +210,6 @@ const LoginForm = () => {
           </button>
         )}
       </div>
-
-      {mode === 'login' && (
-        <div className="mt-[10px] text-center">
-          <p className="text-[12px] text-slate-500">
-            Correos demo:{' '}
-            <strong>axel@example.com, sm@example.com, po@example.com</strong> (Contraseña:{' '}
-            <strong>123</strong>)
-          </p>
-        </div>
-      )}
     </div>
   );
 };

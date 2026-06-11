@@ -16,11 +16,26 @@ export GOOGLE_GENAI_API_KEY="tu-api-key"
 kubectl -n sprintops patch secret backend-secrets --type merge \
   -p "$(printf '{"stringData":{"googleGenaiApiKey":"%s"}}' "$GOOGLE_GENAI_API_KEY")"
 
+# Activar perfil gemini (Spring AI solo arranca con API key + este perfil)
+kubectl -n sprintops patch configmap backend-config --type merge \
+  -p '{"data":{"SPRING_PROFILES_ACTIVE":"prod,oracle,gemini"}}'
+
 kubectl -n sprintops rollout restart deploy/backend
 kubectl -n sprintops rollout status deploy/backend --timeout=180s
 ```
 
-O vuelve a correr `db-setup.sh` con `GOOGLE_GENAI_API_KEY` exportado.
+O vuelve a correr `db-setup.sh` con `GOOGLE_GENAI_API_KEY` exportado y luego el patch del ConfigMap.
+
+## Local (sin tumbar el arranque)
+
+Sin API key el backend arranca **normal** (perfil default). Gemini solo con:
+
+```bash
+export GOOGLE_GENAI_API_KEY="tu-api-key"
+mvn spring-boot:run -Dspring-boot.run.profiles=gemini
+```
+
+O en `application-local.properties`: `spring.profiles.active=gemini` y la variable de entorno.
 
 ## Redeploy solo backend
 

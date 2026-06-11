@@ -24,13 +24,12 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class GenAIChatController {
 
-    private final GoogleGenAiChatModel chatModel;
+    @Autowired(required = false)
+    private GoogleGenAiChatModel chatModel;
+
     private final RagInsightService ragInsightService;
 
-    public GenAIChatController(
-            @Autowired(required = false) GoogleGenAiChatModel chatModel,
-            RagInsightService ragInsightService) {
-        this.chatModel = chatModel;
+    public GenAIChatController(RagInsightService ragInsightService) {
         this.ragInsightService = ragInsightService;
     }
 
