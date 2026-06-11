@@ -335,7 +335,13 @@
   }
 
   /* ---------------- Responsive ---------------- */
+  .menu-toggle{display:none;background:none;border:none;color:#c9c7c2;cursor:pointer;padding:6px}
+  .menu-toggle svg{width:26px;height:26px}
   @media (max-width:980px){
+    .nav-links{display:none}
+    .menu-toggle{display:block}
+    .hero-title{font-size:42px}
+    .hero-lead{font-size:18px}
     .hero-grid,.rag-grid{grid-template-columns:1fr;gap:52px}
     .mockup{transform:none}
     .mockup-stage:hover .mockup{transform:none}
@@ -382,6 +388,9 @@
       <a href="#features">Características</a>
       <a href="#testimonios">Testimonios</a>
     </nav>
+    <button class="menu-toggle" aria-label="Abrir menú de navegación">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
     <div class="nav-cta">
       <a class="header-login" href="#">Entrar</a>
       <button class="btn btn-primary">Iniciar sesión</button>
