@@ -179,6 +179,13 @@ terminar la presentación corre `destroy.sh`. Total real: prácticamente $0.
 - **El backend queda en CrashLoopBackOff** → `kubectl -n sprintops logs deploy/backend`. Normalmente es algo del wallet (path TNS_ADMIN) o el password de la ADB.
 - **El LoadBalancer no obtiene IP** → revisa la subnet `svclb-subnet` y que el cluster esté en estado ACTIVE.
 - **`docker login` falla** → verifica el formato del usuario. Si tu cuenta está en un Identity Domain, suele ser `<tenancy_namespace>/oracleidentitycloudservice/<email>`.
+- **`docker push` 403 tras Login Succeeded** → credenciales viejas en Cloud Shell (podman). Prueba:
+  ```bash
+  docker logout mx-queretaro-1.ocir.io
+  echo "<AUTH_TOKEN>" | docker login mx-queretaro-1.ocir.io -u "axf5izecp5nx/a00838462@tec.mx" --password-stdin
+  docker push mx-queretaro-1.ocir.io/axf5izecp5nx/sprintops-kq8o-backend:latest
+  ```
+  O reintenta con `OCIR_FORCE_LOGIN=1 FORCE_REBUILD=1 bash deploy/oke-pro/utils/java-builds.sh`.
 - **`no space left on device` al build del frontend** → Cloud Shell tiene poco disco. El script `java-builds.sh` intenta `npm run build` en el host y solo empaqueta `dist/` en nginx. Antes de reintentar:
   ```bash
   bash deploy/oke-pro/utils/disk-free.sh
