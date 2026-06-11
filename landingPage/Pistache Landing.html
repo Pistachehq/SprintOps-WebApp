@@ -248,7 +248,7 @@
 
   /* ---------------- Workflow strip ---------------- */
   .how{background:var(--cream-2);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
-  .how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;counter-reset:hs}
+  .how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;counter-reset:hs}
   .how-step{position:relative;padding-top:74px}
   .how-step::before{counter-increment:hs;content:"0" counter(hs);font-family:'Playfair Display',serif;font-size:54px;font-weight:700;line-height:1;color:var(--teal);opacity:.5;position:absolute;top:0;left:-4px}
   .how-step h4{font-size:20px;color:var(--ink);font-weight:600;margin-bottom:10px;position:relative}
@@ -591,6 +591,11 @@
         <div class="bar"></div>
         <h4>Pregunta y entrega</h4>
         <p>Consulta el avance en lenguaje natural y entrega con confianza. El contexto vive contigo, sprint a sprint.</p>
+      </div>
+      <div class="how-step rv-slide d4">
+        <div class="bar"></div>
+        <h4>Reflexiona y mejora</h4>
+        <p>Cierra cada sprint con una retrospectiva y health check del equipo. Aprende de lo que funcionó, corrige lo que no y crece en cada ciclo.</p>
       </div>
     </div>
   </div>
