@@ -55,6 +55,10 @@ fi
 # ---------------------------------------------------------------------------
 # 2) Build backend
 # ---------------------------------------------------------------------------
+# Tras git pull, fuerza rebuild: FORCE_REBUILD=1 ./deploy/oke-pro/utils/java-builds.sh
+if [[ "${FORCE_REBUILD:-}" == "1" ]]; then
+  rm -f "$(state_file BACKEND_BUILT)" "$(state_file FRONTEND_BUILT)" 2>/dev/null || true
+fi
 if ! state_done BACKEND_BUILT; then
   echo "Building backend image $OCIR_BACKEND_IMAGE ..."
   cd "$SPRINTOPS_REPO_ROOT/backend"
@@ -62,6 +66,8 @@ if ! state_done BACKEND_BUILT; then
   docker push "$OCIR_BACKEND_IMAGE"
   state_set BACKEND_IMAGE "$OCIR_BACKEND_IMAGE"
   state_set_done BACKEND_BUILT
+else
+  echo "Backend: omitiendo build (ya marcado BACKEND_BUILT). Usa FORCE_REBUILD=1 para reconstruir."
 fi
 
 # ---------------------------------------------------------------------------
