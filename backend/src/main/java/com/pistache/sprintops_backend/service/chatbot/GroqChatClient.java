@@ -4,6 +4,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +46,22 @@ public class GroqChatClient {
 
     public GroqChatClient(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    @PostConstruct
+    void normalizeApiKey() {
+        if (apiKey == null) {
+            return;
+        }
+        apiKey = apiKey.trim();
+        while (apiKey.length() >= 2
+                && ((apiKey.startsWith("\"") && apiKey.endsWith("\""))
+                || (apiKey.startsWith("'") && apiKey.endsWith("'")))) {
+            apiKey = apiKey.substring(1, apiKey.length() - 1).trim();
+        }
+        if (!apiKey.isBlank() && !apiKey.startsWith("gsk_")) {
+            log.warn("GROQ_API_KEY no parece una clave Groq válida (debe empezar con gsk_)");
+        }
     }
 
     public boolean isConfigured() {

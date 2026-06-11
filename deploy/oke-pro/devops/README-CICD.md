@@ -153,18 +153,18 @@ El CI/CD asume que el namespace `sprintops` y los Secrets ya existen.
 | Deploy no cambia pods | `kubectl describe deploy backend -n sprintops` — ¿`imagePullSecrets`? |
 | `ImagePullBackOff` | Secret `ocir-pull` en namespace; `db-setup.sh` |
 | Rollout timeout | `kubectl logs deploy/backend -n sprintops` |
-| Chatbot: “GROQ_API_KEY no configurada” | `export GROQ_API_KEY='gsk_...'` y vuelve a correr `db-setup.sh`, o parchea el secret y reinicia backend (ver abajo) |
+| Chatbot: “GROQ_API_KEY no configurada” | `export GROQ_API_KEY='gsk_...'` y vuelve a correr `db-setup.sh`, o `bash deploy/oke-pro/utils/patch-groq-key.sh` |
+| Chatbot: `401 Invalid API Key` | La clave en el secret es incorrecta, revocada o truncada. **Genera una nueva** en [console.groq.com/keys](https://console.groq.com/keys) y ejecuta `patch-groq-key.sh` (no uses una key vieja del repo) |
 | Fotos del proyecto / daily rechazadas | Formatos admitidos: JPEG, PNG, WebP, GIF, HEIC. Tras cambios de backend, rebuild + rollout |
 
 ### Chatbot (Groq) en cluster ya desplegado
 
 ```bash
-export GROQ_API_KEY='gsk_...'   # tu API key de console.groq.com
-kubectl -n sprintops patch secret backend-secrets --type merge \
-  -p "$(printf '{"stringData":{"groqApiKey":"%s"}}' "$GROQ_API_KEY")"
-kubectl -n sprintops rollout restart deploy/backend
-kubectl -n sprintops rollout status deploy/backend --timeout=180s
+export GROQ_API_KEY='gsk_...'   # clave **nueva** de https://console.groq.com/keys
+bash deploy/oke-pro/utils/patch-groq-key.sh
 ```
+
+El script valida la clave contra Groq antes de parchear el secret (evita 401 por pegar mal el token).
 
 ---
 
