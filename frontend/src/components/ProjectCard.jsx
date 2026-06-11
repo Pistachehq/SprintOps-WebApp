@@ -2,6 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MoreVertical, ImagePlus, RotateCcw } from 'lucide-react';
 import { projectsRepository } from '../data/repositories/projectsRepository';
 
+function isLikelyImageFile(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith('image/')) return true;
+  const name = (file.name || '').toLowerCase();
+  return /\.(jpe?g|png|webp|gif|heic|heif)$/.test(name);
+}
+
 function formatProjectDate(value) {
   if (value == null || value === '') return '—';
   const str = String(value).slice(0, 10);
@@ -58,7 +65,10 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
     e.stopPropagation();
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!isLikelyImageFile(file)) {
+      window.alert('Selecciona una imagen (JPEG, PNG, WebP, GIF o HEIC).');
+      return;
+    }
     if (!userId) {
       window.alert('Inicia sesión para cambiar la imagen del proyecto.');
       return;
@@ -161,7 +171,7 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
                 className="hidden"
                 onChange={handleFileChange}
               />

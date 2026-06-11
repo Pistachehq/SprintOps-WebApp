@@ -7,6 +7,7 @@ import com.pistache.sprintops_backend.model.*;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
 import com.pistache.sprintops_backend.service.ProyectoCardCoverService;
+import com.pistache.sprintops_backend.util.ImageUploadSupport;
 import com.pistache.sprintops_backend.service.EquipoService;
 import com.pistache.sprintops_backend.service.UsuarioService;
 import com.pistache.sprintops_backend.repository.*;
@@ -312,20 +313,23 @@ public class ProyectoController {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Archivo vacío"));
         }
+        if (!ImageUploadSupport.isAllowed(file)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Solo imágenes JPEG, PNG, WebP, GIF o HEIC"));
+        }
         var opt = proyectoService.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Proyecto proyecto = opt.get();
+        String contentType = ImageUploadSupport.resolveContentType(file);
         try {
-            String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
             proyectoCardCoverService.save(id, file.getInputStream(), 6_000_000L, contentType);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "No se pudo guardar la imagen"));
         }
-        String ct = file.getContentType() != null ? file.getContentType().split(";")[0].trim() : "image/jpeg";
+        String ct = contentType;
         proyecto.setCardCoverContentType(ct);
         proyecto.setCardCoverCustom(true);
         long v = proyecto.getCardCoverVersion() != null ? proyecto.getCardCoverVersion() : 0L;
