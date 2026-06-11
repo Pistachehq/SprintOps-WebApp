@@ -6,7 +6,7 @@ metadata:
   namespace: sprintops
 data:
   SPRING_PROFILES_ACTIVE: "prod,oracle"
-  GROQ_MODEL: "llama-3.3-70b-versatile"
+  GROQ_MODEL: "meta-llama/llama-4-scout-17b-16e-instruct"
   PROJECT_CARD_COVER_DIR: "/data/project-card-covers"
   # TNS_ADMIN apunta a donde montaremos el wallet en el pod
   TNS_ADMIN: "/oracle/wallet"

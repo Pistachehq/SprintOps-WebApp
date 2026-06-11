@@ -41,7 +41,7 @@ public class GroqChatClient {
     @Value("${groq.api.key:}")
     private String apiKey;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${groq.model:meta-llama/llama-4-scout-17b-16e-instruct}")
     private String model;
 
     public GroqChatClient(ObjectMapper objectMapper) {
@@ -102,10 +102,28 @@ public class GroqChatClient {
                 Thread.sleep(waitMs);
                 continue;
             }
+            if (code == 400 && isToolUseFailed(errBody) && attempt < GROQ_MAX_RETRIES) {
+                log.info("Reintentando Groq tras tool_use_failed (intento {})", attempt + 1);
+                Thread.sleep(600L * attempt);
+                continue;
+            }
             lastFailure = new IllegalStateException(userFacingErrorMessage(code, errBody));
             break;
         }
         throw lastFailure != null ? lastFailure : new IllegalStateException("Groq: sin respuesta");
+    }
+
+    private boolean isToolUseFailed(String errorBody) {
+        if (errorBody == null || errorBody.isBlank()) {
+            return false;
+        }
+        try {
+            JsonNode err = objectMapper.readTree(errorBody).path("error");
+            return "tool_use_failed".equals(err.path("code").asText(""));
+        } catch (Exception e) {
+            return errorBody.contains("tool_use_failed")
+                    || errorBody.contains("Failed to call a function");
+        }
     }
 
     /** Groq suele incluir "try again in 19.5s" en el JSON de error 429. */
