@@ -47,7 +47,6 @@ kubectl -n sprintops create secret generic db-credentials \
 kubectl -n sprintops delete secret backend-secrets --ignore-not-found
 kubectl -n sprintops create secret generic backend-secrets \
   --from-literal=groqApiKey="${GROQ_API_KEY:-}" \
-  --from-literal=googleGenaiApiKey="${GOOGLE_GENAI_API_KEY:-}" \
   --from-literal=googleClientId="${GOOGLE_CLIENT_ID:-}" \
   --from-literal=googleClientSecret="${GOOGLE_CLIENT_SECRET:-}" \
   --from-literal=githubClientId="${GITHUB_CLIENT_ID:-}" \

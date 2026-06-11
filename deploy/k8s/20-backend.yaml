@@ -81,12 +81,6 @@ spec:
                   name: backend-secrets
                   key: groqApiKey
                   optional: true
-            - name: GOOGLE_GENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: googleGenaiApiKey
-                  optional: true
             - name: GOOGLE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
