@@ -72,23 +72,65 @@ ocir_login() {
   fi
 }
 
+ocir_username_candidates() {
+  local saved="${OCIR_DOCKER_USER:-}"
+  local u
+  if [[ -n "$saved" ]]; then
+    echo "$saved"
+  fi
+  for u in \
+    "${NAMESPACE}/oracleidentitycloudservice/${USER_NAME}" \
+    "${NAMESPACE}/${USER_NAME}" \
+    "${NAMESPACE}/Default/${USER_NAME}"; do
+    [[ "$u" == "$saved" ]] && continue
+    echo "$u"
+  done
+  if [[ -n "${OCI_DOMAIN:-}" ]]; then
+    echo "${NAMESPACE}/${OCI_DOMAIN}/${USER_NAME}"
+  fi
+}
+
 ocir_push() {
   local image="$1"
-  local attempt
-  for attempt in 1 2; do
-    if docker push "$image"; then
+  local token u
+
+  if docker push "$image" 2>/dev/null; then
+    return 0
+  fi
+
+  echo "WARN: docker push fallo (403 comun en Cloud Shell/podman). Probando credenciales explicitas..."
+  token="$(ocir_read_token)"
+  if [[ -z "$token" ]]; then
+    echo "ERROR: Auth Token vacio para push."
+    exit 1
+  fi
+
+  while IFS= read -r u; do
+    [[ -z "$u" ]] && continue
+    echo "  · podman push --creds ${u}"
+    if podman push --creds "${u}:${token}" "$image" 2>/dev/null; then
+      state_set OCIR_USERNAME "$u"
       return 0
     fi
-    if [[ "$attempt" -eq 1 ]]; then
-      echo "WARN: push fallo (a veces 403 por credenciales viejas en Cloud Shell). Re-login y reintento..."
-      ocir_login
+    if command -v skopeo >/dev/null 2>&1; then
+      echo "  · skopeo copy como ${u}"
+      if skopeo copy --dest-creds "${u}:${token}" \
+        "containers-storage:${image}" "docker://${image}" 2>/dev/null; then
+        state_set OCIR_USERNAME "$u"
+        return 0
+      fi
     fi
-  done
-  echo "ERROR: docker push fallo para $image"
-  echo "Prueba manual:"
-  echo "  docker logout $OCIR_HOST"
-  echo "  echo \"<TOKEN>\" | docker login $OCIR_HOST -u \"${NAMESPACE}/${USER_NAME}\" --password-stdin"
-  echo "  docker push $image"
+  done < <(ocir_username_candidates)
+
+  echo "ERROR: no se pudo pushear $image"
+  echo "Prueba manual (token nuevo + formato federado):"
+  echo "  TOKEN=\$(tr -d '\\n' < ~/.ocir-token)"
+  echo "  podman push --creds \"${NAMESPACE}/oracleidentitycloudservice/${USER_NAME}:\$TOKEN\" \\"
+  echo "    $image"
+  echo ""
+  echo "Si sigue 403, en OCI Console agrega politica IAM:"
+  echo "  Allow group Administrators to manage repos in tenancy"
+  echo "  (o Allow group <tu-grupo> to manage repos in compartment <compartment>)"
   exit 1
 }
 
