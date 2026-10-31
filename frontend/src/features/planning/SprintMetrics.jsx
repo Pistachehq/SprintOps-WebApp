@@ -17,7 +17,7 @@ const SprintMetrics = ({ role, sprintId, issues }) => {
           <WorkloadCard issues={issues} />
         </>
       )}
-      {sprintId && <DeveloperKpisPanel sprintId={sprintId} />}
+      {canViewMetrics && sprintId && <DeveloperKpisPanel sprintId={sprintId} />}
       <AssignedTasksCard role={role} sprintId={sprintId} issues={issues} />
     </div>
   );

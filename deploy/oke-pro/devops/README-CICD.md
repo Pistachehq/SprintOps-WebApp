@@ -153,6 +153,33 @@ El CI/CD asume que el namespace `sprintops` y los Secrets ya existen.
 | Deploy no cambia pods | `kubectl describe deploy backend -n sprintops` — ¿`imagePullSecrets`? |
 | `ImagePullBackOff` | Secret `ocir-pull` en namespace; `db-setup.sh` |
 | Rollout timeout | `kubectl logs deploy/backend -n sprintops` |
+| Chatbot: “GROQ_API_KEY no configurada” | `export GROQ_API_KEY='gsk_...'` y vuelve a correr `db-setup.sh`, o `bash deploy/oke-pro/utils/patch-groq-key.sh` |
+| Chatbot: `401 Invalid API Key` | La clave en el secret es incorrecta, revocada o truncada. **Genera una nueva** en [console.groq.com/keys](https://console.groq.com/keys) y ejecuta `patch-groq-key.sh` (no uses una key vieja del repo) |
+| Chatbot: `400 Failed to call a function` | Groq no pudo generar tool calls; usa modelo `meta-llama/llama-4-scout-17b-16e-instruct` en ConfigMap `backend-config` y redeploy backend |
+| Fotos del proyecto / daily rechazadas | Formatos admitidos: JPEG, PNG, WebP, GIF, HEIC. Tras cambios de backend, rebuild + rollout |
+
+### Chatbot (Groq) en cluster ya desplegado
+
+```bash
+export GROQ_API_KEY='gsk_...'   # clave **nueva** de https://console.groq.com/keys
+bash deploy/oke-pro/utils/patch-groq-key.sh
+```
+
+El script valida la clave contra Groq antes de parchear el secret (evita 401 por pegar mal el token).
+
+---
+
+## Prueba de carga (JMeter)
+
+Pipeline aparte (no sustituye build/deploy):
+
+1. **Build pipelines** → **Create** → `sprintops-load-test`.
+2. **Managed build** → spec: `deploy/oke-pro/devops/build_spec_load_test.yaml`.
+3. Variables obligatorias: `TARGET_HOST`, `LOAD_PROJECT_ID`, `LOAD_SPRINT_ID` (generados con `load-test/scripts/seed-load-test-data.sh`).
+4. Recomendado: `THREADS=15`, `RAMP_UP=30`, `DURATION=180`.
+5. **Manual run** → revisar log `LOAD TEST OK` y reporte HTML en artefactos.
+
+Documentación completa: [load-test/README.md](../../../load-test/README.md).
 
 ---
 

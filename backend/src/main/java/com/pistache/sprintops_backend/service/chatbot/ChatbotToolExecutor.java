@@ -87,6 +87,7 @@ public class ChatbotToolExecutor {
         try {
             return switch (toolName) {
                 case "list_my_assigned_issues" -> listMyAssignedIssues(projectId, userId);
+                case "list_my_assigned_issues_in_sprint" -> listMyAssignedIssuesInSprint(projectId, userId, a);
                 case "list_sprint_issues" -> listSprintIssues(projectId, userId, a);
                 case "list_project_sprints" -> listProjectSprints(projectId, userId);
                 case "find_issues" -> findIssues(projectId, userId, a);
@@ -257,6 +258,48 @@ public class ChatbotToolExecutor {
         }
         if (list.size() > cap) {
             sb.append("(mostrando ").append(cap).append(" de ").append(list.size()).append(")\n");
+        }
+        return sb.toString();
+    }
+
+    private String listMyAssignedIssuesInSprint(Integer projectId, Integer userId, JsonNode a) {
+        Integer sprintId = intArg(a, "sprint_id");
+        if (sprintId == null) {
+            return "Indica sprint_id (número).";
+        }
+        if (!sprintInProject(sprintId, projectId)) {
+            return "Ese sprint no pertenece al proyecto actual.";
+        }
+        if (!perm(userId, projectId, "canViewOnlyOwnIssues") && !perm(userId, projectId, "canViewAllIssues")) {
+            return "No tienes permiso para ver issues en este proyecto.";
+        }
+        Set<Integer> mine = asignacionIssuesRepository.findByUsuarioIdUsuario(userId).stream()
+                .map(x -> x.getIssue().getIdIssue())
+                .collect(Collectors.toSet());
+        List<DescIssue> descs = descIssueRepository.findBySprintIdSprint(sprintId);
+        List<Issues> assigned = new ArrayList<>();
+        for (DescIssue d : descs) {
+            Issues i = d.getIssue();
+            if (i == null || !issueInProject(i.getIdIssue(), projectId)) {
+                continue;
+            }
+            if (mine.contains(i.getIdIssue())) {
+                assigned.add(i);
+            }
+        }
+        assigned.sort(Comparator.comparing(Issues::getIdIssue));
+        if (assigned.isEmpty()) {
+            return "No tienes issues asignados en ese sprint.";
+        }
+        String sprintLabel = sprintService.findById(sprintId)
+                .map(s -> s.getNombreSprint() != null ? s.getNombreSprint() : ("sprint " + sprintId))
+                .orElse("sprint " + sprintId);
+        StringBuilder sb = new StringBuilder("Tus issues asignados en «").append(sprintLabel).append("»:\n");
+        for (Issues i : assigned) {
+            sb.append("- #").append(i.getIdIssue()).append(" ").append(safe(i.getTituloIssue()))
+                    .append(" | estado=").append(safe(i.getEstadoIssue()))
+                    .append(" | SP=").append(i.getStoryPointsIssue() != null ? i.getStoryPointsIssue() : 0)
+                    .append("\n");
         }
         return sb.toString();
     }

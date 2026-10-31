@@ -44,6 +44,16 @@ kubectl -n sprintops create secret generic db-credentials \
   --from-literal=adminPassword="$ADB_PW"
 
 # Secret opcional con credenciales OAuth, Telegram, Groq (vacios por defecto)
+if [[ -z "${GROQ_API_KEY:-}" && -f "$HOME/.groq-api-key" ]]; then
+  GROQ_API_KEY="$(tr -d '\n\r' < "$HOME/.groq-api-key")"
+fi
+if [[ -z "${GROQ_API_KEY:-}" ]]; then
+  echo "AVISO: GROQ_API_KEY vacía — el chatbot Pistache no responderá hasta configurarla."
+  echo "  export GROQ_API_KEY='gsk_...' antes de db-setup, o:"
+  echo "  kubectl -n sprintops patch secret backend-secrets --type merge -p '{\"stringData\":{\"groqApiKey\":\"gsk_...\"}}'"
+  echo "  kubectl -n sprintops rollout restart deploy/backend"
+fi
+
 kubectl -n sprintops delete secret backend-secrets --ignore-not-found
 kubectl -n sprintops create secret generic backend-secrets \
   --from-literal=groqApiKey="${GROQ_API_KEY:-}" \
@@ -58,8 +68,14 @@ kubectl -n sprintops create secret generic backend-secrets \
 USERNAME="$(state_get OCIR_USERNAME)"
 NAMESPACE="$(state_get OCIR_NAMESPACE)"
 REGION="$(state_get REGION)"
-read -s -r -p "(Re)Pega tu Auth Token para crear el imagePullSecret de OCIR: " TOKEN
-echo
+if [[ -n "${OCIR_AUTH_TOKEN:-}" ]]; then
+  TOKEN="$OCIR_AUTH_TOKEN"
+elif [[ -f "$HOME/.ocir-token" ]]; then
+  TOKEN="$(tr -d '\n\r' < "$HOME/.ocir-token")"
+else
+  read -s -r -p "(Re)Pega tu Auth Token para crear el imagePullSecret de OCIR: " TOKEN
+  echo
+fi
 
 kubectl -n sprintops delete secret ocir-pull --ignore-not-found
 kubectl -n sprintops create secret docker-registry ocir-pull \

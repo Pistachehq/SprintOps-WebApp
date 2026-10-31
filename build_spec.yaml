@@ -1,0 +1,34 @@
+# Raiz del repo — ver deploy/oke-pro/devops/build_spec_backend.yaml (fuente principal)
+
+version: 0.1
+component: build
+runAs: root
+shell: bash
+timeoutInSeconds: 3600
+
+env:
+  variables:
+    OCIR_REGION: "mx-queretaro-1"
+    OCIR_NAMESPACE: "axf5izecp5nx"
+    OCIR_BACKEND_REPO: "sprintops-kq8o-backend"
+    OCIR_USERNAME: "oracleidentitycloudservice/a00838462@tec.mx"
+
+steps:
+  - type: Command
+    name: Build and push backend image
+    command: |
+      set -eo pipefail
+      SHORT_HASH="${OCI_PRIMARY_SOURCE_COMMIT_HASH:0:7}"
+      IMAGE="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_BACKEND_REPO}:${SHORT_HASH}"
+      IMAGE_LATEST="${OCIR_REGION}.ocir.io/${OCIR_NAMESPACE}/${OCIR_BACKEND_REPO}:latest"
+      AUTH_TOKEN="${OCI_AUTH_TOKEN:-${AUTH_TOKEN:-}}"
+      [ -n "$AUTH_TOKEN" ] || { echo "ERROR: AUTH_TOKEN/OCI_AUTH_TOKEN"; exit 1; }
+      cd "${OCI_PRIMARY_SOURCE_DIR}/backend"
+      export DOCKER_BUILDKIT=0
+      docker build --progress=plain --platform linux/amd64 -f Dockerfile.devops -t "sprintops-backend:${SHORT_HASH}" .
+      echo "$AUTH_TOKEN" | docker login "${OCIR_REGION}.ocir.io" -u "${OCIR_NAMESPACE}/${OCIR_USERNAME}" --password-stdin
+      docker tag "sprintops-backend:${SHORT_HASH}" "${IMAGE}"
+      docker tag "sprintops-backend:${SHORT_HASH}" "${IMAGE_LATEST}"
+      docker push "${IMAGE}"
+      docker push "${IMAGE_LATEST}"
+      echo "BUILD OK — ${IMAGE}"

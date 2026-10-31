@@ -28,10 +28,11 @@ INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VA
 INSERT IGNORE INTO permiso (id_permiso, nombre_permiso, descripcion_permisos) VALUES (9, 'canUploadDailyPhoto', 'Subir o eliminar fotos del daily meeting en el cronograma');
 
 -- Role-Permission assignments (tabla_permisos)
--- Developer: canCreateIssue, canEditIssue, canViewOnlyOwnIssues
+-- Developer: canCreateIssue, canEditIssue, canViewOnlyOwnIssues, canUploadDailyPhoto
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 2);
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 3);
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 6);
+INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (1, 9);
 
 -- Scrum Master: canCreateSprint, canCreateIssue, canEditIssue, canManageMembers, canViewMetrics, canViewAllIssues
 INSERT IGNORE INTO tabla_permisos (Rol_id_rol, Permiso_id_permiso) VALUES (2, 1);

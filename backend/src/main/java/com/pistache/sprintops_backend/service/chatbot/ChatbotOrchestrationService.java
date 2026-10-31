@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ChatbotOrchestrationService {
@@ -125,6 +127,12 @@ public class ChatbotOrchestrationService {
                 .orElse("usuario " + userId);
 
         List<Sprint> sprints = sprintRepository.findByProyectoIdProyecto(projectId);
+
+        String fastAssigned = tryFastPathAssignedIssuesInSprint(userMessage, projectId, userId, sprints);
+        if (fastAssigned != null) {
+            return fastAssigned;
+        }
+
         StringBuilder sprintLine = new StringBuilder();
         for (Sprint s : sprints) {
             sprintLine.append(String.format("id=%d nombre=%s (%s..%s); ",
@@ -141,6 +149,7 @@ public class ChatbotOrchestrationService {
                 Solo puedes usar herramientas que operan sobre este proyecto (salvo crear_new_project o join_project_by_invite_code).
                 Si el usuario no tiene permiso, explica qué permiso hace falta (nombres exactos: canViewMetrics, canCreateIssue, canEditIssue, canCreateSprint, canManageMembers, canEditProjectDates, canViewAllIssues, canViewOnlyOwnIssues).
                 Para fechas en daily usa yyyy-MM-dd. Estados de issue (inglés en herramientas): todo, in_progress, done, blocked.
+                Si preguntan qué tienen asignado en un sprint concreto, usa list_my_assigned_issues_in_sprint con sprint_id (list_project_sprints para ids).
                 Nunca inventes issue_id ni uses marcadores como <issue_id>: el id es un número devuelto por find_issues o list_sprint_issues.
                 Asignar por título (ej. «Prueba de issue-sprint» en sprint 1 a axel): prefer assign_issue_by_title con title_contains, sprint_id si lo sabes y assignee_usernames ["axel"]. Alternativa: find_issues y luego set_issue_assignees con ese issue_id entero.
                 Cambiar estado por título (una frase): set_issue_status_by_title con title_contains, status (todo/in_progress/done/blocked) y sprint_id opcional. Con issue_id numérico: set_issue_status. Alternativa: find_issues y set_issue_status.
@@ -186,15 +195,16 @@ public class ChatbotOrchestrationService {
                 .put("role", "user")
                 .put("content", userMessage));
 
-        ArrayNode tools = ChatbotGroqToolDefinitions.all(objectMapper);
+        ArrayNode tools = ChatbotGroqToolDefinitions.forUserMessage(objectMapper, userMessage);
 
         for (int round = 0; round < MAX_TOOL_ROUNDS; round++) {
             ObjectNode body = objectMapper.createObjectNode();
             body.put("model", groqChatClient.getModel());
-            body.put("temperature", 0.25);
+            body.put("temperature", 0.2);
             body.set("messages", messages);
             body.set("tools", tools);
             body.put("tool_choice", "auto");
+            body.put("parallel_tool_calls", false);
 
             JsonNode resp = groqChatClient.chat(body);
             JsonNode choice = resp.path("choices").path(0).path("message");
@@ -239,6 +249,7 @@ public class ChatbotOrchestrationService {
                 ObjectNode toolMessage = objectMapper.createObjectNode();
                 toolMessage.put("role", "tool");
                 toolMessage.put("tool_call_id", id);
+                toolMessage.put("name", fnName);
                 toolMessage.put("content", result);
                 messages.add(toolMessage);
             }
@@ -249,6 +260,83 @@ public class ChatbotOrchestrationService {
         }
 
         return "La conversación requirió demasiadas herramientas seguidas; simplifica la petición o hazla por pasos.";
+    }
+
+    /**
+     * Respuesta directa sin LLM para «qué tengo asignado en el sprint X» (evita tool_use_failed de Groq).
+     */
+    private String tryFastPathAssignedIssuesInSprint(
+            String userMessage, Integer projectId, Integer userId, List<Sprint> sprints) {
+        if (sprints == null || sprints.isEmpty()) {
+            return null;
+        }
+        String low = userMessage.toLowerCase(Locale.ROOT);
+        boolean asksAssigned = low.contains("asignad")
+                || low.contains("mis tarea")
+                || low.contains("mis actividad")
+                || low.contains("tengo en el sprint")
+                || low.contains("tengo en sprint");
+        if (!asksAssigned) {
+            return null;
+        }
+        Optional<Sprint> sprint = matchSprintFromMessage(userMessage, sprints);
+        if (sprint.isEmpty()) {
+            return null;
+        }
+        ObjectNode args = objectMapper.createObjectNode().put("sprint_id", sprint.get().getIdSprint());
+        return toolExecutor.execute("list_my_assigned_issues_in_sprint", args, projectId, userId);
+    }
+
+    private static Optional<Sprint> matchSprintFromMessage(String message, List<Sprint> sprints) {
+        Matcher quoted = Pattern.compile("['\"]([^'\"]{2,80})['\"]").matcher(message);
+        while (quoted.find()) {
+            Optional<Sprint> hit = matchSprintByNameFragment(quoted.group(1), sprints);
+            if (hit.isPresent()) {
+                return hit;
+            }
+        }
+        String low = message.toLowerCase(Locale.ROOT);
+        Sprint best = null;
+        int bestLen = 0;
+        for (Sprint s : sprints) {
+            String name = s.getNombreSprint();
+            if (name == null || name.isBlank()) {
+                continue;
+            }
+            String nameLow = name.toLowerCase(Locale.ROOT);
+            if (low.contains(nameLow) && nameLow.length() > bestLen) {
+                best = s;
+                bestLen = nameLow.length();
+            }
+        }
+        return Optional.ofNullable(best);
+    }
+
+    private static Optional<Sprint> matchSprintByNameFragment(String fragment, List<Sprint> sprints) {
+        if (fragment == null || fragment.isBlank()) {
+            return Optional.empty();
+        }
+        String f = fragment.trim().toLowerCase(Locale.ROOT);
+        Sprint exact = null;
+        Sprint partial = null;
+        int partialLen = 0;
+        for (Sprint s : sprints) {
+            String name = s.getNombreSprint();
+            if (name == null) {
+                continue;
+            }
+            String n = name.toLowerCase(Locale.ROOT);
+            if (n.equals(f)) {
+                exact = s;
+            } else if ((n.contains(f) || f.contains(n)) && n.length() > partialLen) {
+                partial = s;
+                partialLen = n.length();
+            }
+        }
+        if (exact != null) {
+            return Optional.of(exact);
+        }
+        return Optional.ofNullable(partial);
     }
 
     private static String clampToolContent(String raw) {

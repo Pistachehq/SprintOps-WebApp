@@ -13,7 +13,7 @@ const permissions = {
     canViewMetrics: false,
     canViewOnlyOwnIssues: true,
     canViewAllIssues: false,
-    canUploadDailyPhoto: false,
+    canUploadDailyPhoto: true,
   },
   [ROLES.SCRUM_MASTER]: {
     canCreateSprint: true,

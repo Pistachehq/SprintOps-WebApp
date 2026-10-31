@@ -9,16 +9,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class ProyectoCardCoverService {
-
-    private static final Set<String> ALLOWED_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp", "image/gif"
-    );
 
     @Value("${app.project-card-cover-dir:uploads/project-card-covers}")
     private String uploadDir;
@@ -42,8 +36,7 @@ public class ProyectoCardCoverService {
     }
 
     public void save(int projectId, InputStream inputStream, long maxBytes, String contentType) throws IOException {
-        String normalizedType = contentType != null ? contentType.toLowerCase(Locale.ROOT).split(";")[0].trim() : "";
-        if (!ALLOWED_TYPES.contains(normalizedType)) {
+        if (contentType == null || contentType.isBlank()) {
             throw new IllegalArgumentException("Tipo de imagen no permitido");
         }
         Path target = fileForProject(projectId);

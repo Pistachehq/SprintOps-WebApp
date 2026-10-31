@@ -5,6 +5,7 @@ import com.pistache.sprintops_backend.model.Proyecto;
 import com.pistache.sprintops_backend.model.Usuario;
 import com.pistache.sprintops_backend.repository.DailyMeetingFotoRepository;
 import com.pistache.sprintops_backend.service.ProyectoPermissionCheckService;
+import com.pistache.sprintops_backend.util.ImageUploadSupport;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,9 +27,6 @@ import java.util.stream.Collectors;
 public class ProyectoTimelineController {
 
     public static final String PERM_UPLOAD_DAILY_PHOTO = "canUploadDailyPhoto";
-
-    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp", "image/gif");
 
     @Autowired
     private ProyectoService proyectoService;
@@ -102,10 +98,10 @@ public class ProyectoTimelineController {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", "archivo vacío"));
         }
-        String ct = file.getContentType() != null ? file.getContentType().toLowerCase(Locale.ROOT) : "";
-        if (!ALLOWED_IMAGE_TYPES.contains(ct)) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("error", "Solo imágenes JPEG, PNG, WebP o GIF"));
+        if (!ImageUploadSupport.isAllowed(file)) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", "Solo imágenes JPEG, PNG, WebP, GIF o HEIC"));
         }
+        String ct = ImageUploadSupport.resolveContentType(file);
         byte[] bytes;
         try {
             bytes = file.getBytes();

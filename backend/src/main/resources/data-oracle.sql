@@ -91,7 +91,7 @@ ON (p.id_permiso = s.id_permiso)
 WHEN NOT MATCHED THEN INSERT (id_permiso, nombre_permiso, descripcion_permisos) VALUES (s.id_permiso, s.nombre_permiso, s.descripcion_permisos);
 
 -- Role-Permission assignments (tabla_permisos): asignaciones por rol
--- Developer (id 1): canCreateIssue (2), canEditIssue (3), canViewOnlyOwnIssues (6)
+-- Developer (id 1): canCreateIssue (2), canEditIssue (3), canViewOnlyOwnIssues (6), canUploadDailyPhoto (9)
 MERGE INTO tabla_permisos t
 USING (SELECT 1 AS Rol_id_rol, 2 AS Permiso_id_permiso FROM dual) s
 ON (t.Rol_id_rol = s.Rol_id_rol AND t.Permiso_id_permiso = s.Permiso_id_permiso)
@@ -104,6 +104,11 @@ WHEN NOT MATCHED THEN INSERT (Rol_id_rol, Permiso_id_permiso) VALUES (s.Rol_id_r
 
 MERGE INTO tabla_permisos t
 USING (SELECT 1 AS Rol_id_rol, 6 AS Permiso_id_permiso FROM dual) s
+ON (t.Rol_id_rol = s.Rol_id_rol AND t.Permiso_id_permiso = s.Permiso_id_permiso)
+WHEN NOT MATCHED THEN INSERT (Rol_id_rol, Permiso_id_permiso) VALUES (s.Rol_id_rol, s.Permiso_id_permiso);
+
+MERGE INTO tabla_permisos t
+USING (SELECT 1 AS Rol_id_rol, 9 AS Permiso_id_permiso FROM dual) s
 ON (t.Rol_id_rol = s.Rol_id_rol AND t.Permiso_id_permiso = s.Permiso_id_permiso)
 WHEN NOT MATCHED THEN INSERT (Rol_id_rol, Permiso_id_permiso) VALUES (s.Rol_id_rol, s.Permiso_id_permiso);
 

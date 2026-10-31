@@ -9,7 +9,8 @@ import { useAuth } from '../auth/hooks/useAuth';
  */
 const DeveloperKpisPanel = ({ sprintId }) => {
   const { user, checkPermission } = useAuth();
-  const canViewOthers = checkPermission('canViewAllIssues') || checkPermission('canViewMetrics');
+  const canViewMetrics = checkPermission('canViewMetrics');
+  const canViewOthers = checkPermission('canViewAllIssues') || canViewMetrics;
   const [projectId, setProjectId] = useState(null);
   const [members, setMembers] = useState([]);
   const [selectedDevId, setSelectedDevId] = useState(null);
@@ -50,7 +51,7 @@ const DeveloperKpisPanel = ({ sprintId }) => {
   const effectiveDevId = selectedDevId ?? user?.id;
 
   useEffect(() => {
-    if (!sprintId || !user?.id || effectiveDevId == null) return;
+    if (!canViewMetrics || !sprintId || !user?.id || effectiveDevId == null) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -71,7 +72,7 @@ const DeveloperKpisPanel = ({ sprintId }) => {
     return () => {
       cancelled = true;
     };
-  }, [sprintId, effectiveDevId, user?.id]);
+  }, [canViewMetrics, sprintId, effectiveDevId, user?.id]);
 
   const selectedName = useMemo(() => {
     if (!effectiveDevId) return '';
@@ -79,7 +80,7 @@ const DeveloperKpisPanel = ({ sprintId }) => {
     return m?.name || (effectiveDevId === user?.id ? 'Yo' : `Usuario ${effectiveDevId}`);
   }, [members, effectiveDevId, user?.id]);
 
-  if (!user?.id) return null;
+  if (!user?.id || !canViewMetrics) return null;
 
   return (
     <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">

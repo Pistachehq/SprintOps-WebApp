@@ -1,23 +1,89 @@
 package com.pistache.sprintops_backend.service.chatbot;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Esquemas de herramientas (OpenAI-compatible) para Groq.
  */
 public final class ChatbotGroqToolDefinitions {
 
+    private static final Set<String> READ_ONLY_TOOLS = Set.of(
+            "list_my_assigned_issues",
+            "list_my_assigned_issues_in_sprint",
+            "list_sprint_issues",
+            "list_project_sprints",
+            "find_issues",
+            "get_issue_detail",
+            "get_issue_change_history",
+            "summarize_my_issue_progress",
+            "project_metrics_snapshot",
+            "team_daily_standup",
+            "my_daily_standup",
+            "list_retro_reflections",
+            "get_project_invite_code",
+            "list_sprint_trash",
+            "reflection_health_check_hint"
+    );
+
     private ChatbotGroqToolDefinitions() {
+    }
+
+    /** Menos herramientas en consultas de solo lectura → menos errores tool_use_failed en Groq. */
+    public static ArrayNode forUserMessage(ObjectMapper om, String userMessage) {
+        ArrayNode all = all(om);
+        if (looksLikeMutation(userMessage)) {
+            return all;
+        }
+        ArrayNode filtered = om.createArrayNode();
+        for (JsonNode tool : all) {
+            String name = tool.path("function").path("name").asText("");
+            if (READ_ONLY_TOOLS.contains(name)) {
+                filtered.add(tool);
+            }
+        }
+        return filtered.isEmpty() ? all : filtered;
+    }
+
+    private static boolean looksLikeMutation(String userMessage) {
+        if (userMessage == null || userMessage.isBlank()) {
+            return false;
+        }
+        String low = userMessage.toLowerCase(Locale.ROOT);
+        return low.contains("crea ")
+                || low.contains("crear ")
+                || low.contains("asigna")
+                || low.contains("mueve")
+                || low.contains("mover ")
+                || low.contains("elimina")
+                || low.contains("borra")
+                || low.contains("restaura")
+                || low.contains("cambia ")
+                || low.contains("cambiar ")
+                || low.contains("actualiza")
+                || low.contains("guarda ")
+                || low.contains("únete")
+                || low.contains("unete")
+                || low.contains("invitación")
+                || low.contains("invitacion")
+                || low.contains("permiso")
+                || low.contains("papelera")
+                || low.contains("definitiv");
     }
 
     public static ArrayNode all(ObjectMapper om) {
         ArrayNode tools = om.createArrayNode();
         tools.add(f(om, "list_my_assigned_issues",
                 "Lista los issues asignados al usuario actual en el proyecto del contexto.", empty(om)));
+        tools.add(f(om, "list_my_assigned_issues_in_sprint",
+                "Lista solo los issues asignados al usuario en un sprint (sprint_id). Ideal para «qué tengo asignado en el sprint X».",
+                req(om, List.of("sprint_id"), o -> { o.put("sprint_id", "integer"); })));
         tools.add(f(om, "list_sprint_issues",
                 "Lista issues de un sprint del proyecto. Requiere sprint_id.",
                 req(om, List.of("sprint_id"), o -> { o.put("sprint_id", "integer"); })));
@@ -263,7 +329,14 @@ public final class ChatbotGroqToolDefinitions {
         ObjectNode toNode(ObjectMapper om) {
             ObjectNode n = om.createObjectNode();
             switch (this) {
-                case INTEGER -> n.put("type", "integer");
+                case INTEGER -> {
+                    // Groq/Llama a veces envía IDs como string; aceptar ambos evita 400 tool call validation.
+                    ArrayNode types = om.createArrayNode();
+                    types.add("integer");
+                    types.add("string");
+                    n.set("type", types);
+                    n.put("description", "ID numérico (entero o texto con dígitos)");
+                }
                 case ARRAY -> {
                     n.put("type", "array");
                     n.putObject("items").put("type", "string");
