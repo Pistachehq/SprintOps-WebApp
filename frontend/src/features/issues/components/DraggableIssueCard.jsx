@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useNavigate } from 'react-router-dom';
+import { readUiScale } from '../../../components/AppFrame';
 
 export const IssueCardContent = ({ issue }) => {
   const getPriorityColor = (priority) => {
@@ -53,12 +54,14 @@ const DraggableIssueCard = ({ issue, sprintId }) => {
     id: issue.id,
     data: { issue }
   });
+  const scale = readUiScale();
+  const style = transform ? {
+    transform: `translate3d(${transform.x / scale}px, ${transform.y / scale}px, 0)`,
+    position: 'relative',
+    zIndex: 40,
+  } : undefined;
 
   const { onPointerDown: dndPointerDown, ...restListeners } = listeners;
-
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
 
   const openDetail = () => {
     if (issue?.id == null || sprintId == null || sprintId === '') return;
@@ -98,7 +101,7 @@ const DraggableIssueCard = ({ issue, sprintId }) => {
           openDetail();
         }
       }}
-      className={`rounded-xl border border-gray-100 bg-white p-4 shadow-sm select-none hover:shadow-md cursor-grab focus:outline-none focus-visible:ring-2 focus-visible:ring-oracle-main/40 ${isDragging ? 'opacity-0' : ''}`}
+      className={`rounded-xl border border-gray-100 bg-white p-4 shadow-sm select-none cursor-grab focus:outline-none focus-visible:ring-2 focus-visible:ring-oracle-main/40 ${isDragging ? 'z-40 cursor-grabbing shadow-lg' : 'hover:shadow-md'}`}
     >
       <IssueCardContent issue={issue} />
     </div>

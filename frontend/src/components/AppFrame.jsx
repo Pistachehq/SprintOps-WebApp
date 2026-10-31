@@ -39,6 +39,7 @@ const AppFrame = ({ children }) => {
       const root = document.documentElement;
       root.style.setProperty('--app-w', `${next.width}px`);
       root.style.setProperty('--app-h', `${next.height}px`);
+      root.style.setProperty('--ui-scale', String(next.scale));
     };
 
     fit();
@@ -66,5 +67,10 @@ const AppFrame = ({ children }) => {
     </div>
   );
 };
+
+export function readUiScale() {
+  const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale'));
+  return Number.isFinite(value) && value > 0 ? value : 1;
+}
 
 export default AppFrame;

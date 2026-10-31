@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { Plus, MoreHorizontal } from 'lucide-react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useAuth } from '../auth/hooks/useAuth';
 import { useIssues } from './hooks/useIssues';
 import { issueHistoryRepository } from '../../data/repositories/issueHistoryRepository';
@@ -10,7 +10,7 @@ import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { toast } from 'sonner';
 import SprintMetrics from './components/SprintMetrics';
 import DroppableColumn from './components/DroppableColumn';
-import DraggableIssueCard, { IssueCardContent } from './components/DraggableIssueCard';
+import DraggableIssueCard from './components/DraggableIssueCard';
 import NextSprintPanel, { NEXT_SPRINT_DROPPABLE_ID } from './components/NextSprintPanel';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import PopupPortal from '../../components/PopupPortal';
@@ -33,8 +33,7 @@ const IssuesBoard = () => {
   const { checkPermission, user } = useAuth();
   const { issues, isLoading, moveIssue, refetch } = useIssues(id);
 
-  const [activeDragIssue, setActiveDragIssue] = useState(null);
-  const [dragWidth, setDragWidth] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
   const [projectId, setProjectId] = useState(null);
   const [sprintsList, setSprintsList] = useState([]);
   const [issuesSentToNextSprint, setIssuesSentToNextSprint] = useState(0);
@@ -101,11 +100,7 @@ const IssuesBoard = () => {
   ];
 
   const handleDragStart = (event) => {
-    const draggedIssue =
-      event.active.data?.current?.issue ||
-      visibleIssues.find(i => String(i.id) === String(event.active.id));
-    setActiveDragIssue(draggedIssue || null);
-    setDragWidth(event.active.rect.current?.initial?.width ?? null);
+    setDraggingId(event.active.id);
   };
 
   const resolveStatusForColumn = (columnId, issue) => {
@@ -119,8 +114,7 @@ const IssuesBoard = () => {
   };
 
   const handleDragEnd = async (event) => {
-    setActiveDragIssue(null);
-    setDragWidth(null);
+    setDraggingId(null);
     const { active, over } = event;
     if (!over) return;
 
@@ -220,10 +214,7 @@ const IssuesBoard = () => {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
-          onDragCancel={() => {
-            setActiveDragIssue(null);
-            setDragWidth(null);
-          }}
+          onDragCancel={() => setDraggingId(null)}
           onDragEnd={handleDragEnd}
         >
           <div className="min-h-0 md:flex-1 md:min-h-0">
@@ -243,7 +234,9 @@ const IssuesBoard = () => {
                 return (
                   <div
                     key={column.id}
-                    className="flex min-h-0 flex-col rounded-2xl border border-slate-100 bg-slate-50 p-4 md:h-full md:max-h-full"
+                    className={`flex min-h-0 flex-col rounded-2xl border border-slate-100 bg-slate-50 p-4 md:h-full md:max-h-full ${
+                      columnIssues.some(issue => String(issue.id) === String(draggingId)) ? 'relative z-30' : ''
+                    }`}
                   >
                     <div className="mb-4 flex shrink-0 items-center justify-between px-2">
                       <div className="flex items-center gap-2">
@@ -257,7 +250,7 @@ const IssuesBoard = () => {
                       </button>
                     </div>
 
-                    <DroppableColumn id={column.id}>
+                    <DroppableColumn id={column.id} dragging={draggingId != null}>
                       {columnIssues.map(issue => (
                         <DraggableIssueCard key={issue.id} issue={issue} sprintId={id} />
                       ))}
@@ -292,16 +285,6 @@ const IssuesBoard = () => {
             </div>
           </div>
 
-          <DragOverlay dropAnimation={null}>
-            {activeDragIssue ? (
-              <div
-                className="cursor-grabbing rounded-xl border border-gray-100 bg-white p-4 shadow-lg"
-                style={dragWidth ? { width: dragWidth } : undefined}
-              >
-                <IssueCardContent issue={activeDragIssue} />
-              </div>
-            ) : null}
-          </DragOverlay>
         </DndContext>
       </div>
 
