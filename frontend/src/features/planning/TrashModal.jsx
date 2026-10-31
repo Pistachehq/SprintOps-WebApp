@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, RotateCcw, Trash2 } from 'lucide-react';
 import PopupPortal from '../../components/PopupPortal';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 import { papeleraRepository } from '../../data/repositories/papeleraRepository';
 
 const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
@@ -33,15 +34,6 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
   };
 
   if (!isOpen) return null;
-
-  const getPriorityColor = (p) => {
-    switch (p?.toLowerCase()) {
-      case 'high': case 'alta': return 'bg-red-500';
-      case 'medium': case 'media': return 'bg-yellow-500';
-      case 'low': case 'baja': return 'bg-green-500';
-      default: return 'bg-gray-400';
-    }
-  };
 
   return (
     <PopupPortal>
@@ -80,9 +72,7 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-bold text-slate-800 text-sm truncate">{item.title}</h4>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white shrink-0 ${getPriorityColor(item.priority)}`}>
-                        {item.priority}
-                      </span>
+                      <PriorityBadge priority={item.priority} />
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-400">
                       {item.storyPoints != null && <span>{item.storyPoints} SP</span>}

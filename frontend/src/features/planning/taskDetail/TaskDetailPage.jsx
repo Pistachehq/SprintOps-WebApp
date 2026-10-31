@@ -10,13 +10,7 @@ import { projectsRepository } from '../../../data/repositories/projectsRepositor
 import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
 import TaskTimeCard from './TaskTimeCard';
 import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../../domain/issueTagPalette';
-
-const normalizePriority = (value) => {
-  const v = String(value || '').toLowerCase();
-  if (v === 'high' || v === 'alta') return 'high';
-  if (v === 'low' || v === 'baja') return 'low';
-  return 'medium';
-};
+import { normalizePriority } from '../../../domain/priority';
 
 const draftFromTask = (task) => ({
   title: task.title || '',

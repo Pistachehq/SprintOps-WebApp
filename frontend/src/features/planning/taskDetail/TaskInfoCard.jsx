@@ -1,6 +1,7 @@
 import React from 'react';
 import TeamAvatars from './TeamAvatars';
 import IssueTagPicker from '../../../components/ui/IssueTagPicker';
+import { PRIORITY_LEVELS } from '../../../domain/priority';
 
 const fieldClass = 'mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#67BFA1]';
 
@@ -61,9 +62,9 @@ const TaskInfoCard = ({
               onChange={(e) => set({ priority: e.target.value })}
               className={`${fieldClass} h-12`}
             >
-              <option value="high">Alta</option>
-              <option value="medium">Media</option>
-              <option value="low">Baja</option>
+              {PRIORITY_LEVELS.map((level) => (
+                <option key={level.value} value={level.value}>{level.label}</option>
+              ))}
             </select>
           </label>
           <label className="text-xs font-bold uppercase tracking-widest text-slate-400">

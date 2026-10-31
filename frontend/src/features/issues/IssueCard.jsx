@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 
 const IssueCard = ({ issue }) => {
   const {
@@ -24,19 +25,6 @@ const IssueCard = ({ issue }) => {
     opacity: isDragging ? 0.3 : 1,
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'high':
-      case 'critica': return 'bg-black text-white';
-      case 'alta': return 'bg-red-500 text-white';
-      case 'medium':
-      case 'media': return 'bg-yellow-400 text-black';
-      case 'low':
-      case 'baja': return 'bg-green-500 text-white';
-      default: return 'bg-gray-200 text-gray-700';
-    }
-  };
-
   return (
     <div
       ref={setNodeRef}
@@ -48,9 +36,7 @@ const IssueCard = ({ issue }) => {
       <div className="mb-3 flex items-start justify-between gap-2">
         <span className="shrink-0 text-[10px] font-bold text-gray-400">#{issue.displayIndex || issue.id}</span>
         <div className="flex min-w-0 flex-col items-end gap-1">
-          <span className={`rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${getPriorityColor(issue.priority)}`}>
-            {issue.priority || 'Normal'}
-          </span>
+          <PriorityBadge priority={issue.priority} />
           {issue.tagLabel && issue.tagColor && (
             <span
               className="max-w-[140px] truncate rounded-md px-2 py-0.5 text-[9px] font-bold text-white shadow-sm"

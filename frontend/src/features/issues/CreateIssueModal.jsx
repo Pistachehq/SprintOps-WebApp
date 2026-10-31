@@ -3,13 +3,14 @@ import { X } from 'lucide-react';
 import PopupPortal from '../../components/PopupPortal';
 import IssueTagPicker from '../../components/ui/IssueTagPicker';
 import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../domain/issueTagPalette';
+import { PRIORITY_LEVELS, normalizePriority } from '../../domain/priority';
 
 const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [], timeMode = false }) => {
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('Task');
-  const [priority, setPriority] = useState('Medium');
+  const [priority, setPriority] = useState('medium');
   const [points, setPoints] = useState(0);
   const [endDate, setEndDate] = useState('');
   const [horasEstimadas, setHorasEstimadas] = useState('');
@@ -25,7 +26,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setPurpose(issue.purpose || '');
       setDescription(issue.description || '');
       setType(issue.type || 'Task');
-      setPriority(issue.priority || 'Medium');
+      setPriority(normalizePriority(issue.priority));
       setPoints(issue.storyPoints || 0);
       setEndDate(issue.completedAt || '');
       setHorasEstimadas(issue.horasEstimadas ?? '');
@@ -40,7 +41,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setPurpose('');
       setDescription('');
       setType('Task');
-      setPriority('Medium');
+      setPriority('medium');
       setPoints(0);
       setEndDate('');
       setHorasEstimadas('');
@@ -156,9 +157,9 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
                 className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                 value={priority} onChange={e => setPriority(e.target.value)}
               >
-                <option value="high">Alta</option>
-                <option value="medium">Media</option>
-                <option value="low">Baja</option>
+                {PRIORITY_LEVELS.map((level) => (
+                  <option key={level.value} value={level.value}>{level.label}</option>
+                ))}
               </select>
             </div>
           </div>

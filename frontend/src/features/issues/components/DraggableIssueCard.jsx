@@ -2,28 +2,14 @@ import React, { useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useNavigate } from 'react-router-dom';
 import { readUiScale } from '../../../components/AppFrame';
+import PriorityBadge from '../../../components/ui/PriorityBadge';
 
 export const IssueCardContent = ({ issue }) => {
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'high':
-      case 'critica': return 'bg-black text-white';
-      case 'alta': return 'bg-red-500 text-white';
-      case 'medium':
-      case 'media': return 'bg-yellow-400 text-black';
-      case 'low':
-      case 'baja': return 'bg-green-500 text-white';
-      default: return 'bg-gray-200 text-gray-700';
-    }
-  };
-
   return (
     <>
       <div className="mb-3 flex items-start justify-between gap-2">
         <span className="shrink-0 text-[10px] font-bold text-gray-400">#{issue.displayIndex || issue.id}</span>
-        <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${getPriorityColor(issue.priority)}`}>
-          {issue.priority || 'Normal'}
-        </span>
+        <PriorityBadge priority={issue.priority} />
       </div>
       <h4 className="text-sm font-bold text-gray-800 mb-4 line-clamp-2">{issue.title}</h4>
       <div className="flex items-center justify-between gap-2">

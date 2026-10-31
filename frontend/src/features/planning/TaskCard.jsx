@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import AssignUserModal from './AssignUserModal';
 import PopupPortal from '../../components/PopupPortal';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 import { useAuth } from '../auth/hooks/useAuth';
 
 const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = false, onDelete }) => {
@@ -17,18 +18,6 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
   const points = storyPoints || task.points || 0;
 
   const assignedMembers = members.filter(m => assigneeIds.includes(m.userId));
-
-  const getPriorityColor = (p) => {
-    switch(p?.toLowerCase()) {
-      case 'high':
-      case 'alta': return 'bg-red-500';
-      case 'medium':
-      case 'media': return 'bg-yellow-500';
-      case 'low':
-      case 'baja': return 'bg-green-500';
-      default: return 'bg-gray-400';
-    }
-  };
 
   const handleAssign = (userId) => {
     const newIds = assigneeIds.includes(userId)
@@ -53,9 +42,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
               #{formattedId} {title}
             </h3>
             <div className="flex shrink-0 flex-col items-end gap-1">
-              <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase text-white ${getPriorityColor(priority)}`}>
-                {priority || 'Normal'}
-              </div>
+              <PriorityBadge priority={priority} />
               {task.tagLabel && task.tagColor && (
                 <span
                   className="max-w-[140px] truncate rounded-full px-2.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
