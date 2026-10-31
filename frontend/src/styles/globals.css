@@ -18,8 +18,32 @@
     --oracle-red: #C74634;
   }
 
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+    background: #f0efed;
+  }
+
   body {
-    @apply bg-gray-50 text-slate-900 font-sans;
+    @apply text-slate-900 font-sans;
+  }
+
+  .app-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #f0efed;
+  }
+
+  .app-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    overflow: hidden;
+    background: #f0efed;
   }
 
   /*

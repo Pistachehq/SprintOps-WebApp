@@ -20,7 +20,7 @@ const Modal = ({
       onClick={onClose}
     >
       <div
-        className={`max-h-[92vh] w-full ${maxWidthClass} overflow-hidden rounded-2xl bg-white shadow-xl animate-in zoom-in-95 duration-200`}
+        className={`max-h-[calc(var(--app-h)*0.92)] w-full ${maxWidthClass} overflow-hidden rounded-2xl bg-white shadow-xl animate-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 sm:px-6">

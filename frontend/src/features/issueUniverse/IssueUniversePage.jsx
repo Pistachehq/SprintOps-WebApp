@@ -276,7 +276,7 @@ const IssueUniversePage = () => {
   }, [projectId]);
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f1a14 0%, #1a2e22 30%, #0d1910 70%, #162319 100%)' }}>
+    <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f1a14 0%, #1a2e22 30%, #0d1910 70%, #162319 100%)' }}>
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) scale(1); }

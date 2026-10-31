@@ -35,7 +35,7 @@ const VerifyEmailPage = () => {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#212121] px-6 py-12 font-sans">
+    <div className="flex h-full flex-col items-center justify-center bg-[#212121] px-6 py-12 font-sans">
       <img
         src="/pistache-banner.png"
         alt="Pistache"

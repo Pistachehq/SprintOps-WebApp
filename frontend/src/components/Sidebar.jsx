@@ -25,7 +25,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0">
+    <aside className="sticky top-0 flex h-full w-64 flex-col border-r border-gray-100 bg-white">
       <div className="p-6 flex-1">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Principal</p>
         <nav className="space-y-1">

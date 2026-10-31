@@ -52,7 +52,7 @@ const LoginPage = () => {
   }, [searchParams, setSearchParams, navigate, completeOAuthLogin]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F0EFED] font-sans">
+    <div className="flex h-full flex-col bg-[#F0EFED] font-sans">
       {/* Header Section */}
       <header className="w-full h-[80px] bg-[#2B2B2B] flex items-center justify-center shrink-0 shadow-sm px-4">
         <img

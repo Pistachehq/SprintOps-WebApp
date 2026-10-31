@@ -284,7 +284,7 @@ const IssuesBoard = () => {
             </div>
           </div>
 
-          <DragOverlay>
+          <DragOverlay adjustScale>
             {activeDragIssue ? (
               <div className="w-[220px] rotate-3 rounded-xl border-2 border-oracle-main bg-white p-4 shadow-xl">
                 <IssueCardContent issue={activeDragIssue} />
