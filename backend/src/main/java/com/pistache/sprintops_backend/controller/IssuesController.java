@@ -14,6 +14,7 @@ import com.pistache.sprintops_backend.repository.IssuesRepository;
 import com.pistache.sprintops_backend.repository.LogsIssuesRepository;
 import com.pistache.sprintops_backend.repository.PapeleraIssueRepository;
 import com.pistache.sprintops_backend.service.LogsIssuesService;
+import com.pistache.sprintops_backend.util.ScheduleDates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -91,7 +92,7 @@ public class IssuesController {
     }
 
     @PostMapping
-    public ResponseEntity<IssueDTO> create(@RequestBody CreateIssueRequest request) {
+    public ResponseEntity<?> create(@RequestBody CreateIssueRequest request) {
         Issues issue = new Issues();
         issue.setTituloIssue(request.getTitle());
         issue.setDescripcionIssue(request.getDescription());
@@ -129,6 +130,16 @@ public class IssuesController {
             issue.setHorasEstimadas(request.getHorasEstimadas());
         }
 
+        if (linkedSprint != null) {
+            String dateError = ScheduleDates.issueEndError(
+                    request.getEndDate(),
+                    linkedSprint.getFechaInicioSprint(),
+                    linkedSprint.getFechaFinSprint());
+            if (dateError != null) {
+                return ResponseEntity.badRequest().body(Map.of("error", dateError));
+            }
+        }
+
         issue = issuesService.save(issue);
 
         if (linkedSprint != null) {
@@ -158,7 +169,7 @@ public class IssuesController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<IssueDTO> update(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
         var optIssue = issuesService.findById(id);
         if (optIssue.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -177,7 +188,17 @@ public class IssuesController {
         }
         if (updates.containsKey("endDate")) {
             String endDateStr = (String) updates.get("endDate");
-            issue.setFechaFinIssue(endDateStr != null ? LocalDate.parse(endDateStr) : null);
+            LocalDate parsed = endDateStr != null && !endDateStr.isBlank() ? LocalDate.parse(endDateStr) : null;
+            List<DescIssue> links = descIssueRepository.findByIssueIdIssue(id);
+            if (!links.isEmpty() && links.get(0).getSprint() != null) {
+                Sprint sprint = links.get(0).getSprint();
+                String dateError = ScheduleDates.issueEndError(
+                        parsed, sprint.getFechaInicioSprint(), sprint.getFechaFinSprint());
+                if (dateError != null) {
+                    return ResponseEntity.badRequest().body(Map.of("error", dateError));
+                }
+            }
+            issue.setFechaFinIssue(parsed);
         }
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
@@ -236,7 +257,7 @@ public class IssuesController {
      */
     @PostMapping("/{issueId}/move-to-next-sprint")
     @Transactional
-    public ResponseEntity<IssueDTO> moveToNextSprint(
+    public ResponseEntity<?> moveToNextSprint(
             @PathVariable Integer issueId,
             @RequestBody MoveToNextSprintRequest req) {
         if (req == null || req.getFromSprintId() == null || req.getToSprintId() == null) {
@@ -275,6 +296,16 @@ public class IssuesController {
             return ResponseEntity.badRequest().build();
         }
 
+        LocalDate chosenEnd = null;
+        if (req.getEndDate() != null && !req.getEndDate().isBlank()) {
+            chosenEnd = LocalDate.parse(req.getEndDate());
+            String dateError = ScheduleDates.issueEndError(
+                    chosenEnd, toSprint.getFechaInicioSprint(), toSprint.getFechaFinSprint());
+            if (dateError != null) {
+                return ResponseEntity.badRequest().body(Map.of("error", dateError));
+            }
+        }
+
         int movedPts = storyPointsForMoveToNextSprint(req, issue);
         if ((issue.getStoryPointsIssue() == null || issue.getStoryPointsIssue() == 0) && movedPts > 0) {
             issue.setStoryPointsIssue(movedPts);
@@ -291,7 +322,7 @@ public class IssuesController {
         descIssueRepository.save(newLink);
 
         issue.setEstadoIssue("todo");
-        issue.setFechaFinIssue(null);
+        issue.setFechaFinIssue(chosenEnd);
         issue = issuesService.save(issue);
 
         int prev = fromSprint.getIssuesEnviadosSiguiente() != null ? fromSprint.getIssuesEnviadosSiguiente() : 0;
@@ -308,7 +339,7 @@ public class IssuesController {
         String actor = userId != null ? String.valueOf(userId) : (username.isEmpty() ? "sistema" : username);
         log.setActorLogIssue(actor);
         String who = !username.isEmpty() ? username : actor;
-        log.setDescripcionLogIssue("Enviado al sprint \"" + destName + "\" por " + who);
+        log.setDescripcionLogIssue("Cambiado al sprint \"" + destName + "\" por " + who);
         log.setFechaCreacionLogIssue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
         logsIssuesService.save(log);
 

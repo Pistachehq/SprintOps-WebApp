@@ -11,6 +11,7 @@ import { sprintsRepository } from '../../../data/repositories/sprintsRepository'
 import TaskTimeCard from './TaskTimeCard';
 import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../../domain/issueTagPalette';
 import { normalizePriority } from '../../../domain/priority';
+import { formatLong } from '../../../domain/scheduleDates';
 
 const draftFromTask = (task) => ({
   title: task.title || '',
@@ -19,6 +20,7 @@ const draftFromTask = (task) => ({
   priority: normalizePriority(task.priority),
   points: task.storyPoints || 0,
   endDate: task.completedAt || '',
+  datePending: !task.completedAt,
   isSubIssue: !!task.parentIssueId,
   parentIssueId: task.parentIssueId || '',
   useTag: !!(task.tagLabel && task.tagColor),
@@ -37,6 +39,8 @@ const TaskDetailPage = () => {
   
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
+  const [sprintRange, setSprintRange] = useState(null);
+  const [dateError, setDateError] = useState('');
   const [members, setMembers] = useState([]);
   const [projectMode, setProjectMode] = useState('agil');
 
@@ -45,10 +49,11 @@ const TaskDetailPage = () => {
   // Load permissions based on the user's role in this sprint's project
   useEffect(() => {
     sprintsRepository.getById(sprintId).then(sprint => {
+      setSprintRange(sprint ? { start: sprint.startDate || '', end: sprint.endDate || '' } : null);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
       }
-    }).catch(() => {});
+    }).catch(() => setSprintRange(null));
   }, [sprintId]);
 
   useEffect(() => {
@@ -92,6 +97,13 @@ const TaskDetailPage = () => {
   }
 
   const handleEditIssue = async (id, form) => {
+    if (!form.datePending) {
+      if (!form.endDate || (sprintRange?.start && form.endDate < sprintRange.start) || (sprintRange?.end && form.endDate > sprintRange.end)) {
+        setDateError('La fecha tiene que caer dentro del sprint, o márcala como por determinar.');
+        return;
+      }
+    }
+    setDateError('');
     const tagPayload = form.useTag && form.tagLabel.trim()
       ? {
           tagLabel: form.tagLabel.trim(),
@@ -104,7 +116,7 @@ const TaskDetailPage = () => {
       description: form.description,
       priority: form.priority,
       storyPoints: Number(form.points) || 0,
-      endDate: form.endDate || null,
+      endDate: form.datePending ? null : form.endDate,
       parentIssueId: form.isSubIssue && form.parentIssueId ? Number(form.parentIssueId) : null,
       assigneeIds: task.assigneeIds || [],
       status: task.status,
@@ -181,7 +193,13 @@ const TaskDetailPage = () => {
               </div>
               <p className="mt-2 text-sm font-medium text-slate-500">
                 <span className="font-black text-slate-700">{task.storyPoints ?? 0}</span> story points
+                <span className="mx-2 text-slate-300">·</span>
+                Fin tentativo:{' '}
+                <span className="font-black text-slate-700">
+                  {task.completedAt ? formatLong(task.completedAt) : 'Por determinar'}
+                </span>
               </p>
+              {dateError && <p className="mt-2 text-sm font-medium text-red-600">{dateError}</p>}
             </div>
           </div>
           {canEditIssue && (
@@ -236,6 +254,7 @@ const TaskDetailPage = () => {
           draft={draft}
           onDraft={setDraft}
           sprintIssues={issues}
+          sprintRange={sprintRange}
         />
 
         {projectMode === 'tiempo' && (

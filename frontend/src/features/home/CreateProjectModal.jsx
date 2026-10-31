@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import ProjectCodeModal from '../../components/ui/ProjectCodeModal';
 import { AnimatedPopup } from '../../components/PopupPortal';
+import { projectDateBounds } from '../../domain/scheduleDates';
 
 const MODES = [
   {
@@ -28,11 +29,20 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [createdName, setCreatedName] = useState('');
+  const [formError, setFormError] = useState('');
+  const bounds = projectDateBounds(start);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const result = await onCreate({
+    if (start < bounds.startMin || start > bounds.startMax || end < bounds.endMin || end > bounds.endMax) {
+      setFormError('El proyecto empieza hoy o después, y termina como máximo dentro de 3 años.');
+      return;
+    }
+    setFormError('');
+
+    let result;
+    try {
+      result = await onCreate({
       name,
       description,
       start,
@@ -40,7 +50,11 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
       modo,
       cotizacionHabilitada: modo === 'tiempo' && cotizacionHabilitada,
     });
-    
+    } catch (err) {
+      setFormError(err?.message || 'No se pudo crear el proyecto.');
+      return;
+    }
+
     setCreatedName(name);
     setGeneratedCode(result?.codigo || '');
     setShowCodeModal(true);
@@ -96,19 +110,29 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha Inicio</label>
                 <input 
                   required type="date"
+                  min={bounds.startMin}
+                  max={bounds.startMax}
                   className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
-                  value={start} onChange={e => setStart(e.target.value)}
+                  value={start}
+                  onChange={e => {
+                    const next = e.target.value;
+                    setStart(next);
+                    if (end && next && end < next) setEnd(next);
+                  }}
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha Fin</label>
                 <input 
                   required type="date"
+                  min={bounds.endMin}
+                  max={bounds.endMax}
                   className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
                   value={end} onChange={e => setEnd(e.target.value)}
                 />
               </div>
             </div>
+            <p className="text-xs text-slate-400 -mt-2">Desde hoy y hasta dentro de 3 años.</p>
 
             <div>
               <p className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Modo del proyecto</p>
@@ -158,6 +182,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
               </span>
             </label>
             
+            {formError && <p className="text-sm font-medium text-red-600">{formError}</p>}
             <div className="mt-2 flex gap-3">
               <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">
                 Cancelar

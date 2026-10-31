@@ -32,6 +32,7 @@ async function request(path, options = {}) {
     const base =
       errorBody.error ||
       errorBody.message ||
+      errorBody.detail ||
       (errorBody.path && response.status === 404
         ? `Ruta no encontrada en el servidor: ${errorBody.path}`
         : null) ||

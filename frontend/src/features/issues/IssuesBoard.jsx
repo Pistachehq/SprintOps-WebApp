@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useParams, useOutletContext } from 'react-router-dom';
 import { Plus, MoreHorizontal } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -7,13 +7,14 @@ import { useIssues } from './hooks/useIssues';
 import { issueHistoryRepository } from '../../data/repositories/issueHistoryRepository';
 import { issuesRepository } from '../../data/repositories/issuesRepository';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
+import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { toast } from 'sonner';
 import SprintMetrics from './components/SprintMetrics';
 import DroppableColumn from './components/DroppableColumn';
 import DraggableIssueCard from './components/DraggableIssueCard';
 import NextSprintPanel, { NEXT_SPRINT_DROPPABLE_ID } from './components/NextSprintPanel';
+import ChangeSprintModal from './components/ChangeSprintModal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import { AnimatedPopup } from '../../components/PopupPortal';
 
 function sortSprintsForOrder(list) {
   return [...(list || [])].sort((a, b) => {
@@ -28,16 +29,16 @@ const COLUMN_IDS = ['todo', 'in_progress', 'done'];
 
 const IssuesBoard = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { setShowCreateIssue } = useOutletContext();
   const { checkPermission, user } = useAuth();
   const { issues, isLoading, moveIssue, refetch } = useIssues(id);
 
   const [draggingId, setDraggingId] = useState(null);
   const [projectId, setProjectId] = useState(null);
+  const [project, setProject] = useState(null);
   const [sprintsList, setSprintsList] = useState([]);
   const [issuesSentToNextSprint, setIssuesSentToNextSprint] = useState(0);
-  const [showNoNextModal, setShowNoNextModal] = useState(false);
+  const [moveTarget, setMoveTarget] = useState(null);
   const [movingToNext, setMovingToNext] = useState(false);
 
   const canCreateIssue = checkPermission('canCreateIssue');
@@ -51,11 +52,16 @@ const IssuesBoard = () => {
       const pid = cur?.projectId;
       setProjectId(pid ?? null);
       if (pid == null) {
+        setProject(null);
         setSprintsList([]);
         setIssuesSentToNextSprint(0);
         return;
       }
-      const all = await sprintsRepository.getByProjectId(pid);
+      const [all, projectData] = await Promise.all([
+        sprintsRepository.getByProjectId(pid),
+        projectsRepository.getById(pid).catch(() => null),
+      ]);
+      setProject(projectData);
       setSprintsList(all || []);
       const me = (all || []).find(s => String(s.id) === String(id));
       setIssuesSentToNextSprint(me?.issuesSentToNextSprint ?? 0);
@@ -72,13 +78,8 @@ const IssuesBoard = () => {
 
   const sortedProjectSprints = useMemo(() => sortSprintsForOrder(sprintsList), [sprintsList]);
 
-  const nextSprint = useMemo(() => {
-    const idx = sortedProjectSprints.findIndex(s => String(s.id) === String(id));
-    if (idx < 0 || idx >= sortedProjectSprints.length - 1) return null;
-    return sortedProjectSprints[idx + 1];
-  }, [sortedProjectSprints, id]);
-
-  const nextSprintPanelDisabled = !nextSprint && !canCreateSprint;
+  const otherSprints = sortedProjectSprints.filter((sprint) => String(sprint.id) !== String(id));
+  const nextSprintPanelDisabled = otherSprints.length === 0 && !canCreateSprint;
 
   const visibleIssues = canViewAllIssues
     ? issues
@@ -130,34 +131,7 @@ const IssuesBoard = () => {
     }
 
     if (over.id === NEXT_SPRINT_DROPPABLE_ID) {
-      if (nextSprint) {
-        setMovingToNext(true);
-        try {
-          await issuesRepository.moveToNextSprint(issueId, {
-            fromSprintId: Number(id),
-            toSprintId: nextSprint.id,
-            userId: user?.id,
-            username: user?.username ?? user?.email ?? '',
-            storyPoints: Math.max(
-              0,
-              Math.trunc(Number(activeIssue.storyPoints ?? activeIssue.points ?? 0)) || 0
-            ),
-          });
-          toast.success(`Issue enviado a ${nextSprint.name || 'siguiente sprint'}`);
-          await refetch();
-          await loadSprintContext();
-        } catch (err) {
-          console.error(err);
-          toast.error('No se pudo mover el issue al siguiente sprint');
-        } finally {
-          setMovingToNext(false);
-        }
-        return;
-      }
-
-      if (canCreateSprint) {
-        setShowNoNextModal(true);
-      }
+      setMoveTarget(activeIssue);
       return;
     }
 
@@ -182,15 +156,6 @@ const IssuesBoard = () => {
     );
   }
 
-  const handleModalGoCreateSprint = () => {
-    setShowNoNextModal(false);
-    if (projectId != null) {
-      navigate(`/project/${projectId}/sprints`, {
-        state: { openProjectConfig: true, focusSprints: true },
-      });
-    }
-  };
-
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {checkPermission('canViewMetrics') && (
@@ -206,7 +171,7 @@ const IssuesBoard = () => {
       <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto md:overflow-hidden">
         {movingToNext && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-            <LoadingSpinner label="Moviendo al siguiente sprint..." />
+            <LoadingSpinner label="Cambiando de sprint..." />
           </div>
         )}
 
@@ -277,10 +242,7 @@ const IssuesBoard = () => {
                     : 'border border-[#67BFA1]/40 shadow-sm',
                 ].join(' ')}
               >
-                <NextSprintPanel
-                  disabled={nextSprintPanelDisabled}
-                  nextSprintName={nextSprint ? nextSprint.name : null}
-                />
+                <NextSprintPanel disabled={nextSprintPanelDisabled} />
               </div>
             </div>
           </div>
@@ -288,40 +250,53 @@ const IssuesBoard = () => {
         </DndContext>
       </div>
 
-      <AnimatedPopup open={showNoNextModal}>
-        <div
-          className="popup-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="no-next-sprint-title"
-        >
-          <div className="popup-panel w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <h2 id="no-next-sprint-title" className="text-lg font-black text-slate-900">
-              No hay siguiente sprint
-            </h2>
-            <p className="mt-3 text-sm text-slate-600">
-              No existe un sprint planificado después del actual. ¿Deseas crear uno nuevo en la configuración del
-              proyecto?
-            </p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowNoNextModal(false)}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
-              >
-                No
-              </button>
-              <button
-                type="button"
-                onClick={handleModalGoCreateSprint}
-                className="rounded-xl bg-[#67BFA1] px-4 py-2 text-sm font-bold text-white hover:opacity-90"
-              >
-                Sí, ir a crear sprint
-              </button>
-            </div>
-          </div>
-        </div>
-      </AnimatedPopup>
+      <ChangeSprintModal
+        open={!!moveTarget}
+        issue={moveTarget}
+        sprints={sortedProjectSprints}
+        currentSprintId={id}
+        project={project}
+        canCreateSprint={canCreateSprint}
+        onClose={() => setMoveTarget(null)}
+        onCreateSprint={async (payload) => {
+          const created = await sprintsRepository.create({
+            projectId,
+            name: payload.name,
+            status: 'planned',
+            startDate: payload.startDate,
+            endDate: payload.endDate,
+          });
+          await loadSprintContext();
+          return created;
+        }}
+        onConfirm={async ({ toSprintId, endDate }) => {
+          if (!moveTarget) return;
+          setMovingToNext(true);
+          try {
+            await issuesRepository.moveToNextSprint(moveTarget.id, {
+              fromSprintId: Number(id),
+              toSprintId,
+              endDate,
+              userId: user?.id,
+              username: user?.username ?? user?.email ?? '',
+              storyPoints: Math.max(
+                0,
+                Math.trunc(Number(moveTarget.storyPoints ?? moveTarget.points ?? 0)) || 0
+              ),
+            });
+            const dest = sortedProjectSprints.find((sprint) => String(sprint.id) === String(toSprintId));
+            toast.success(`Tarea movida a ${dest?.name || 'el sprint elegido'}`);
+            setMoveTarget(null);
+            await refetch();
+            await loadSprintContext();
+          } catch (err) {
+            toast.error(err?.message || 'No se pudo cambiar de sprint');
+            throw err;
+          } finally {
+            setMovingToNext(false);
+          }
+        }}
+      />
     </div>
   );
 };

@@ -139,7 +139,7 @@ class RetoReleaseApiIT {
         Map<String, Object> createProj = new LinkedHashMap<>();
         createProj.put("name", "Proyecto Reto IT");
         createProj.put("description", "Datos generados por RetoReleaseApiIT");
-        createProj.put("start", LocalDate.now().minusDays(30).toString());
+        createProj.put("start", LocalDate.now().toString());
         createProj.put("end", LocalDate.now().plusDays(60).toString());
         createProj.put("ownerId", smUserId);
         ResponseEntity<String> rProj = exchangeJson("POST", api("/proyectos"), createProj);
@@ -173,8 +173,8 @@ class RetoReleaseApiIT {
         sprintBody.put("name", "Sprint Reto IT");
         sprintBody.put("goal", "Cerrar pruebas automáticas");
         sprintBody.put("status", "P");
-        sprintBody.put("startDate", LocalDate.now().minusDays(7).toString());
-        sprintBody.put("endDate", LocalDate.now().plusDays(7).toString());
+        sprintBody.put("startDate", LocalDate.now().toString());
+        sprintBody.put("endDate", LocalDate.now().plusDays(14).toString());
         sprintBody.put("capacity", 40);
         ResponseEntity<String> rSprint = exchangeJson("POST", api("/sprints"), sprintBody);
         logIo("Setup — Crear sprint", "POST", api("/sprints"), sprintBody, rSprint);

@@ -6,6 +6,7 @@ import { projectsRepository } from '../../data/repositories/projectsRepository';
 import { rolesRepository } from '../../data/repositories/rolesRepository';
 import CreateRoleModal from './CreateRoleModal';
 import TelegramLinkCard from './TelegramLinkCard';
+import { addDays, formatLong, nextSprintWindow, projectDateBounds } from '../../domain/scheduleDates';
 
 // Función para convertir status a display format
 const getStatusDisplay = (status) => {
@@ -59,6 +60,7 @@ const ProjectConfigView = ({
   const [sprintCapacity, setSprintCapacity] = useState('');
   const [sprintSearch, setSprintSearch] = useState('');
   const [showSprintCreate, setShowSprintCreate] = useState(false);
+  const [sprintFormError, setSprintFormError] = useState('');
   
   const [localMembers, setLocalMembers] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -144,6 +146,23 @@ const ProjectConfigView = ({
     }
   }, [project?.end, isEditingProjectEndDate]);
 
+  const sprintWindow = useMemo(() => nextSprintWindow(project, sprints), [project, sprints]);
+  const projectBounds = projectDateBounds(project?.start);
+  const projectEndMin = sprintWindow.startLocked && addDays(sprintWindow.startMin, -1) > projectBounds.endMin
+    ? addDays(sprintWindow.startMin, -1)
+    : projectBounds.endMin;
+
+  const sprintFormKey = `${showSprintCreate}|${sprintWindow.blocked}|${sprintWindow.startMin}`;
+  const [appliedSprintFormKey, setAppliedSprintFormKey] = useState(sprintFormKey);
+  if (sprintFormKey !== appliedSprintFormKey) {
+    setAppliedSprintFormKey(sprintFormKey);
+    if (showSprintCreate && !sprintWindow.blocked) {
+      setStartDate(sprintWindow.startMin);
+      setEndDate('');
+      setSprintFormError('');
+    }
+  }
+
   const canCreateSprint = checkPermission('canCreateSprint');
   const canManageMembers = checkPermission('canManageMembers');
   const canEditProjectDates = checkPermission('canEditProjectDates');
@@ -169,6 +188,15 @@ const ProjectConfigView = ({
   const handleAddSprint = async (e) => {
     e.preventDefault();
     if (!addSprint) return;
+    if (sprintWindow.blocked) {
+      setSprintFormError(sprintWindow.blockedReason);
+      return;
+    }
+    if (!startDate || !endDate || endDate < startDate || endDate > sprintWindow.endMax) {
+      setSprintFormError('La fecha final tiene que caer entre el inicio del sprint y el fin del proyecto.');
+      return;
+    }
+    setSprintFormError('');
     try {
       await addSprint({
         projectId,
@@ -186,7 +214,7 @@ const ProjectConfigView = ({
       setSprintCapacity('');
       setShowSprintCreate(false);
     } catch (err) {
-      console.error('Error al crear sprint:', err);
+      setSprintFormError(err?.message || 'No se pudo crear el sprint.');
     }
   };
 
@@ -338,6 +366,8 @@ const ProjectConfigView = ({
                   <div className="flex gap-2 items-center">
                     <input 
                       type="date" 
+                      min={projectEndMin}
+                      max={projectBounds.endMax}
                       value={newProjectEndDate}
                       onChange={e => setNewProjectEndDate(e.target.value)}
                       className="flex-1 h-10 px-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm"
@@ -502,17 +532,49 @@ const ProjectConfigView = ({
                         <label className="block text-xs font-semibold text-slate-500 mb-1">Capacidad de Story Points</label>
                         <input type="number" min="0" value={sprintCapacity} onChange={e => setSprintCapacity(e.target.value)} placeholder="ej. 40" className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1]" />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha de inicio</label>
-                          <input required type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600" />
+                      {sprintWindow.blocked ? (
+                        <p className="text-sm font-medium leading-relaxed text-amber-800 bg-amber-50 rounded-xl px-4 py-3">{sprintWindow.blockedReason}</p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha de inicio</label>
+                            <input
+                              required
+                              type="date"
+                              min={sprintWindow.startMin}
+                              max={sprintWindow.startMax}
+                              readOnly={sprintWindow.startLocked}
+                              value={startDate}
+                              onChange={e => {
+                                const next = e.target.value;
+                                setStartDate(next);
+                                if (endDate && next && endDate < next) setEndDate(next);
+                              }}
+                              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600 read-only:bg-gray-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha final</label>
+                            <input
+                              required
+                              type="date"
+                              min={startDate || sprintWindow.startMin}
+                              max={sprintWindow.endMax}
+                              value={endDate}
+                              onChange={e => setEndDate(e.target.value)}
+                              className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 mb-1">Fecha final</label>
-                          <input required type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#67BFA1] text-sm text-slate-600" />
-                        </div>
-                      </div>
-                      <button type="submit" className="w-full h-12 bg-[#67BFA1] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90">
+                      )}
+                      <p className="text-xs text-slate-400">
+                        {sprintWindow.startLocked
+                          ? `Este sprint empieza el ${formatLong(sprintWindow.startMin)}, el día después del anterior.`
+                          : `El primero empieza desde el ${formatLong(sprintWindow.startMin)}.`}
+                        {sprintWindow.endMax ? ` Termina a más tardar el ${formatLong(sprintWindow.endMax)}.` : ''}
+                      </p>
+                      {sprintFormError && <p className="text-sm font-medium text-red-600">{sprintFormError}</p>}
+                      <button type="submit" disabled={sprintWindow.blocked} className="w-full h-12 bg-[#67BFA1] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:opacity-90 disabled:opacity-50">
                         <Plus size={18} /> Crear Sprint
                       </button>
                     </form>

@@ -13,4 +13,6 @@ public class MoveToNextSprintRequest {
     private String username;
     private Integer userId;
     private Integer storyPoints;
+    /** Fecha fin tentativa dentro del sprint destino. Vacío = por determinar. */
+    private String endDate;
 }

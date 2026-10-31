@@ -4,8 +4,9 @@ import { AnimatedPopup } from '../../components/PopupPortal';
 import IssueTagPicker from '../../components/ui/IssueTagPicker';
 import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 import { PRIORITY_LEVELS, normalizePriority } from '../../domain/priority';
+import { formatLong } from '../../domain/scheduleDates';
 
-const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [], timeMode = false }) => {
+const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [], timeMode = false, sprintRange = null }) => {
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [description, setDescription] = useState('');
@@ -13,6 +14,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   const [priority, setPriority] = useState('medium');
   const [points, setPoints] = useState(0);
   const [endDate, setEndDate] = useState('');
+  const [datePending, setDatePending] = useState(true);
+  const [formError, setFormError] = useState('');
   const [horasEstimadas, setHorasEstimadas] = useState('');
   const [isSubIssue, setIsSubIssue] = useState(false);
   const [parentIssueId, setParentIssueId] = useState('');
@@ -30,6 +33,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setPriority(normalizePriority(issue.priority));
       setPoints(issue.storyPoints || 0);
       setEndDate(issue.completedAt || '');
+      setDatePending(!issue.completedAt);
+      setFormError('');
       setHorasEstimadas(issue.horasEstimadas ?? '');
       setIsSubIssue(!!issue.parentIssueId);
       setParentIssueId(issue.parentIssueId || '');
@@ -45,6 +50,8 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setPriority('medium');
       setPoints(0);
       setEndDate('');
+      setDatePending(true);
+      setFormError('');
       setHorasEstimadas('');
       setIsSubIssue(false);
       setParentIssueId('');
@@ -56,6 +63,21 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!datePending) {
+      if (!endDate) {
+        setFormError('Elige una fecha del sprint o marca Por determinar.');
+        return;
+      }
+      if (sprintRange?.start && endDate < sprintRange.start) {
+        setFormError('La fecha tiene que caer dentro del sprint.');
+        return;
+      }
+      if (sprintRange?.end && endDate > sprintRange.end) {
+        setFormError('La fecha tiene que caer dentro del sprint.');
+        return;
+      }
+    }
+    setFormError('');
     const tagPayload =
       useTag && tagLabel.trim()
         ? {
@@ -72,7 +94,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       priority,
       type,
       storyPoints: Number(points) || 0,
-      endDate: endDate || null,
+      endDate: datePending ? null : endDate,
       ...(timeMode
         ? { horasEstimadas: horasEstimadas === '' ? null : Number(horasEstimadas) }
         : {}),
@@ -179,12 +201,33 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha fin tentativa</label>
               <input 
                 type="date"
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
-                value={endDate}
+                min={sprintRange?.start || undefined}
+                max={sprintRange?.end || undefined}
+                disabled={datePending}
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm disabled:opacity-50"
+                value={datePending ? '' : endDate}
                 onChange={e => setEndDate(e.target.value)}
               />
+              <label className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-[#67BFA1]"
+                  checked={datePending}
+                  onChange={(e) => {
+                    setDatePending(e.target.checked);
+                    if (e.target.checked) setEndDate('');
+                  }}
+                />
+                Por determinar
+              </label>
+              {sprintRange?.start && sprintRange?.end && (
+                <p className="mt-1 text-xs text-slate-400">
+                  Dentro del sprint: {formatLong(sprintRange.start)} – {formatLong(sprintRange.end)}.
+                </p>
+              )}
             </div>
           </div>
+          {formError && <p className="text-sm font-medium text-red-600">{formError}</p>}
 
           {timeMode && (
             <div>

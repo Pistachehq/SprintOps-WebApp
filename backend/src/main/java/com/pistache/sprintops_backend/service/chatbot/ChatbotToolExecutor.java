@@ -8,6 +8,7 @@ import com.pistache.sprintops_backend.model.RolesDeUsuarios.RolesDeUsuariosId;
 import com.pistache.sprintops_backend.model.TablaPermisos.TablaPermisosId;
 import com.pistache.sprintops_backend.repository.*;
 import com.pistache.sprintops_backend.service.*;
+import com.pistache.sprintops_backend.util.ScheduleDates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -1118,6 +1119,12 @@ public class ChatbotToolExecutor {
             return "Faltan start_date o end_date (formato yyyy-MM-dd).";
         }
         Proyecto p = proyectoService.findById(projectId).orElseThrow();
+        String sprintDateError = ScheduleDates.sprintRangeError(
+                start, end, p.getFechaInicioProyecto(), p.getFechaFinProyecto(),
+                sprintRepository.findByProyectoIdProyecto(projectId));
+        if (sprintDateError != null) {
+            return sprintDateError;
+        }
         Sprint sp = new Sprint();
         sp.setNombreSprint(name);
         sp.setObjetivoSprint(Optional.ofNullable(strArg(a, "goal")).orElse(""));
@@ -1414,6 +1421,10 @@ public class ChatbotToolExecutor {
         LocalDate end = dateArg(a, "end", null);
         if (start == null || end == null) {
             return "Faltan fechas start y end.";
+        }
+        String projectDateError = ScheduleDates.projectRangeError(start, end);
+        if (projectDateError != null) {
+            return projectDateError;
         }
         Equipo nuevoEquipo = new Equipo();
         nuevoEquipo.setNombreEquipo("Equipo " + name);

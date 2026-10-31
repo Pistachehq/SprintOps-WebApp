@@ -2,6 +2,7 @@ import React from 'react';
 import TeamAvatars from './TeamAvatars';
 import IssueTagPicker from '../../../components/ui/IssueTagPicker';
 import { PRIORITY_LEVELS } from '../../../domain/priority';
+import { formatLong } from '../../../domain/scheduleDates';
 
 const fieldClass = 'mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#67BFA1]';
 
@@ -14,6 +15,7 @@ const TaskInfoCard = ({
   draft = null,
   onDraft,
   sprintIssues = [],
+  sprintRange = null,
 }) => {
   const assignedMembers = members.filter(m => task.assigneeIds?.includes(m.userId));
   const set = (patch) => onDraft?.({ ...draft, ...patch });
@@ -53,6 +55,15 @@ const TaskInfoCard = ({
         )}
       </section>
 
+      {!editing && (
+        <section>
+          <h3 className="text-lg font-bold text-[#67BFA1] mb-3">Fecha fin tentativa</h3>
+          <div className="border-l-4 border-[#67BFA1] bg-gray-50 rounded-r-xl p-5 text-sm text-gray-600 leading-relaxed">
+            {task.completedAt ? formatLong(task.completedAt) : 'Por determinar'}
+          </div>
+        </section>
+      )}
+
       {editing && (
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -77,15 +88,32 @@ const TaskInfoCard = ({
               className={`${fieldClass} h-12 font-semibold`}
             />
           </label>
-          <label className="text-xs font-bold uppercase tracking-widest text-slate-400">
+          <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
             Fecha fin tentativa
             <input
               type="date"
-              value={draft.endDate || ''}
-              onChange={(e) => set({ endDate: e.target.value })}
-              className={`${fieldClass} h-12`}
+              min={sprintRange?.start || undefined}
+              max={sprintRange?.end || undefined}
+              disabled={draft.datePending}
+              value={draft.datePending ? '' : (draft.endDate || '')}
+              onChange={(e) => set({ endDate: e.target.value, datePending: false })}
+              className={`${fieldClass} h-12 disabled:opacity-50`}
             />
-          </label>
+            <label className="mt-2 flex items-center gap-2 text-sm font-medium normal-case tracking-normal text-slate-600">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-[#67BFA1]"
+                checked={!!draft.datePending}
+                onChange={(e) => set({ datePending: e.target.checked, endDate: e.target.checked ? '' : draft.endDate })}
+              />
+              Por determinar
+            </label>
+            {sprintRange?.start && sprintRange?.end && (
+              <p className="mt-1 text-xs font-medium normal-case tracking-normal text-slate-400">
+                Dentro del sprint: {formatLong(sprintRange.start)} – {formatLong(sprintRange.end)}.
+              </p>
+            )}
+          </div>
           <label className="text-xs font-bold uppercase tracking-widest text-slate-400">
             ¿Es sub issue?
             <select

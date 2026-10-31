@@ -10,6 +10,7 @@ import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
 import com.pistache.sprintops_backend.service.ProyectoCardCoverService;
 import com.pistache.sprintops_backend.util.ImageUploadSupport;
 import com.pistache.sprintops_backend.service.EquipoService;
+import com.pistache.sprintops_backend.util.ScheduleDates;
 import com.pistache.sprintops_backend.service.UsuarioService;
 import com.pistache.sprintops_backend.repository.*;
 import com.pistache.sprintops_backend.model.InfoUsuarioEquipo.InfoUsuarioEquipoId;
@@ -48,6 +49,8 @@ public class ProyectoController {
     private ProyectoIssuesDocxExportService proyectoIssuesDocxExportService;
     @Autowired
     private ProyectoCardCoverService proyectoCardCoverService;
+    @Autowired
+    private SprintRepository sprintRepository;
     @Autowired
     private JoinCodeRateLimiter joinCodeRateLimiter;
 
@@ -160,7 +163,11 @@ public class ProyectoController {
     }
 
     @PostMapping
-    public ResponseEntity<ProyectoDTO> create(@RequestBody CreateProyectoRequest request) {
+    public ResponseEntity<?> create(@RequestBody CreateProyectoRequest request) {
+        String dateError = ScheduleDates.projectRangeError(request.getStart(), request.getEnd());
+        if (dateError != null) {
+            return ResponseEntity.badRequest().body(Map.of("error", dateError));
+        }
         // Create equipo for project
         Equipo equipo = new Equipo();
         equipo.setNombreEquipo("Equipo " + request.getName());
@@ -290,7 +297,7 @@ public class ProyectoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProyectoDTO> update(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
         var optProyecto = proyectoService.findById(id);
         if (optProyecto.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -300,7 +307,26 @@ public class ProyectoController {
         if (updates.containsKey("name")) proyecto.setNombreProyecto((String) updates.get("name"));
         if (updates.containsKey("description")) proyecto.setDescripcionProyecto((String) updates.get("description"));
         if (updates.containsKey("status")) proyecto.setEstadoDelProyecto((String) updates.get("status"));
-        if (updates.containsKey("end")) proyecto.setFechaFinProyecto(LocalDate.parse((String) updates.get("end")));
+        if (updates.containsKey("end")) {
+            LocalDate end = LocalDate.parse((String) updates.get("end"));
+            LocalDate latestSprintEnd = null;
+            for (var sprint : sprintRepository.findByProyectoIdProyecto(id)) {
+                LocalDate marker = sprint.getFechaFinSprint() != null
+                        ? sprint.getFechaFinSprint()
+                        : sprint.getFechaInicioSprint();
+                if (marker != null && (latestSprintEnd == null || marker.isAfter(latestSprintEnd))) {
+                    latestSprintEnd = marker;
+                }
+            }
+            LocalDate start = updates.containsKey("start")
+                    ? LocalDate.parse((String) updates.get("start"))
+                    : proyecto.getFechaInicioProyecto();
+            String dateError = ScheduleDates.projectEndUpdateError(start, end, latestSprintEnd);
+            if (dateError != null) {
+                return ResponseEntity.badRequest().body(Map.of("error", dateError));
+            }
+            proyecto.setFechaFinProyecto(end);
+        }
         if (updates.containsKey("start")) proyecto.setFechaInicioProyecto(LocalDate.parse((String) updates.get("start")));
 
         return ResponseEntity.ok(ProyectoDTO.fromEntity(proyectoService.save(proyecto)));

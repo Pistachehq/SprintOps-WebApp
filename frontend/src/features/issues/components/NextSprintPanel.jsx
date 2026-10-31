@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 export const NEXT_SPRINT_DROPPABLE_ID = 'next-sprint';
 
-const NextSprintPanel = ({ disabled, nextSprintName }) => {
+const NextSprintPanel = ({ disabled }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: NEXT_SPRINT_DROPPABLE_ID,
     disabled: Boolean(disabled),
@@ -15,11 +15,11 @@ const NextSprintPanel = ({ disabled, nextSprintName }) => {
       <div
         className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center"
         role="region"
-        aria-label="Siguiente sprint no disponible"
+        aria-label="Cambiar de sprint no disponible"
       >
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Zona no disponible</p>
         <p className="max-w-[14rem] text-sm font-semibold leading-snug text-slate-500">
-          No hay siguiente sprint y no tienes permiso para crear uno
+          No hay otro sprint y no tienes permiso para crear uno
         </p>
         <div className="mt-4 rounded-full border border-dashed border-slate-300 p-4 text-slate-300">
           <ArrowRight className="h-10 w-10" strokeWidth={1.25} aria-hidden />
@@ -32,7 +32,7 @@ const NextSprintPanel = ({ disabled, nextSprintName }) => {
     <div
       ref={setNodeRef}
       role="region"
-      aria-label="Zona para enviar el issue al siguiente sprint"
+      aria-label="Zona para cambiar la tarea de sprint"
       className="relative flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-b from-[#8ed9c4] via-[#67BFA1] to-[#3a6656] px-5 py-8 text-center transition-colors duration-200"
     >
       {isOver ? (
@@ -44,18 +44,9 @@ const NextSprintPanel = ({ disabled, nextSprintName }) => {
 
       <div className="relative z-[1] flex max-w-[12rem] flex-col items-center gap-1">
         <p className="text-[11px] font-black uppercase leading-tight tracking-[0.22em] text-white">
-          Enviar al siguiente sprint
+          Cambiar de sprint
         </p>
-        {nextSprintName ? (
-          <span
-            className="mt-1 inline-flex max-w-full items-center justify-center rounded-lg bg-black/25 px-3 py-1.5 text-xs font-bold text-white shadow-inner backdrop-blur-[2px]"
-            title={nextSprintName}
-          >
-            <span className="truncate">{nextSprintName}</span>
-          </span>
-        ) : (
-          <p className="mt-1 text-xs font-semibold text-white/75">Suelta un issue aquí</p>
-        )}
+        <p className="mt-1 text-xs font-semibold text-white/75">Suelta una tarea aquí</p>
       </div>
 
       <ArrowRight
@@ -65,7 +56,7 @@ const NextSprintPanel = ({ disabled, nextSprintName }) => {
       />
 
       <p className="relative z-[1] max-w-[11rem] text-[10px] font-medium leading-relaxed text-white/55">
-        Arrastra una tarjeta desde cualquier columna
+        Elige el sprint y la fecha al soltarla
       </p>
     </div>
   );

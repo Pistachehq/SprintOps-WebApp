@@ -20,6 +20,7 @@ const SprintSubLayout = () => {
   const { issues, addIssue } = useIssues(id);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [sprintName, setSprintName] = useState('');
+  const [sprintRange, setSprintRange] = useState(null);
   const [projectId, setProjectId] = useState(null);
   const [projectMode, setProjectMode] = useState('agil');
   const [velocityModalOpen, setVelocityModalOpen] = useState(false);
@@ -27,10 +28,12 @@ const SprintSubLayout = () => {
 
   useEffect(() => {
     setSprintName('');
+    setSprintRange(null);
     setProjectId(null);
     setProjectMode('agil');
     sprintsRepository.getById(id).then(sprint => {
       if (sprint?.name) setSprintName(sprint.name);
+      setSprintRange(sprint ? { start: sprint.startDate || '', end: sprint.endDate || '' } : null);
       if (sprint?.projectId != null) setProjectId(sprint.projectId);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
@@ -155,6 +158,7 @@ const SprintSubLayout = () => {
         onClose={() => setShowCreateIssue(false)}
         onCreate={handleCreateIssue}
         sprintIssues={issues}
+        sprintRange={sprintRange}
         timeMode={projectMode === 'tiempo'}
       />
 

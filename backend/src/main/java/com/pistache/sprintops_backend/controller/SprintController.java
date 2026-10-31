@@ -9,6 +9,7 @@ import com.pistache.sprintops_backend.service.DeveloperSprintKpisService;
 import com.pistache.sprintops_backend.service.SprintService;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.repository.SprintRepository;
+import com.pistache.sprintops_backend.util.ScheduleDates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -66,10 +67,20 @@ public class SprintController {
     }
 
     @PostMapping
-    public ResponseEntity<SprintDTO> create(@RequestBody CreateSprintRequest request) {
+    public ResponseEntity<?> create(@RequestBody CreateSprintRequest request) {
         var optProyecto = proyectoService.findById(request.getProjectId());
         if (optProyecto.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", "Proyecto no encontrado."));
+        }
+        Proyecto proyecto = optProyecto.get();
+        String dateError = ScheduleDates.sprintRangeError(
+                request.getStartDate(),
+                request.getEndDate(),
+                proyecto.getFechaInicioProyecto(),
+                proyecto.getFechaFinProyecto(),
+                sprintRepository.findByProyectoIdProyecto(proyecto.getIdProyecto()));
+        if (dateError != null) {
+            return ResponseEntity.badRequest().body(Map.of("error", dateError));
         }
 
         Sprint sprint = new Sprint();
@@ -79,7 +90,7 @@ public class SprintController {
         sprint.setFechaInicioSprint(request.getStartDate());
         sprint.setFechaFinSprint(request.getEndDate());
         sprint.setCapacidadStoryPoints(request.getCapacity());
-        sprint.setProyecto(optProyecto.get());
+        sprint.setProyecto(proyecto);
 
         return ResponseEntity.ok(SprintDTO.fromEntity(sprintService.save(sprint)));
     }
