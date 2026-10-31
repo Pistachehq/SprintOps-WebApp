@@ -281,10 +281,10 @@ const ProjectConfigView = ({
             <p className="text-xs font-bold text-white/80 uppercase tracking-widest mb-3">Código del Proyecto</p>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-5xl font-black text-white tracking-widest">
-                  {project.codigo || '00000'}
+                <p className="font-mono text-5xl font-black tracking-widest text-white">
+                  {project.codigo || '------'}
                 </p>
-                <p className="text-sm text-white/70 mt-2">Comparte este código con tu equipo para que puedan unirse</p>
+                <p className="text-sm text-white/70 mt-2">Compártelo con tu equipo. Las mayúsculas y las minúsculas importan.</p>
               </div>
               <button
                 onClick={handleCopyCode}

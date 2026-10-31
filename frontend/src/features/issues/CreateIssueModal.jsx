@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 import IssueTagPicker from '../../components/ui/IssueTagPicker';
 import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 import { PRIORITY_LEVELS, normalizePriority } from '../../domain/priority';
@@ -21,6 +21,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   const [tagColor, setTagColor] = useState(DEFAULT_ISSUE_TAG_COLOR);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (issue) {
       setTitle(issue.title || '');
       setPurpose(issue.purpose || '');
@@ -52,8 +53,6 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setTagColor(DEFAULT_ISSUE_TAG_COLOR);
     }
   }, [issue, isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -92,7 +91,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   };
 
   return (
-    <PopupPortal>
+    <AnimatedPopup open={isOpen}>
     <div className="popup-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
       <div className="popup-panel flex h-[min(40rem,calc(var(--app-h)*0.88))] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-gray-50 p-6">
@@ -261,7 +260,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
         </form>
       </div>
     </div>
-    </PopupPortal>
+    </AnimatedPopup>
   );
 };
 

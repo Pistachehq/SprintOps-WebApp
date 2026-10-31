@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
-import PopupPortal from '../PopupPortal';
+import { AnimatedPopup } from '../PopupPortal';
 import { usersRepository } from '../../data/repositories/usersRepository';
 
 const roleLabel = (role) => {
@@ -35,8 +35,6 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
     setSuggestions(filtered);
   }, [name, allUsers]);
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedUser) {
@@ -56,7 +54,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
   };
 
   return (
-    <PopupPortal>
+    <AnimatedPopup open={isOpen}>
     <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="popup-panel bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
@@ -112,7 +110,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
         </form>
       </div>
     </div>
-    </PopupPortal>
+    </AnimatedPopup>
   );
 };
 

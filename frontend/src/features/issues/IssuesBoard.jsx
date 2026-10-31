@@ -13,7 +13,7 @@ import DroppableColumn from './components/DroppableColumn';
 import DraggableIssueCard from './components/DraggableIssueCard';
 import NextSprintPanel, { NEXT_SPRINT_DROPPABLE_ID } from './components/NextSprintPanel';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 
 function sortSprintsForOrder(list) {
   return [...(list || [])].sort((a, b) => {
@@ -288,8 +288,7 @@ const IssuesBoard = () => {
         </DndContext>
       </div>
 
-      {showNoNextModal && (
-        <PopupPortal>
+      <AnimatedPopup open={showNoNextModal}>
         <div
           className="popup-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           role="dialog"
@@ -322,8 +321,7 @@ const IssuesBoard = () => {
             </div>
           </div>
         </div>
-        </PopupPortal>
-      )}
+      </AnimatedPopup>
     </div>
   );
 };

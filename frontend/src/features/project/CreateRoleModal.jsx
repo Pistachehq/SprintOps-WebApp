@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Shield, Check, Plus, Zap, PlusCircle, Pencil, Users, BarChart3, Eye, Lock, Settings, CalendarCog, Camera } from 'lucide-react';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 import { rolesRepository } from '../../data/repositories/rolesRepository';
 
 const PERMISSION_ICONS = {
@@ -108,10 +108,8 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <PopupPortal>
+    <AnimatedPopup open={isOpen}>
     <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="popup-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
@@ -221,7 +219,7 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
         </form>
       </div>
     </div>
-    </PopupPortal>
+    </AnimatedPopup>
   );
 };
 

@@ -36,7 +36,12 @@ async function request(path, options = {}) {
         ? `Ruta no encontrada en el servidor: ${errorBody.path}`
         : null) ||
       `HTTP ${response.status}`;
-    throw new Error(base);
+    const error = new Error(base);
+    error.status = response.status;
+    if (errorBody.retryAfterSeconds != null) {
+      error.retryAfterSeconds = Number(errorBody.retryAfterSeconds);
+    }
+    throw error;
   }
 
   if (response.status === 204) return null;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, RotateCcw, Trash2 } from 'lucide-react';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 import PriorityBadge from '../../components/ui/PriorityBadge';
 import { papeleraRepository } from '../../data/repositories/papeleraRepository';
 
@@ -8,6 +8,8 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  if (pendingDelete && pendingDelete !== deleteTarget) setDeleteTarget(pendingDelete);
 
   useEffect(() => {
     if (isOpen && sprintId) {
@@ -33,10 +35,9 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
-  if (!isOpen) return null;
-
   return (
-    <PopupPortal>
+    <>
+    <AnimatedPopup open={isOpen}>
     <div className="popup-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="popup-panel flex max-h-[calc(var(--app-h)*0.8)] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -102,7 +103,9 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
         </div>
       </div>
     </div>
-    {pendingDelete && (
+    </AnimatedPopup>
+    <AnimatedPopup open={!!pendingDelete}>
+      {deleteTarget && (
       <div
         className="popup-overlay fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
         onClick={() => setPendingDelete(null)}
@@ -115,7 +118,7 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
         >
           <h2 className="text-lg font-black text-gray-800">Eliminar para siempre</h2>
           <p className="mt-2 text-sm font-medium text-gray-500">
-            ¿Eliminar permanentemente &quot;{pendingDelete.title}&quot;? Esta acción no se puede deshacer.
+            ¿Eliminar permanentemente &quot;{deleteTarget.title}&quot;? Esta acción no se puede deshacer.
           </p>
           <div className="mt-6 flex gap-3">
             <button
@@ -135,8 +138,9 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
           </div>
         </div>
       </div>
-    )}
-    </PopupPortal>
+      )}
+    </AnimatedPopup>
+    </>
   );
 };
 

@@ -33,6 +33,8 @@ public class ChatbotToolExecutor {
     @Autowired
     private ProyectoService proyectoService;
     @Autowired
+    private JoinCodeRateLimiter joinCodeRateLimiter;
+    @Autowired
     private SprintService sprintService;
     @Autowired
     private SprintRepository sprintRepository;
@@ -1055,14 +1057,26 @@ public class ChatbotToolExecutor {
 
     @Transactional
     public String joinByCode(Integer userId, JsonNode a) {
+        String key = JoinCodeRateLimiter.attemptKey(userId);
+        var locked = joinCodeRateLimiter.lockRemaining(key);
+        if (locked.isPresent()) {
+            return JoinCodeRateLimiter.lockMessage(locked.get());
+        }
         String code = strArg(a, "code");
-        if (code == null || code.length() != 5 || !code.chars().allMatch(Character::isDigit)) {
-            return "El código debe ser de 5 dígitos numéricos.";
+        if (code == null || !code.matches("[A-Za-z0-9]{5,6}")) {
+            joinCodeRateLimiter.recordFailure(key);
+            return "El código debe tener 5 o 6 caracteres, con letras y números. Respeta mayúsculas y minúsculas.";
         }
         var optP = proyectoService.findByCodigoProyecto(code);
         if (optP.isEmpty()) {
-            return "No existe un proyecto con ese código.";
+            joinCodeRateLimiter.recordFailure(key);
+            var nowLocked = joinCodeRateLimiter.lockRemaining(key);
+            if (nowLocked.isPresent()) {
+                return JoinCodeRateLimiter.lockMessage(nowLocked.get());
+            }
+            return JoinCodeRateLimiter.UNKNOWN_CODE;
         }
+        joinCodeRateLimiter.reset(key);
         Proyecto p = optP.get();
         if (p.getEquipo() == null) {
             return "Proyecto sin equipo configurado.";

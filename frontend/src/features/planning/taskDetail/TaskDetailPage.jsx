@@ -32,7 +32,7 @@ const TaskDetailPage = () => {
   const { user, checkPermission, refreshPermissionsForProject } = useAuth();
   const role = user?.role || 'developer';
   const canEditIssue = checkPermission('canEditIssue');
-  const { issues, updateIssue, assignIssue, refetch } = useIssues(sprintId);
+  const { issues, isLoading, updateIssue, assignIssue, refetch } = useIssues(sprintId);
   const { history, addHistory } = useIssueHistory(taskId);
   
   const [editing, setEditing] = useState(false);
@@ -72,6 +72,10 @@ const TaskDetailPage = () => {
       return { icon: Trash2, bg: 'bg-red-500' };
     return { icon: Clock, bg: 'bg-gray-500' };
   };
+
+  if (!task && isLoading) {
+    return <div className="h-full bg-[#F0EFED]" />;
+  }
 
   if (!task) {
     return (

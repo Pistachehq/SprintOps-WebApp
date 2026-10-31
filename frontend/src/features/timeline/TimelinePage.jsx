@@ -8,7 +8,7 @@ import { issuesRepository } from '../../data/repositories/issuesRepository';
 import { timelineRepository } from '../../data/repositories/timelineRepository';
 import { useAuth } from '../auth/hooks/useAuth';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 import { toast } from 'sonner';
 import { ISSUE_TAG_COLORS, isAllowedIssueTagColor, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
@@ -39,7 +39,7 @@ function diffDays(a, b) {
   return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000) + 1;
 }
 
-function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, onClose, canUpload }) {
+function PhotoModal({ open, projectId, fecha, userId, photoDatesSet, onPhotoChange, onClose, canUpload }) {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [imageBroken, setImageBroken] = useState(false);
@@ -95,7 +95,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
   const showImage = Boolean(photoUrl) && !imageBroken;
 
   return (
-    <PopupPortal>
+    <AnimatedPopup open={open}>
     <div className="popup-overlay fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
       <div className="popup-panel relative z-10 w-[min(100vw-2rem,320px)] rounded-2xl bg-white p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -175,7 +175,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
         {canUpload && <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />}
       </div>
     </div>
-    </PopupPortal>
+    </AnimatedPopup>
   );
 }
 
@@ -189,6 +189,8 @@ const TimelinePage = () => {
   const [issues, setIssues] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [photoDay, setPhotoDay] = useState(null);
+  if (selectedDay && selectedDay !== photoDay) setPhotoDay(selectedDay);
   const [photoDates, setPhotoDates] = useState(new Set());
   const [hoveredRow, setHoveredRow] = useState(null);
   const [exportingDocx, setExportingDocx] = useState(false);
@@ -520,10 +522,11 @@ const TimelinePage = () => {
       </div>
 
       {/* Photo modal */}
-      {selectedDay && (
+      {photoDay && (
         <PhotoModal
+          open={!!selectedDay}
           projectId={projectId}
-          fecha={new Date(selectedDay + 'T00:00:00')}
+          fecha={new Date((selectedDay || photoDay) + 'T00:00:00')}
           userId={user?.id}
           photoDatesSet={photoDates}
           onPhotoChange={refreshPhotoDates}

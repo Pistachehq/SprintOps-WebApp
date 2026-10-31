@@ -9,7 +9,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import apiClient from '../../data/api/apiClient';
-import PopupPortal from '../../components/PopupPortal';
+import PopupPortal, { AnimatedPopup } from '../../components/PopupPortal';
 import { useAuth } from '../auth/hooks/useAuth';
 
 function localDateKey(d = new Date()) {
@@ -69,6 +69,13 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
   const [expandedDates, setExpandedDates] = useState(() => new Set());
   const [detailEntry, setDetailEntry] = useState(null);
   const [detailDayLabel, setDetailDayLabel] = useState('');
+  const [shownDetail, setShownDetail] = useState(null);
+  if (
+    detailEntry &&
+    (shownDetail?.entry !== detailEntry || shownDetail?.label !== detailDayLabel)
+  ) {
+    setShownDetail({ entry: detailEntry, label: detailDayLabel });
+  }
 
   const loadDailyData = useCallback(async () => {
     if (!sprintId || !userId) return;
@@ -382,8 +389,8 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
         </div>
 
         {/* Detail popup */}
-        {detailEntry && (
-          <PopupPortal>
+        <AnimatedPopup open={!!detailEntry}>
+          {shownDetail && (
           <div
             className="popup-overlay fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={() => setDetailEntry(null)}
@@ -395,11 +402,11 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
             >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-[#67BFA1]">{detailDayLabel}</p>
-                  <h3 className="mt-1 text-lg font-black text-gray-900">{detailEntry.userName}</h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#67BFA1]">{shownDetail.label}</p>
+                  <h3 className="mt-1 text-lg font-black text-gray-900">{shownDetail.entry.userName}</h3>
                   <p className="mt-0.5 text-xs font-medium text-gray-500">
-                    Rol: {detailEntry.roleLabel}
-                    {formatSavedAt(detailEntry.savedAt) ? ` · ${formatSavedAt(detailEntry.savedAt)}` : ''}
+                    Rol: {shownDetail.entry.roleLabel}
+                    {formatSavedAt(shownDetail.entry.savedAt) ? ` · ${formatSavedAt(shownDetail.entry.savedAt)}` : ''}
                   </p>
                 </div>
                 <button
@@ -415,26 +422,26 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">¿Qué hice?</p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-                    {detailEntry.done?.trim() || '—'}
+                    {shownDetail.entry.done?.trim() || '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">¿Qué haré?</p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-                    {detailEntry.doing?.trim() || '—'}
+                    {shownDetail.entry.doing?.trim() || '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">Impedimentos</p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-                    {detailEntry.blockers?.trim() || '—'}
+                    {shownDetail.entry.blockers?.trim() || '—'}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          </PopupPortal>
-        )}
+          )}
+        </AnimatedPopup>
 
         <div
           className={`pointer-events-none absolute left-1/2 top-8 z-[60] flex -translate-x-1/2 items-center gap-3 rounded-full bg-slate-900 px-6 py-3 text-white shadow-2xl transition-all duration-300 ${

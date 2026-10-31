@@ -4,6 +4,7 @@ import com.pistache.sprintops_backend.dto.CreateProyectoRequest;
 import com.pistache.sprintops_backend.dto.ProyectoDTO;
 import com.pistache.sprintops_backend.dto.MiembroEquipoDTO;
 import com.pistache.sprintops_backend.model.*;
+import com.pistache.sprintops_backend.service.JoinCodeRateLimiter;
 import com.pistache.sprintops_backend.service.ProyectoService;
 import com.pistache.sprintops_backend.service.ProyectoIssuesDocxExportService;
 import com.pistache.sprintops_backend.service.ProyectoCardCoverService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,6 +48,8 @@ public class ProyectoController {
     private ProyectoIssuesDocxExportService proyectoIssuesDocxExportService;
     @Autowired
     private ProyectoCardCoverService proyectoCardCoverService;
+    @Autowired
+    private JoinCodeRateLimiter joinCodeRateLimiter;
 
     @GetMapping
     public List<ProyectoDTO> getAll() {
@@ -86,10 +90,32 @@ public class ProyectoController {
     }
 
     @GetMapping("/codigo/{codigo}")
-    public ResponseEntity<ProyectoDTO> getByCodigo(@PathVariable String codigo) {
-        return proyectoService.findByCodigoProyecto(codigo)
-                .map(p -> ResponseEntity.ok(ProyectoDTO.fromEntity(p)))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> getByCodigo(
+            @PathVariable String codigo,
+            @RequestParam(required = false) Integer userId) {
+        String key = JoinCodeRateLimiter.attemptKey(userId);
+        var locked = joinCodeRateLimiter.lockRemaining(key);
+        if (locked.isPresent()) {
+            return lockedResponse(locked.get());
+        }
+        var found = proyectoService.findByCodigoProyecto(codigo);
+        if (found.isEmpty()) {
+            joinCodeRateLimiter.recordFailure(key);
+            var nowLocked = joinCodeRateLimiter.lockRemaining(key);
+            if (nowLocked.isPresent()) {
+                return lockedResponse(nowLocked.get());
+            }
+            return ResponseEntity.status(404).body(Map.of("error", JoinCodeRateLimiter.UNKNOWN_CODE));
+        }
+        joinCodeRateLimiter.reset(key);
+        return ResponseEntity.ok(ProyectoDTO.fromEntity(found.get()));
+    }
+
+    private ResponseEntity<Map<String, Object>> lockedResponse(Duration remaining) {
+        long seconds = Math.max(1, remaining.getSeconds());
+        return ResponseEntity.status(429).body(Map.of(
+                "error", JoinCodeRateLimiter.lockMessage(remaining),
+                "retryAfterSeconds", seconds));
     }
 
     @GetMapping("/usuario/{userId}")

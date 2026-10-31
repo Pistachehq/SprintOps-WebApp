@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import AssignUserModal from './AssignUserModal';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 import PriorityBadge from '../../components/ui/PriorityBadge';
 import { useAuth } from '../auth/hooks/useAuth';
 
@@ -116,8 +116,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
         )}
       </div>
 
-      {confirmDelete && (
-        <PopupPortal>
+      <AnimatedPopup open={confirmDelete}>
           <div
             className="popup-overlay fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
             onClick={() => setConfirmDelete(false)}
@@ -153,8 +152,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
               </div>
             </div>
           </div>
-        </PopupPortal>
-      )}
+      </AnimatedPopup>
 
       <AssignUserModal
         isOpen={showAssignModal}

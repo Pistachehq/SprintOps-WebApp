@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, X } from 'lucide-react';
-import PopupPortal from '../../../components/PopupPortal';
+import { AnimatedPopup } from '../../../components/PopupPortal';
 
 /** Días en "Por hacer" (todo/blocked) sin completar → aviso por antigüedad desde creación. */
 const STALE_TODO_DAYS = 5;
@@ -138,8 +138,7 @@ const SprintMetrics = ({ issues, issuesSentToNextSprint = 0, sprintId }) => {
         </div>
       </div>
 
-      {showRiskModal && (
-        <PopupPortal>
+      <AnimatedPopup open={showRiskModal}>
         <div
           className="popup-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
           role="dialog"
@@ -201,8 +200,7 @@ const SprintMetrics = ({ issues, issuesSentToNextSprint = 0, sprintId }) => {
             </ul>
           </div>
         </div>
-        </PopupPortal>
-      )}
+      </AnimatedPopup>
     </>
   );
 };

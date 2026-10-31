@@ -179,6 +179,35 @@
   animation: popup-panel-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes popup-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes popup-panel-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.97);
+  }
+}
+
+.popup-leave {
+  pointer-events: none;
+}
+
+.popup-leave .popup-overlay {
+  animation: popup-overlay-out 0.2s ease-in both;
+  pointer-events: none;
+}
+
+.popup-leave .popup-panel {
+  animation: popup-panel-out 0.2s ease-in both;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

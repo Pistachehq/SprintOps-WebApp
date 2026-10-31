@@ -45,18 +45,10 @@ const HomePage = () => {
   };
 
   const handleJoinProject = async (code) => {
-    try {
-      const project = await projectsRepository.getByCodigo(code);
-      if (project) {
-        await projectsRepository.joinProject(project.id, user.id);
-        alert(`¡Te has unido al proyecto ${project.name} exitosamente!`);
-        refetch();
-      } else {
-        alert('No se encontró proyecto con ese código');
-      }
-    } catch (err) {
-      alert(err.message || 'No se encontró proyecto con ese código');
-    }
+    const project = await projectsRepository.getByCodigo(code, user?.id);
+    await projectsRepository.joinProject(project.id, user.id);
+    refetch();
+    return project.name;
   };
 
   return (

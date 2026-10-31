@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import PopupPortal from './PopupPortal';
+import { AnimatedPopup } from './PopupPortal';
 
 const Modal = ({
   isOpen,
@@ -10,10 +10,8 @@ const Modal = ({
   maxWidthClass = 'max-w-lg',
   bodyClassName = 'p-6',
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <PopupPortal>
+    <AnimatedPopup open={isOpen}>
     <div
       className="popup-overlay fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       role="dialog"
@@ -43,7 +41,7 @@ const Modal = ({
         </div>
       </div>
     </div>
-    </PopupPortal>
+    </AnimatedPopup>
   );
 };
 

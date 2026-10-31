@@ -1,88 +1,132 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import PopupPortal from '../PopupPortal';
+import { AnimatedPopup } from '../PopupPortal';
+
+const formatWait = (seconds) => {
+  const total = Math.max(0, seconds);
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+  if (minutes <= 0) return `${rest} s`;
+  return `${minutes} min ${rest.toString().padStart(2, '0')} s`;
+};
 
 const JoinProjectModal = ({ isOpen, onClose, onJoin }) => {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
-  if (!isOpen) return null;
+  const locked = lockedUntil > now;
+  const waitSeconds = locked ? Math.ceil((lockedUntil - now) / 1000) : 0;
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (!locked) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [locked]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (locked || submitting) return;
+    const trimmed = code.trim();
+    if (!/^[A-Za-z0-9]{5,6}$/.test(trimmed)) {
+      setError('El código tiene 5 o 6 caracteres, con letras y números.');
+      setSuccess('');
+      return;
+    }
+    setSubmitting(true);
     setError('');
-    
-    if (!code || code.length !== 5) {
-      setError('El código debe tener exactamente 5 dígitos');
-      return;
+    setSuccess('');
+    try {
+      const name = await onJoin(trimmed);
+      setSuccess(name ? `Te uniste a ${name}.` : 'Te uniste al proyecto.');
+      setCode('');
+      window.setTimeout(() => {
+        setSuccess('');
+        onClose();
+      }, 900);
+    } catch (err) {
+      const retry = Number(err?.retryAfterSeconds);
+      if (Number.isFinite(retry) && retry > 0) {
+        setLockedUntil(Date.now() + retry * 1000);
+        setNow(Date.now());
+      }
+      setError(err?.message || 'El código introducido no corresponde a un proyecto registrado, inténtalo nuevamente.');
+    } finally {
+      setSubmitting(false);
     }
-
-    if (!/^\d+$/.test(code)) {
-      setError('El código solo debe contener números');
-      return;
-    }
-
-    onJoin(code);
-    setCode('');
-    onClose();
   };
 
   return (
-    <PopupPortal>
-    <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="popup-panel bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
-          <h2 className="text-xl font-black text-gray-800 tracking-tight">Unirse a Proyecto</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={24} />
-          </button>
+    <AnimatedPopup open={isOpen}>
+      <div className="popup-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="popup-panel w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-6">
+            <h2 className="text-xl font-black tracking-tight text-gray-800">Unirse a un proyecto</h2>
+            <button type="button" onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
+              <X size={24} />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6">
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                Código del proyecto
+              </label>
+              <p className="mb-4 text-sm text-gray-600">
+                Escríbelo tal cual. Las mayúsculas y las minúsculas cuentan.
+              </p>
+              <input
+                type="text"
+                maxLength={6}
+                required
+                disabled={locked || submitting}
+                value={code}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                onChange={(e) => {
+                  setCode(e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 6));
+                  if (!locked) setError('');
+                }}
+                className="h-14 w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 text-center font-mono text-2xl font-bold tracking-[0.3em] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#67BFA1] disabled:opacity-60"
+                placeholder="A7k2M9"
+              />
+              {success && (
+                <p className="mt-3 text-sm font-medium text-[#3d7563]">{success}</p>
+              )}
+              {error && (
+                <p className="mt-3 text-sm font-medium leading-relaxed text-red-600">{error}</p>
+              )}
+              {locked && (
+                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Bloqueado · {formatWait(waitSeconds)}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-12 flex-1 rounded-xl bg-gray-100 font-bold text-slate-600 transition-colors hover:bg-gray-200"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={locked || submitting}
+                className="h-12 flex-1 rounded-xl bg-[#67BFA1] font-bold text-white shadow-lg shadow-[#67BFA1]/25 transition-colors hover:bg-[#52A98A] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {submitting ? 'Uniendo...' : 'Unirse'}
+              </button>
+            </div>
+          </form>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-              Código del Proyecto
-            </label>
-            <p className="text-sm text-gray-600 mb-4">
-              Ingresa el código de 5 dígitos proporcionado por el Product Owner para unirte al proyecto.
-            </p>
-            <input 
-              type="text"
-              maxLength="5"
-              pattern="\d*"
-              required
-              value={code}
-              onChange={(e) => {
-                const num = e.target.value.replace(/\D/g, '');
-                setCode(num.slice(0, 5));
-              }}
-              className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] focus:border-transparent bg-gray-50 text-center text-2xl font-bold tracking-widest"
-              placeholder="00000"
-            />
-            {error && (
-              <p className="text-red-500 text-sm mt-2">{error}</p>
-            )}
-          </div>
-          
-          <div className="mt-4 flex gap-3">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              className="flex-1 h-12 bg-[#67BFA1] text-white font-bold rounded-xl hover:bg-[#52A98A] transition-colors shadow-lg shadow-[#67BFA1]/25"
-            >
-              Unirse
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
-    </PopupPortal>
+    </AnimatedPopup>
   );
 };
 

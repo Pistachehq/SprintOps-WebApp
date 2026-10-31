@@ -27,7 +27,7 @@ public class Proyecto {
     @Column(name = "nombre_proyecto", length = 250)
     private String nombreProyecto;
 
-    @Column(name = "codigo_proyecto", length = 5, unique = true)
+    @Column(name = "codigo_proyecto", length = 8, unique = true)
     private String codigoProyecto;
 
     @Column(name = "descripcion_proyecto", length = 250)

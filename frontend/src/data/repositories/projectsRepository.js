@@ -4,7 +4,10 @@ export const projectsRepository = {
   getAll: () => apiClient.get('/proyectos'),
   getById: (id) => apiClient.get(`/proyectos/${id}`),
   getByUserId: (userId) => apiClient.get(`/proyectos/usuario/${userId}`),
-  getByCodigo: (codigo) => apiClient.get(`/proyectos/codigo/${codigo}`),
+  getByCodigo: (codigo, userId) => {
+    const params = userId != null ? `?userId=${encodeURIComponent(userId)}` : '';
+    return apiClient.get(`/proyectos/codigo/${encodeURIComponent(codigo)}${params}`);
+  },
   create: (data) => apiClient.post('/proyectos', data),
   getTiempo: (projectId) => apiClient.get(`/proyectos/${projectId}/tiempo`),
   updateCotizacion: (projectId, data) => apiClient.put(`/proyectos/${projectId}/cotizacion`, data),

@@ -188,10 +188,10 @@ public final class ChatbotGroqToolDefinitions {
                     o.put("story_points", "integer");
                 })));
         tools.add(f(om, "join_project_by_invite_code",
-                "Une al usuario a otro proyecto por código de 5 dígitos.",
+                "Une al usuario a otro proyecto por código de invitación (6 caracteres con letras y números, o 5 números en códigos viejos). Respeta mayúsculas y minúsculas.",
                 req(om, List.of("code"), o -> { o.put("code", "string"); })));
         tools.add(f(om, "get_project_invite_code",
-                "Devuelve el código numérico de invitación del proyecto actual.", empty(om)));
+                "Devuelve el código de invitación del proyecto actual.", empty(om)));
         tools.add(f(om, "create_sprint",
                 "Crea sprint en el proyecto (fechas ISO yyyy-MM-dd).",
                 req(om, List.of("name", "start_date", "end_date"), o -> {

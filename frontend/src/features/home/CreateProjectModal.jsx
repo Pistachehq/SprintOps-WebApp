@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import ProjectCodeModal from '../../components/ui/ProjectCodeModal';
-import PopupPortal from '../../components/PopupPortal';
+import { AnimatedPopup } from '../../components/PopupPortal';
 
 const MODES = [
   {
@@ -28,12 +28,6 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [createdName, setCreatedName] = useState('');
-
-  if (!isOpen) return null;
-
-  const generateProjectCode = () => {
-    return String(Math.floor(Math.random() * 90000) + 10000).slice(0, 5);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,8 +58,9 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   };
 
   return (
-    <PopupPortal>
     <>
+    {!showCodeModal && (
+    <AnimatedPopup open={isOpen}>
       <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="popup-panel bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[calc(var(--app-h,900px)*0.92)] flex flex-col">
           <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
@@ -174,15 +169,15 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
           </form>
         </div>
       </div>
-
-      <ProjectCodeModal 
-        isOpen={showCodeModal}
-        projectName={createdName}
-        projectCode={generatedCode}
-        onClose={handleCodeModalClose}
-      />
+    </AnimatedPopup>
+    )}
+    <ProjectCodeModal
+      isOpen={isOpen && showCodeModal}
+      projectName={createdName}
+      projectCode={generatedCode}
+      onClose={handleCodeModalClose}
+    />
     </>
-    </PopupPortal>
   );
 };
 

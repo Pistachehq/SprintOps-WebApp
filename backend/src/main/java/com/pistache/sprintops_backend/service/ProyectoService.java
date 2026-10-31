@@ -53,17 +53,28 @@ public class ProyectoService {
     }
 
     /**
-     * Código numérico de 5 dígitos (10000–99999) único en {@code proyecto.codigo_proyecto}.
-     * Reintenta si choca con otro proyecto (índice único en BD).
+     * Seis caracteres intercalados letra/dígito, con mayúsculas y minúsculas.
+     * Los códigos viejos de 5 números siguen siendo válidos para unirse.
      */
     public String nextUniqueCodigoProyecto() {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         for (int attempt = 0; attempt < 200; attempt++) {
-            String code = String.valueOf(rnd.nextInt(10_000, 100_000));
+            String code = randomInviteCode(rnd);
             if (!proyectoRepository.existsByCodigoProyecto(code)) {
                 return code;
             }
         }
         throw new IllegalStateException("No se pudo generar un código de proyecto único; reintenta.");
+    }
+
+    static String randomInviteCode(ThreadLocalRandom rnd) {
+        char[] letters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
+        char[] digits = "23456789".toCharArray();
+        char[] code = new char[6];
+        for (int i = 0; i < code.length; i++) {
+            char[] pool = (i % 2 == 0) ? letters : digits;
+            code[i] = pool[rnd.nextInt(pool.length)];
+        }
+        return new String(code);
     }
 }
