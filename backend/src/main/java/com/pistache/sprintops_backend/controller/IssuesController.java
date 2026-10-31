@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -174,6 +175,14 @@ public class IssuesController {
         }
         if (updates.containsKey("priority")) issue.setPrioridadIssue((String) updates.get("priority"));
         if (updates.containsKey("storyPoints")) issue.setStoryPointsIssue((Integer) updates.get("storyPoints"));
+        if (updates.containsKey("horasEstimadas")) {
+            Object raw = updates.get("horasEstimadas");
+            if (raw == null || String.valueOf(raw).isBlank()) {
+                issue.setHorasEstimadas(null);
+            } else {
+                issue.setHorasEstimadas(new BigDecimal(String.valueOf(raw)));
+            }
+        }
         if (updates.containsKey("parentIssueId")) issue.setParentIssueId((Integer) updates.get("parentIssueId"));
 
         if (updates.containsKey("tagLabel") || updates.containsKey("tagColor")) {

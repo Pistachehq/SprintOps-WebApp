@@ -1415,6 +1415,8 @@ public class ChatbotToolExecutor {
         proyecto.setFechaInicioProyecto(start);
         proyecto.setFechaFinProyecto(end);
         proyecto.setEstadoDelProyecto("A");
+        proyecto.setModoProyecto("agil");
+        proyecto.setCotizacionHabilitada(false);
         proyecto.setEquipo(equipoGuardado);
         usuarioService.findById(userId).ifPresent(proyecto::setCreador);
         Proyecto proyectoGuardado = proyectoService.save(proyecto);

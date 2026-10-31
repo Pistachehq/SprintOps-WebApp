@@ -13,8 +13,8 @@ const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+    <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="popup-panel bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#67BFA1] to-[#3d7563] p-8 text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">

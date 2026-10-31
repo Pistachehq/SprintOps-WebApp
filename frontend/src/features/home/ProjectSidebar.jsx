@@ -118,6 +118,20 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
             </p>
           </div>
 
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Modo</h3>
+            <p className="text-sm font-bold text-gray-800">
+              {displayProject?.modo === 'tiempo' ? 'Gestión por tiempo' : 'Ágil'}
+            </p>
+            {displayProject?.modo === 'tiempo' && (
+              <p className="text-xs text-slate-500">
+                {displayProject.cotizacionHabilitada
+                  ? 'Incluye métricas de horas y recomendaciones de cotización.'
+                  : 'Incluye métricas de horas, sin recomendaciones de precio.'}
+              </p>
+            )}
+          </div>
+
           {/* Quick stats: sprints, issues, team */}
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl bg-[#67BFA1]/8 border border-[#67BFA1]/15 p-3 text-center">

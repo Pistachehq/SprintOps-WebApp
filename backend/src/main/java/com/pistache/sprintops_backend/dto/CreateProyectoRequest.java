@@ -10,4 +10,7 @@ public class CreateProyectoRequest {
     private LocalDate start;
     private LocalDate end;
     private Integer ownerId;
+    /** agil | tiempo. Si viene vacío, se crea en modo ágil. */
+    private String modo;
+    private Boolean cotizacionHabilitada;
 }

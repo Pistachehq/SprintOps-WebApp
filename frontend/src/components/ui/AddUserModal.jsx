@@ -55,8 +55,8 @@ const AddUserModal = ({ isOpen, onClose, onAdd }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="popup-panel bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
           <h2 className="text-xl font-black text-gray-800 tracking-tight">Agregar Usuario</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">

@@ -2,6 +2,7 @@ package com.pistache.sprintops_backend.dto;
 
 import com.pistache.sprintops_backend.model.Proyecto;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -19,6 +20,11 @@ public class ProyectoDTO {
     /** true si hay imagen de card subida al servidor (todos los miembros la ven). */
     private Boolean cardCoverCustom;
     private Long cardCoverVersion;
+    /** agil | tiempo */
+    private String modo;
+    private Boolean cotizacionHabilitada;
+    private BigDecimal tarifaHora;
+    private BigDecimal margenUtilidad;
 
     public static ProyectoDTO fromEntity(Proyecto p) {
         ProyectoDTO dto = new ProyectoDTO();
@@ -38,6 +44,11 @@ public class ProyectoDTO {
         }
         dto.setCardCoverCustom(Boolean.TRUE.equals(p.getCardCoverCustom()));
         dto.setCardCoverVersion(p.getCardCoverVersion() != null ? p.getCardCoverVersion() : 0L);
+        String modo = p.getModoProyecto();
+        dto.setModo(modo == null || modo.isBlank() ? "agil" : modo);
+        dto.setCotizacionHabilitada(Boolean.TRUE.equals(p.getCotizacionHabilitada()));
+        dto.setTarifaHora(p.getTarifaHora());
+        dto.setMargenUtilidad(p.getMargenUtilidad());
         return dto;
     }
 }

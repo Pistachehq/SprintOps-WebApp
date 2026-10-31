@@ -145,6 +145,30 @@
   animation: sprint-tab-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes popup-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popup-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.popup-overlay {
+  animation: popup-overlay-in 0.22s ease-out both;
+}
+
+.popup-panel {
+  animation: popup-panel-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

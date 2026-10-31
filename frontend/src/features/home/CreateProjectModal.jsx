@@ -2,13 +2,31 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import ProjectCodeModal from '../../components/ui/ProjectCodeModal';
 
+const MODES = [
+  {
+    id: 'agil',
+    title: 'Modo Ágil',
+    hint: 'Estándar',
+    text: 'Sprints, story points y seguimiento de tareas, sin control detallado del tiempo.',
+  },
+  {
+    id: 'tiempo',
+    title: 'Gestión por tiempo',
+    hint: 'Esfuerzo real',
+    text: 'Todo lo del modo ágil, más horas por tarea, reportes y comparación contra lo estimado.',
+  },
+];
+
 const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  const [modo, setModo] = useState('agil');
+  const [cotizacionHabilitada, setCotizacionHabilitada] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+  const [createdName, setCreatedName] = useState('');
 
   if (!isOpen) return null;
 
@@ -24,14 +42,19 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
       description,
       start,
       end,
+      modo,
+      cotizacionHabilitada: modo === 'tiempo' && cotizacionHabilitada,
     });
     
+    setCreatedName(name);
     setGeneratedCode(result?.codigo || '');
     setShowCodeModal(true);
     setName('');
     setDescription('');
     setStart('');
     setEnd('');
+    setModo('agil');
+    setCotizacionHabilitada(false);
   };
 
   const handleCodeModalClose = () => {
@@ -41,8 +64,8 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="popup-panel bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[calc(var(--app-h,900px)*0.92)] flex flex-col">
           <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
             <h2 className="text-xl font-black text-gray-800 tracking-tight">Crear Nuevo Proyecto</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -50,7 +73,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
             </button>
           </div>
           
-          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Nombre del Proyecto</label>
               <input 
@@ -89,8 +112,56 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
                 />
               </div>
             </div>
+
+            <div>
+              <p className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Modo del proyecto</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {MODES.map((option) => {
+                  const active = modo === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setModo(option.id);
+                        if (option.id !== 'tiempo') setCotizacionHabilitada(false);
+                      }}
+                      className={`rounded-xl border p-3 text-left transition-colors ${
+                        active
+                          ? 'border-[#67BFA1] bg-[#67BFA1]/10'
+                          : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-black text-slate-800">{option.title}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-[#67BFA1]">{option.hint}</span>
+                      </span>
+                      <span className="mt-1 block text-xs leading-relaxed text-slate-500">{option.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <label className={`flex items-start gap-3 rounded-xl border p-3 ${
+              modo === 'tiempo' ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'
+            }`}>
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 accent-[#67BFA1]"
+                checked={modo === 'tiempo' && cotizacionHabilitada}
+                disabled={modo !== 'tiempo'}
+                onChange={(e) => setCotizacionHabilitada(e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-bold text-slate-800">Incluir recomendaciones de cotización</span>
+                <span className="mt-1 block text-xs leading-relaxed text-slate-500">
+                  Con las horas registradas, SprintOps sugiere un rango de precio. Si lo dejas apagado, el proyecto igual guarda las métricas de tiempo, pero no muestra precios.
+                </span>
+              </span>
+            </label>
             
-            <div className="mt-4 flex gap-3">
+            <div className="mt-2 flex gap-3">
               <button type="button" onClick={onClose} className="flex-1 h-12 bg-gray-100 text-slate-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">
                 Cancelar
               </button>
@@ -104,7 +175,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
 
       <ProjectCodeModal 
         isOpen={showCodeModal}
-        projectName={name}
+        projectName={createdName}
         projectCode={generatedCode}
         onClose={handleCodeModalClose}
       />

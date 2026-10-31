@@ -139,12 +139,12 @@ const SprintMetrics = ({ issues, issuesSentToNextSprint = 0, sprintId }) => {
 
       {showRiskModal && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+          className="popup-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="risk-modal-title"
         >
-          <div className="max-h-[min(520px,85vh)] w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+          <div className="popup-panel max-h-[min(520px,85vh)] w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
             <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 rounded-lg bg-amber-50 p-2 text-amber-700">

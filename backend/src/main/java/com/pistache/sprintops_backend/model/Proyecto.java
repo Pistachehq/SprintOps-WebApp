@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -40,6 +41,21 @@ public class Proyecto {
 
     @Column(name = "estado_del_proyecto", length = 50)
     private String estadoDelProyecto;
+
+    /** agil = flujo actual. tiempo = además registra horas y esfuerzo. */
+    @Column(name = "modo_proyecto", length = 20)
+    private String modoProyecto = "agil";
+
+    /** Solo aplica en modo tiempo. Si es false, hay métricas de horas pero no precio. */
+    @Column(name = "cotizacion_habilitada")
+    private Boolean cotizacionHabilitada = false;
+
+    @Column(name = "tarifa_hora", precision = 10, scale = 2)
+    private BigDecimal tarifaHora;
+
+    /** Porcentaje de utilidad sugerida para la cotización (0–100). */
+    @Column(name = "margen_utilidad", precision = 5, scale = 2)
+    private BigDecimal margenUtilidad;
 
     /** Portada de la card en home: imagen subida por el equipo (visible para todos los miembros). */
     @Column(name = "card_cover_custom")

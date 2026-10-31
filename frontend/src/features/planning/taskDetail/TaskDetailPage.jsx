@@ -9,6 +9,7 @@ import { useAuth } from '../../auth/hooks/useAuth';
 import CreateIssueModal from '../../issues/CreateIssueModal';
 import { projectsRepository } from '../../../data/repositories/projectsRepository';
 import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
+import TaskTimeCard from './TaskTimeCard';
 
 const TaskDetailPage = () => {
   const { sprintId, taskId } = useParams();
@@ -16,11 +17,12 @@ const TaskDetailPage = () => {
   const { user, checkPermission, refreshPermissionsForProject } = useAuth();
   const role = user?.role || 'developer';
   const canEditIssue = checkPermission('canEditIssue');
-  const { issues, updateIssue, assignIssue } = useIssues(sprintId);
+  const { issues, updateIssue, assignIssue, refetch } = useIssues(sprintId);
   const { history, addHistory } = useIssueHistory(taskId);
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [members, setMembers] = useState([]);
+  const [projectMode, setProjectMode] = useState('agil');
 
   const task = issues.find(t => String(t.id) === String(taskId));
 
@@ -36,6 +38,9 @@ const TaskDetailPage = () => {
   useEffect(() => {
     if (task?.projectId) {
       projectsRepository.getMembers(task.projectId).then(m => setMembers(m || [])).catch(() => {});
+      projectsRepository.getById(task.projectId)
+        .then((project) => setProjectMode(project?.modo || 'agil'))
+        .catch(() => setProjectMode('agil'));
     }
   }, [task?.projectId]);
 
@@ -144,6 +149,10 @@ const TaskDetailPage = () => {
 
         {/* Info Card */}
         <TaskInfoCard task={task} role={role} members={members} onAssign={assignIssue} />
+
+        {projectMode === 'tiempo' && (
+          <TaskTimeCard task={task} userId={user?.id} onEstimatedSaved={refetch} />
+        )}
 
         {/* History Section - Always visible below */}
         <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mt-8 flex flex-col min-h-0">

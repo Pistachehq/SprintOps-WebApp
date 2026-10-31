@@ -152,6 +152,9 @@ public class ProyectoController {
         proyecto.setFechaFinProyecto(request.getEnd());
         proyecto.setEstadoDelProyecto("A");
         proyecto.setEquipo(savedEquipo);
+        boolean modoTiempo = "tiempo".equalsIgnoreCase(request.getModo());
+        proyecto.setModoProyecto(modoTiempo ? "tiempo" : "agil");
+        proyecto.setCotizacionHabilitada(modoTiempo && Boolean.TRUE.equals(request.getCotizacionHabilitada()));
 
         // Set creator
         if (request.getOwnerId() != null) {

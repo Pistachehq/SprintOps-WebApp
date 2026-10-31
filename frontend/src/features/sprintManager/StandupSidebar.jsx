@@ -382,12 +382,12 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
         {/* Detail popup */}
         {detailEntry && (
           <div
-            className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+            className="popup-overlay fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={() => setDetailEntry(null)}
           >
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
             <div
-              className="relative z-10 max-h-[calc(var(--app-h)*0.85)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+              className="popup-panel relative z-10 max-h-[calc(var(--app-h)*0.85)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-start justify-between gap-3">

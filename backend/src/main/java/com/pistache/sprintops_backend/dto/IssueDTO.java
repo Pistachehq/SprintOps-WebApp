@@ -2,6 +2,7 @@ package com.pistache.sprintops_backend.dto;
 
 import com.pistache.sprintops_backend.model.Issues;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class IssueDTO {
     private String status;
     private String priority;
     private Integer storyPoints;
+    private BigDecimal horasEstimadas;
     private Integer parentIssueId;
     private List<Integer> assigneeIds;
     private Integer reporterId;
@@ -33,6 +35,7 @@ public class IssueDTO {
         dto.setStatus(i.getEstadoIssue());
         dto.setPriority(i.getPrioridadIssue());
         dto.setStoryPoints(i.getStoryPointsIssue());
+        dto.setHorasEstimadas(i.getHorasEstimadas());
         dto.setParentIssueId(i.getParentIssueId());
         dto.setCreatedAt(i.getFechaCreacionIssue());
         dto.setCompletedAt(i.getFechaFinIssue());

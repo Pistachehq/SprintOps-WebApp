@@ -191,6 +191,12 @@ const ProjectCard = ({ project, onSelect, userId, onCoverUpdated }) => {
 
       <div className="p-6 flex flex-col items-center pointer-events-none">
         <h3 className="text-2xl font-bold text-gray-800 mb-1 text-center leading-tight">{name}</h3>
+        <p className={`mb-2 text-[10px] font-bold uppercase tracking-widest ${
+          project.modo === 'tiempo' ? 'text-[#C74634]' : 'text-[#67BFA1]'
+        }`}>
+          {project.modo === 'tiempo' ? 'Gestión por tiempo' : 'Modo ágil'}
+          {project.modo === 'tiempo' && project.cotizacionHabilitada ? ' · Cotización' : ''}
+        </p>
         <p className="text-[11px] text-gray-500 text-center leading-relaxed">
           <span className="text-gray-400">Inicio</span> {startFmt}
           <span className="mx-1.5 text-gray-300">·</span>

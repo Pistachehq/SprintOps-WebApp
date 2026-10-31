@@ -548,7 +548,7 @@ const ProjectConfigView = ({
                 Rol{memberRoleFilters.size > 0 && <span className="text-[10px] bg-[#67BFA1] text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">{memberRoleFilters.size}</span>}
               </button>
               {showRoleFilter && (
-                <div className="absolute right-0 top-12 bg-white border border-slate-100 rounded-xl shadow-lg z-20 min-w-[180px] py-2 animate-in fade-in zoom-in duration-150">
+                <div className="popup-panel absolute right-0 top-12 bg-white border border-slate-100 rounded-xl shadow-lg z-20 min-w-[180px] py-2">
                   {roles.map(r => {
                     const active = memberRoleFilters.has(r.nombreRol);
                     return (

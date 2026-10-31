@@ -296,12 +296,12 @@ const IssuesBoard = () => {
 
       {showNoNextModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="popup-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="no-next-sprint-title"
         >
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+          <div className="popup-panel w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
             <h2 id="no-next-sprint-title" className="text-lg font-black text-slate-900">
               No hay siguiente sprint
             </h2>

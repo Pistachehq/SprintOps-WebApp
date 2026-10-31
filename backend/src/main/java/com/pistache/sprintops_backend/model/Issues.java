@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -36,6 +37,10 @@ public class Issues {
 
     @Column(name = "story_points_issue")
     private Integer storyPointsIssue;
+
+    /** Horas estimadas. Se usa en proyectos de modo tiempo. */
+    @Column(name = "horas_estimadas", precision = 6, scale = 2)
+    private BigDecimal horasEstimadas;
 
     @Column(name = "fecha_creacion_issue")
     private LocalDate fechaCreacionIssue;

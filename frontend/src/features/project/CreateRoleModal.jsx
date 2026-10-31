@@ -110,8 +110,8 @@ const CreateRoleModal = ({ isOpen, onClose, onRoleCreated, editRole = null, proj
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="popup-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold flex items-center gap-2">
