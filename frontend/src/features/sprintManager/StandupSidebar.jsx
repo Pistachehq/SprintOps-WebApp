@@ -9,6 +9,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import apiClient from '../../data/api/apiClient';
+import PopupPortal from '../../components/PopupPortal';
 import { useAuth } from '../auth/hooks/useAuth';
 
 function localDateKey(d = new Date()) {
@@ -190,16 +191,17 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
   if (!isOpen && !present) return null;
 
   return (
+    <PopupPortal>
     <>
       <div
         className={`fixed inset-0 z-40 bg-black/20 transition-opacity duration-300 ${
-          transitionOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+          transitionOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={onClose}
       />
 
       <div
-        className={`fixed inset-y-0 right-0 z-50 flex w-[400px] transform flex-col bg-white p-10 shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`pointer-events-auto fixed inset-y-0 right-0 z-50 flex w-[400px] transform flex-col bg-white p-10 shadow-2xl transition-transform duration-300 ease-in-out ${
           transitionOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -381,6 +383,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
 
         {/* Detail popup */}
         {detailEntry && (
+          <PopupPortal>
           <div
             className="popup-overlay fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={() => setDetailEntry(null)}
@@ -430,6 +433,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
               </div>
             </div>
           </div>
+          </PopupPortal>
         )}
 
         <div
@@ -444,6 +448,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
         </div>
       </div>
     </>
+    </PopupPortal>
   );
 };
 

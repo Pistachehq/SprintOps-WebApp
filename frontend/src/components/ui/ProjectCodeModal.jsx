@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check, Copy } from 'lucide-react';
+import PopupPortal from '../PopupPortal';
 
 const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
   const [copied, setCopied] = React.useState(false);
@@ -13,6 +14,7 @@ const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
   };
 
   return (
+    <PopupPortal>
     <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="popup-panel bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#67BFA1] to-[#3d7563] p-8 text-center">
@@ -62,6 +64,7 @@ const ProjectCodeModal = ({ isOpen, projectName, projectCode, onClose }) => {
         </div>
       </div>
     </div>
+    </PopupPortal>
   );
 };
 

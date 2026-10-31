@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Plus, Pencil, Check } from 'lucide-react';
 import TaskCard from './TaskCard';
 import CreateIssueModal from '../issues/CreateIssueModal';
 import { projectsRepository } from '../../data/repositories/projectsRepository';
@@ -9,6 +10,7 @@ import { useAuth } from '../auth/hooks/useAuth';
 const TaskList = ({ role, sprintId, issuesData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const { projectMode } = useOutletContext() || {};
   const { checkPermission } = useAuth();
   const canCreateIssue = checkPermission('canCreateIssue');
   const canEditIssue = checkPermission('canEditIssue');
@@ -51,12 +53,12 @@ const TaskList = ({ role, sprintId, issuesData }) => {
               onClick={() => setEditMode(!editMode)}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg ${
                 editMode 
-                  ? 'bg-red-500 text-white shadow-red-100' 
+                  ? 'bg-[#67BFA1] text-white shadow-[#67BFA1]/30' 
                   : 'bg-gray-200 text-gray-600 hover:bg-gray-300 shadow-gray-100'
               }`}
               title={editMode ? 'Salir de modo edición' : 'Modo edición'}
             >
-              <Pencil size={18} />
+              {editMode ? <Check size={18} /> : <Pencil size={18} />}
             </button>
           )}
           {canCreateIssue && (
@@ -89,6 +91,7 @@ const TaskList = ({ role, sprintId, issuesData }) => {
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateIssue}
         sprintIssues={issues}
+        timeMode={projectMode === 'tiempo'}
       />
     </div>
   );

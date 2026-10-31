@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { X, ExternalLink, Users, Layers, ListTodo } from 'lucide-react';
+import PopupPortal from '../../components/PopupPortal';
 import { useAuth } from '../auth/hooks/useAuth';
 import { sprintsRepository } from '../../data/repositories/sprintsRepository';
 import { issuesRepository } from '../../data/repositories/issuesRepository';
@@ -80,17 +81,18 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
   if (!displayProject && !isOpen) return null;
 
   return (
+    <PopupPortal>
     <>
       {/* Overlay */}
       <div 
         className={`fixed inset-0 bg-black/20 z-40 transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={onClose}
       />
       
       <div 
-        className={`fixed inset-y-0 right-0 w-[350px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-100 p-8 flex flex-col ${
+        className={`pointer-events-auto fixed inset-y-0 right-0 z-50 flex w-[350px] transform flex-col border-l border-gray-100 bg-white p-8 shadow-2xl transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -206,6 +208,7 @@ const ProjectSidebar = ({ project, onClose, onViewSprints }) => {
         </div>
       </div>
     </>
+    </PopupPortal>
   );
 };
 

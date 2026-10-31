@@ -61,6 +61,7 @@ const AppFrame = ({ children }) => {
         }}
       >
         <div className="h-full w-full overflow-hidden">{children}</div>
+        <div id="popup-root" />
       </div>
     </div>
   );

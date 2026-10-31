@@ -46,6 +46,14 @@
     background: #f0efed;
   }
 
+  /* Encima del contenido, pero dentro del stage para que escale con el zoom. */
+  #popup-root {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+  }
+
   /*
    * Scrollbars discretas: invisibles en reposo; visibles al pasar el ratón / foco
    * o mientras haces scroll (clase `scrollbar-reveal`, vía useScrollbarRevealOnScroll).
@@ -128,8 +136,9 @@
 }
 
 /* Entrada al cambiar Planeación / Kanban / Reflexión.
-   `both` aplica el fotograma inicial antes del primer paint, así no hay
-   un frame con el panel ya visible y luego la animación. */
+   `both` oculta el primer frame. El final es `transform: none`:
+   un translate(0) dejaba el panel como contenedor de los popups y el
+   oscurecido se recortaba sobre las tarjetas. */
 @keyframes sprint-tab-in {
   from {
     opacity: 0;
@@ -137,7 +146,7 @@
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: none;
   }
 }
 
@@ -157,12 +166,13 @@
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: none;
   }
 }
 
 .popup-overlay {
   animation: popup-overlay-in 0.22s ease-out both;
+  pointer-events: auto;
 }
 
 .popup-panel {

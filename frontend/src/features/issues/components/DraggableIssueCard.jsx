@@ -98,7 +98,7 @@ const DraggableIssueCard = ({ issue, sprintId }) => {
           openDetail();
         }
       }}
-      className={`rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow select-none hover:shadow-md cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-oracle-main/40 ${isDragging ? 'opacity-30' : ''}`}
+      className={`rounded-xl border border-gray-100 bg-white p-4 shadow-sm select-none hover:shadow-md cursor-grab focus:outline-none focus-visible:ring-2 focus-visible:ring-oracle-main/40 ${isDragging ? 'opacity-0' : ''}`}
     >
       <IssueCardContent issue={issue} />
     </div>

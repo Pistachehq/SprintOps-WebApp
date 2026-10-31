@@ -123,6 +123,12 @@ public class IssuesController {
             } catch (NumberFormatException ignored) {}
         }
 
+        if (request.getHorasEstimadas() != null
+                && issue.getProyecto() != null
+                && "tiempo".equalsIgnoreCase(issue.getProyecto().getModoProyecto())) {
+            issue.setHorasEstimadas(request.getHorasEstimadas());
+        }
+
         issue = issuesService.save(issue);
 
         if (linkedSprint != null) {

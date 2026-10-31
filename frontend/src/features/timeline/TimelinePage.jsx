@@ -8,6 +8,7 @@ import { issuesRepository } from '../../data/repositories/issuesRepository';
 import { timelineRepository } from '../../data/repositories/timelineRepository';
 import { useAuth } from '../auth/hooks/useAuth';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import PopupPortal from '../../components/PopupPortal';
 import { toast } from 'sonner';
 import { ISSUE_TAG_COLORS, isAllowedIssueTagColor, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
@@ -94,6 +95,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
   const showImage = Boolean(photoUrl) && !imageBroken;
 
   return (
+    <PopupPortal>
     <div className="popup-overlay fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
       <div className="popup-panel relative z-10 w-[min(100vw-2rem,320px)] rounded-2xl bg-white p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -173,6 +175,7 @@ function PhotoModal({ projectId, fecha, userId, photoDatesSet, onPhotoChange, on
         {canUpload && <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />}
       </div>
     </div>
+    </PopupPortal>
   );
 }
 

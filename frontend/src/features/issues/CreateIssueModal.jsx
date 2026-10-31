@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import PopupPortal from '../../components/PopupPortal';
 import IssueTagPicker from '../../components/ui/IssueTagPicker';
 import { DEFAULT_ISSUE_TAG_COLOR, normalizeIssueTagColor } from '../../domain/issueTagPalette';
 
-const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [] }) => {
+const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, sprintIssues = [], timeMode = false }) => {
   const [title, setTitle] = useState('');
   const [purpose, setPurpose] = useState('');
   const [description, setDescription] = useState('');
@@ -11,6 +12,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   const [priority, setPriority] = useState('Medium');
   const [points, setPoints] = useState(0);
   const [endDate, setEndDate] = useState('');
+  const [horasEstimadas, setHorasEstimadas] = useState('');
   const [isSubIssue, setIsSubIssue] = useState(false);
   const [parentIssueId, setParentIssueId] = useState('');
   const [useTag, setUseTag] = useState(false);
@@ -26,6 +28,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setPriority(issue.priority || 'Medium');
       setPoints(issue.storyPoints || 0);
       setEndDate(issue.completedAt || '');
+      setHorasEstimadas(issue.horasEstimadas ?? '');
       setIsSubIssue(!!issue.parentIssueId);
       setParentIssueId(issue.parentIssueId || '');
       const has = !!(issue.tagLabel && issue.tagColor);
@@ -40,6 +43,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       setPriority('Medium');
       setPoints(0);
       setEndDate('');
+      setHorasEstimadas('');
       setIsSubIssue(false);
       setParentIssueId('');
       setUseTag(false);
@@ -69,6 +73,9 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
       type,
       storyPoints: Number(points) || 0,
       endDate: endDate || null,
+      ...(timeMode
+        ? { horasEstimadas: horasEstimadas === '' ? null : Number(horasEstimadas) }
+        : {}),
       parentIssueId: isSubIssue && parentIssueId ? Number(parentIssueId) : null,
       assigneeIds: issue ? issue.assigneeIds : [],
       ...tagPayload,
@@ -84,8 +91,9 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
   };
 
   return (
+    <PopupPortal>
     <div className="popup-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
-      <div className="popup-panel flex max-h-[calc(var(--app-h)*0.92)] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="popup-panel flex h-[min(40rem,calc(var(--app-h)*0.88))] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-gray-50 p-6">
           <h2 className="text-xl font-black text-gray-800 tracking-tight">{issue ? "Editar Issue" : "Crear Issue"}</h2>
           <button type="button" onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
@@ -178,6 +186,22 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
             </div>
           </div>
 
+          {timeMode && (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Horas estimadas</label>
+              <input
+                type="number"
+                min="0"
+                step="0.25"
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50"
+                value={horasEstimadas}
+                onChange={e => setHorasEstimadas(e.target.value)}
+                placeholder="0"
+              />
+              <p className="mt-1 text-xs text-gray-400">Las horas reales se registran al abrir la tarea.</p>
+            </div>
+          )}
+
           <IssueTagPicker
             idPrefix="issue-modal"
             enabled={useTag}
@@ -204,18 +228,16 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
                 <option value="yes">Sí</option>
               </select>
             </div>
-          </div>
-
-          {isSubIssue && (
-            <div>
+            <div className={isSubIssue ? '' : 'opacity-45'}>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Issue padre</label>
               <select
-                required
-                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm"
+                required={isSubIssue}
+                disabled={!isSubIssue}
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BFA1] bg-gray-50 text-sm disabled:cursor-not-allowed"
                 value={parentIssueId}
                 onChange={e => setParentIssueId(e.target.value)}
               >
-                <option value="">Selecciona un issue...</option>
+                <option value="">{isSubIssue ? 'Selecciona un issue...' : 'No aplica'}</option>
                 {sprintIssues
                   .filter(i => String(i.id) !== String(issue?.id))
                   .map(i => (
@@ -224,7 +246,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
                 }
               </select>
             </div>
-          )}
+          </div>
           </div>
 
           <div className="flex shrink-0 gap-3 border-t border-gray-100 bg-white px-6 py-4">
@@ -238,6 +260,7 @@ const CreateIssueModal = ({ isOpen, onClose, onCreate, onEdit, issue = null, spr
         </form>
       </div>
     </div>
+    </PopupPortal>
   );
 };
 

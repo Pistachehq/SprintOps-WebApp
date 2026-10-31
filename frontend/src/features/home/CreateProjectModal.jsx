@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import ProjectCodeModal from '../../components/ui/ProjectCodeModal';
+import PopupPortal from '../../components/PopupPortal';
 
 const MODES = [
   {
@@ -63,6 +64,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   };
 
   return (
+    <PopupPortal>
     <>
       <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="popup-panel bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[calc(var(--app-h,900px)*0.92)] flex flex-col">
@@ -180,6 +182,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
         onClose={handleCodeModalClose}
       />
     </>
+    </PopupPortal>
   );
 };
 

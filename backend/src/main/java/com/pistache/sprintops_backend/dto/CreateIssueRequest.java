@@ -1,6 +1,7 @@
 package com.pistache.sprintops_backend.dto;
 
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class CreateIssueRequest {
     private String status;
     private String priority;
     private Integer storyPoints;
+    private BigDecimal horasEstimadas;
     private Integer parentIssueId;
     private List<Integer> assigneeIds;
     private LocalDate endDate;

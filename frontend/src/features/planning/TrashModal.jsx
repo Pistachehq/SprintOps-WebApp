@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, RotateCcw, Trash2 } from 'lucide-react';
+import PopupPortal from '../../components/PopupPortal';
 import { papeleraRepository } from '../../data/repositories/papeleraRepository';
 
 const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   useEffect(() => {
     if (isOpen && sprintId) {
@@ -22,8 +24,10 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
     onRestored?.();
   };
 
-  const handleDeletePermanently = async (id, title) => {
-    if (!confirm(`¿Eliminar permanentemente "${title}"? Esta acción no se puede deshacer.`)) return;
+  const handleDeletePermanently = async () => {
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    setPendingDelete(null);
     await papeleraRepository.deletePermanently(id);
     setItems(prev => prev.filter(i => i.id !== id));
   };
@@ -40,6 +44,7 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
   };
 
   return (
+    <PopupPortal>
     <div className="popup-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="popup-panel flex max-h-[calc(var(--app-h)*0.8)] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -93,7 +98,7 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
                       <RotateCcw size={14} /> Restaurar
                     </button>
                     <button
-                      onClick={() => handleDeletePermanently(item.id, item.title)}
+                      onClick={() => setPendingDelete({ id: item.id, title: item.title })}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       title="Eliminar permanentemente"
                     >
@@ -107,6 +112,41 @@ const TrashModal = ({ isOpen, onClose, sprintId, onRestored }) => {
         </div>
       </div>
     </div>
+    {pendingDelete && (
+      <div
+        className="popup-overlay fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+        onClick={() => setPendingDelete(null)}
+      >
+        <div
+          className="popup-panel w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+          <h2 className="text-lg font-black text-gray-800">Eliminar para siempre</h2>
+          <p className="mt-2 text-sm font-medium text-gray-500">
+            ¿Eliminar permanentemente &quot;{pendingDelete.title}&quot;? Esta acción no se puede deshacer.
+          </p>
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setPendingDelete(null)}
+              className="h-11 flex-1 rounded-xl bg-gray-100 font-bold text-slate-600 transition-colors hover:bg-gray-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDeletePermanently}
+              className="h-11 flex-1 rounded-xl bg-red-500 font-bold text-white transition-colors hover:bg-red-600"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </PopupPortal>
   );
 };
 

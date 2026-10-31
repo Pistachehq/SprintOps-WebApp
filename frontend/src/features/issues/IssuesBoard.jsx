@@ -13,6 +13,7 @@ import DroppableColumn from './components/DroppableColumn';
 import DraggableIssueCard, { IssueCardContent } from './components/DraggableIssueCard';
 import NextSprintPanel, { NEXT_SPRINT_DROPPABLE_ID } from './components/NextSprintPanel';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import PopupPortal from '../../components/PopupPortal';
 
 function sortSprintsForOrder(list) {
   return [...(list || [])].sort((a, b) => {
@@ -33,6 +34,7 @@ const IssuesBoard = () => {
   const { issues, isLoading, moveIssue, refetch } = useIssues(id);
 
   const [activeDragIssue, setActiveDragIssue] = useState(null);
+  const [dragWidth, setDragWidth] = useState(null);
   const [projectId, setProjectId] = useState(null);
   const [sprintsList, setSprintsList] = useState([]);
   const [issuesSentToNextSprint, setIssuesSentToNextSprint] = useState(0);
@@ -103,6 +105,7 @@ const IssuesBoard = () => {
       event.active.data?.current?.issue ||
       visibleIssues.find(i => String(i.id) === String(event.active.id));
     setActiveDragIssue(draggedIssue || null);
+    setDragWidth(event.active.rect.current?.initial?.width ?? null);
   };
 
   const resolveStatusForColumn = (columnId, issue) => {
@@ -117,6 +120,7 @@ const IssuesBoard = () => {
 
   const handleDragEnd = async (event) => {
     setActiveDragIssue(null);
+    setDragWidth(null);
     const { active, over } = event;
     if (!over) return;
 
@@ -216,6 +220,10 @@ const IssuesBoard = () => {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
+          onDragCancel={() => {
+            setActiveDragIssue(null);
+            setDragWidth(null);
+          }}
           onDragEnd={handleDragEnd}
         >
           <div className="min-h-0 md:flex-1 md:min-h-0">
@@ -284,9 +292,12 @@ const IssuesBoard = () => {
             </div>
           </div>
 
-          <DragOverlay adjustScale>
+          <DragOverlay dropAnimation={null}>
             {activeDragIssue ? (
-              <div className="w-[220px] rotate-3 rounded-xl border-2 border-oracle-main bg-white p-4 shadow-xl">
+              <div
+                className="cursor-grabbing rounded-xl border border-gray-100 bg-white p-4 shadow-lg"
+                style={dragWidth ? { width: dragWidth } : undefined}
+              >
                 <IssueCardContent issue={activeDragIssue} />
               </div>
             ) : null}
@@ -295,6 +306,7 @@ const IssuesBoard = () => {
       </div>
 
       {showNoNextModal && (
+        <PopupPortal>
         <div
           className="popup-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           role="dialog"
@@ -327,6 +339,7 @@ const IssuesBoard = () => {
             </div>
           </div>
         </div>
+        </PopupPortal>
       )}
     </div>
   );

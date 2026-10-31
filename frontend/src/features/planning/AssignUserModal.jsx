@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Search, Check } from 'lucide-react';
+import PopupPortal from '../../components/PopupPortal';
 
 const roleLabel = (role) => {
   const map = { developer: 'Developer', scrumMaster: 'Scrum Master', productOwner: 'Product Owner' };
@@ -17,6 +18,7 @@ const AssignUserModal = ({ isOpen, onClose, members = [], assigneeIds = [], onTo
   );
 
   return (
+    <PopupPortal>
     <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="popup-panel bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
@@ -82,6 +84,7 @@ const AssignUserModal = ({ isOpen, onClose, members = [], assigneeIds = [], onTo
         </div>
       </div>
     </div>
+    </PopupPortal>
   );
 };
 

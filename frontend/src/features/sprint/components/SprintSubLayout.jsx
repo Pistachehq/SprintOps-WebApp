@@ -11,6 +11,7 @@ import SprintIndicatorCard from '../../reflection/SprintIndicatorCard';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useIssues } from '../../issues/hooks/useIssues';
 import { sprintsRepository } from '../../../data/repositories/sprintsRepository';
+import { projectsRepository } from '../../../data/repositories/projectsRepository';
 
 const SprintSubLayout = () => {
   const { id } = useParams();
@@ -20,17 +21,22 @@ const SprintSubLayout = () => {
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [sprintName, setSprintName] = useState('');
   const [projectId, setProjectId] = useState(null);
+  const [projectMode, setProjectMode] = useState('agil');
   const [velocityModalOpen, setVelocityModalOpen] = useState(false);
   const [sprintIndicatorModalOpen, setSprintIndicatorModalOpen] = useState(false);
 
   useEffect(() => {
     setSprintName('');
     setProjectId(null);
+    setProjectMode('agil');
     sprintsRepository.getById(id).then(sprint => {
       if (sprint?.name) setSprintName(sprint.name);
       if (sprint?.projectId != null) setProjectId(sprint.projectId);
       if (sprint?.projectId) {
         refreshPermissionsForProject(sprint.projectId);
+        projectsRepository.getById(sprint.projectId)
+          .then((project) => setProjectMode(project?.modo || 'agil'))
+          .catch(() => setProjectMode('agil'));
       }
     }).catch(() => {});
   }, [id]);
@@ -53,7 +59,7 @@ const SprintSubLayout = () => {
   };
 
   const { title, showButton, tab } = getHeaderInfo();
-  const outlet = useOutlet({ setShowCreateIssue });
+  const outlet = useOutlet({ setShowCreateIssue, projectMode });
   const canCreateIssue = checkPermission('canCreateIssue');
   const canViewMetrics = checkPermission('canViewMetrics');
 
@@ -133,9 +139,11 @@ const SprintSubLayout = () => {
             ya esté oculto. Con Framer, la vista nueva se pintaba visible
             un instante y después empezaba la animación. */}
         <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-6">
+          {/* Sin h-full: con el padding de abajo, height 100% se salía
+              y overflow recortaba la esquina redondeada del backlog. */}
           <div
             key={location.pathname}
-            className="sprint-tab-panel flex h-full min-h-0 flex-1 flex-col"
+            className="sprint-tab-panel flex min-h-0 flex-1 flex-col"
           >
             {outlet}
           </div>
@@ -147,6 +155,7 @@ const SprintSubLayout = () => {
         onClose={() => setShowCreateIssue(false)}
         onCreate={handleCreateIssue}
         sprintIssues={issues}
+        timeMode={projectMode === 'tiempo'}
       />
 
       {canViewMetrics && (

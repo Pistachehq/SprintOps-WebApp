@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import PopupPortal from '../PopupPortal';
 
 const JoinProjectModal = ({ isOpen, onClose, onJoin }) => {
   const [code, setCode] = useState('');
@@ -27,6 +28,7 @@ const JoinProjectModal = ({ isOpen, onClose, onJoin }) => {
   };
 
   return (
+    <PopupPortal>
     <div className="popup-overlay fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="popup-panel bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
@@ -80,6 +82,7 @@ const JoinProjectModal = ({ isOpen, onClose, onJoin }) => {
         </form>
       </div>
     </div>
+    </PopupPortal>
   );
 };
 

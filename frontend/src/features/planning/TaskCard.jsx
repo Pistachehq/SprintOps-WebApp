@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import AssignUserModal from './AssignUserModal';
+import PopupPortal from '../../components/PopupPortal';
 import { useAuth } from '../auth/hooks/useAuth';
 
 const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = false, onDelete }) => {
   const navigate = useNavigate();
   const { checkPermission } = useAuth();
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { id, title, priority, storyPoints, description, assigneeIds = [] } = task;
   const canAssign = checkPermission('canManageMembers');
   
@@ -118,11 +120,7 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
 
         {editMode && (
           <button
-            onClick={() => {
-              if (confirm(`¿Eliminar el issue "#${formattedId} ${title}"?`)) {
-                onDelete?.(id);
-              }
-            }}
+            onClick={() => setConfirmDelete(true)}
             className="w-20 bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center shrink-0"
             title="Eliminar issue"
           >
@@ -130,6 +128,46 @@ const TaskCard = ({ task, role, sprintId, members = [], onAssign, editMode = fal
           </button>
         )}
       </div>
+
+      {confirmDelete && (
+        <PopupPortal>
+          <div
+            className="popup-overlay fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setConfirmDelete(false)}
+          >
+            <div
+              className="popup-panel w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+            >
+              <h2 className="text-lg font-black text-gray-800">Eliminar issue</h2>
+              <p className="mt-2 text-sm font-medium text-gray-500">
+                ¿Eliminar el issue &quot;#{formattedId} {title}&quot;?
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="h-11 flex-1 rounded-xl bg-gray-100 font-bold text-slate-600 transition-colors hover:bg-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmDelete(false);
+                    onDelete?.(id);
+                  }}
+                  className="h-11 flex-1 rounded-xl bg-red-500 font-bold text-white transition-colors hover:bg-red-600"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </PopupPortal>
+      )}
 
       <AssignUserModal
         isOpen={showAssignModal}
