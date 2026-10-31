@@ -103,6 +103,24 @@
   }
 }
 
+/* Entrada al cambiar Planeación / Kanban / Reflexión.
+   `both` aplica el fotograma inicial antes del primer paint, así no hay
+   un frame con el panel ya visible y luego la animación. */
+@keyframes sprint-tab-in {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.sprint-tab-panel {
+  animation: sprint-tab-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

@@ -47,11 +47,14 @@ function formatSavedAt(iso) {
   }
 }
 
+const EXIT_MS = 300;
+
 const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
   const { checkPermission, refreshPermissionsForProject } = useAuth();
   const canViewMetrics = checkPermission('canViewMetrics');
 
   const [transitionOpen, setTransitionOpen] = useState(false);
+  const [present, setPresent] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -87,14 +90,20 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
 
   useEffect(() => {
     if (isOpen) {
+      setPresent(true);
       const timer = setTimeout(() => setTransitionOpen(true), 10);
       loadDailyData();
       if (projectId) refreshPermissionsForProject(projectId);
       return () => clearTimeout(timer);
     }
+
     setTransitionOpen(false);
-    setTeamPanelOpen(false);
-    setDetailEntry(null);
+    const timer = setTimeout(() => {
+      setPresent(false);
+      setTeamPanelOpen(false);
+      setDetailEntry(null);
+    }, EXIT_MS);
+    return () => clearTimeout(timer);
   }, [isOpen, projectId, loadDailyData, refreshPermissionsForProject]);
 
   const loadTeamDailies = useCallback(async () => {
@@ -178,7 +187,7 @@ const StandupSidebar = ({ isOpen, onClose, sprintId, userId, projectId }) => {
     setDetailDayLabel(formatSectionTitle(dateStr));
   };
 
-  if (!isOpen && !transitionOpen) return null;
+  if (!isOpen && !present) return null;
 
   return (
     <>

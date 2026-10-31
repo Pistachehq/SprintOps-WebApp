@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Activity, Plus, Target } from 'lucide-react';
 import BackButton from '../../../components/ui/BackButton';
@@ -53,6 +53,7 @@ const SprintSubLayout = () => {
   };
 
   const { title, showButton, tab } = getHeaderInfo();
+  const outlet = useOutlet({ setShowCreateIssue });
   const canCreateIssue = checkPermission('canCreateIssue');
   const canViewMetrics = checkPermission('canViewMetrics');
 
@@ -78,7 +79,7 @@ const SprintSubLayout = () => {
         <header className="mb-10 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-4">
           <div className="flex min-w-0 items-center gap-4">
             <BackButton to={`/sprint/${id}`} />
-            <h1 className="truncate text-4xl font-black tracking-tight text-slate-800 transition-all duration-300">
+            <h1 className="truncate text-4xl font-black tracking-tight text-slate-800">
               {title === 'Kanban' ? `${sprintName || `Sprint ${id}`}: ${title}` : title}
             </h1>
           </div>
@@ -128,23 +129,16 @@ const SprintSubLayout = () => {
           </div>
         </header>
 
-        {/* ── Animated Content Area ── */}
+        {/* La entrada va en CSS (fill-mode: both) para que el primer frame
+            ya esté oculto. Con Framer, la vista nueva se pintaba visible
+            un instante y después empezaba la animación. */}
         <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ x: 40, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -40, opacity: 0 }}
-              transition={{ 
-                duration: 0.5, 
-                ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic
-              }}
-              className="flex h-full min-h-0 flex-1 flex-col"
-            >
-              <Outlet context={{ setShowCreateIssue }} />
-            </motion.div>
-          </AnimatePresence>
+          <div
+            key={location.pathname}
+            className="sprint-tab-panel flex h-full min-h-0 flex-1 flex-col"
+          >
+            {outlet}
+          </div>
         </main>
       </div>
 
