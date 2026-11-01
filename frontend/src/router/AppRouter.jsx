@@ -13,6 +13,7 @@ import PlanningPage from '../features/planning/PlanningPage';
 import SprintSubLayout from '../features/sprint/components/SprintSubLayout';
 import TaskDetailPage from '../features/planning/taskDetail/TaskDetailPage';
 import ProfilePage from '../features/profile/ProfilePage';
+import AppearancePage from '../features/settings/AppearancePage';
 import IssueUniversePage from '../features/issueUniverse/IssueUniversePage';
 import TimelinePage from '../features/timeline/TimelinePage';
 import TimeReportPage from '../features/time/TimeReportPage';
@@ -55,6 +56,7 @@ const AppRouter = () => {
         </Route>
         <Route path="sprint/:sprintId/planning/task/:taskId" element={<TaskDetailPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="settings/apariencia" element={<AppearancePage />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Route>
     </Routes>

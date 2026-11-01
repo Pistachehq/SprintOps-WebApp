@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
 import { ChevronRight, ClipboardList } from 'lucide-react';
+import EdgeSuckScroll from '../../components/EdgeSuckScroll';
 
 const DevTasksView = ({ sprintId, issuesData }) => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const DevTasksView = ({ sprintId, issuesData }) => {
           </p>
         </div>
       ) : (
-        <div className="space-y-5 overflow-y-auto flex-1 min-h-0 pb-4 pr-1 -mr-1" style={{ scrollbarWidth: 'thin' }}>
+        <EdgeSuckScroll fade="#ffffff" className="space-y-5 pb-4 pr-1 -mr-1">
           {myTasks.map(task => (
             <div
               key={task.id}
@@ -62,7 +63,7 @@ const DevTasksView = ({ sprintId, issuesData }) => {
           <p className="text-xs text-gray-300 text-center pt-4">
             {myTasks.length} tarea{myTasks.length !== 1 ? 's' : ''} asignada{myTasks.length !== 1 ? 's' : ''} en este sprint
           </p>
-        </div>
+        </EdgeSuckScroll>
       )}
     </div>
   );
